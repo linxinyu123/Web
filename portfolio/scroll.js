@@ -40,7 +40,6 @@ function scroll_toTop() {
     })
 }
 
-
 var card_width= (window.screen.width -600) / 3
 var x = document.getElementsByClassName("card")
 var i;
@@ -64,16 +63,17 @@ function rightgo() {
 }
 
 
-           
+
 
 function showalert() {
     secDiv = document.querySelector(".imgs")
+    imgsWidth=(window.screen.width)
 secMargin = getComputedStyle(secDiv)
-if (width<-1400){
+if (width<-imgsWidth){
     width =0
     position=true
 }else if (width>0){
-    width =-1400
+    width =-imgsWidth
     position=false
 }else{
     if (position==true){

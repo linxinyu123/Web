@@ -329,21 +329,26 @@
 }
 
 .banner{
-    width: 700px;
-    height: 380px;
+    width: auto;
+    height: auto;
     overflow: hidden;
     border-radius: 20px;
-    margin: 50px auto;
+    margin: 50px 100px;
     position: relative;
 
 }
 .banner .imgs{
-    width: 2100px;
-    height: 380px;
+    width: 2080px;
+    height: auto;
+    float: left;
+    background-color:transparent;
+
 }
 .banner .imgs img{
-    width: 700px;
-    height: 380px;
+    width: 210px;
+    height: auto;
+    margin: 50px 25px 50px 25px;
+    border-radius: 20px;
 }
 .banner .imgs a{
     float: left;
@@ -361,6 +366,8 @@
   margin: auto 0;
   font-size: 3em;
   cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 25px;
 }
 
 .banner .right{
@@ -376,6 +383,8 @@
     margin: auto auto;
     font-size: 3em;
     cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 25px;
 }
 
 .banner .left:hover,.banner .right:hover{
