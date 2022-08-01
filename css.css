@@ -1,0 +1,20 @@
+
+body{
+    text-align:center;
+    background-color: #c4fec1;
+} 
+
+
+img{
+    width: auto;
+    height: 20em;
+    border: 1px solid #fff;
+}
+
+.hh{
+    width: auto;
+    text-align: center;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    margin-top: 10px;
+}
