@@ -1,0 +1,32 @@
+{
+    "showapi_res_error": "",
+    "showapi_res_id": "646d0f070de376532f2fe723",
+    "showapi_res_code": 0,
+    "showapi_fee_num": 1,
+    "showapi_res_body": {
+      "ret_code": 0,
+      "pb": {
+        "contentlist": [
+          {
+            "id": "402467",
+            "typeName": "脑筋急转弯",
+            "title": "问：有一个海没有一滴水，是什么海？",
+            "answer": "答：辞海",
+            "typeId": "njmy"
+          },
+          {
+            "id": "402466",
+            "typeName": "脑筋急转弯",
+            "title": "问：老陈买的明明是真药而不是假药，为什么会被判重刑？",
+            "answer": "答：他走私火药",
+            "typeId": "njmy"
+          }
+         
+        ],
+        "maxResult": 20,
+        "allNum": 936,
+        "allPages": 47,
+        "currentPage": 1
+      }
+    }
+  }
