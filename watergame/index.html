@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-	<title>脑筋急转弯</title>
+	<title>Eglish QUIZ of water</title>
 	<script src="jquery-3.1.1.min.js"></script>
 	<script src="sound.js"></script>
 	<script src="timeDate.js"></script>
@@ -209,8 +209,6 @@ body,html {
 		});
 		function ajax() {
 			$.get("https://lestoy.com/data.json", function (data, textStatus){
-					//返回的 data 可以是 xmlDoc, jsonObj, html, text, 等等.
-					//console.log(data); // 在这里this指向的是Ajax请求的选项配置信息，请参考下图
 					var answer = data.showapi_res_body.pb.contentlist;
 					$(".font").html(answer[storage.c].title);
 					$(".text").html(answer[storage.c].answer);
