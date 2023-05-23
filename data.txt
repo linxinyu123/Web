@@ -1,5 +1,7 @@
-[
-    { "text":"runoob" , ".font":"www.runoob.com" }, 
-    { "text":"google" , ".font":"www.google.com" }, 
-    { "text":"微博" , ".font":"www.weibo.com" }
-]
+ {
+                  "showapi_res_error": "",
+                  "showapi_res_id": "646d0bcc0de376542f0b0c1b",
+                  "showapi_res_code": 0,
+                  "showapi_fee_num": 1,
+                  "showapi_res_body": {"ret_code":0,"pb":{"contentlist":[{"id":"402467","typeName":"脑筋急转弯","title":"问：有一个海没有一滴水，是什么海？","answer":"答：辞海","typeId":"njmy"},{"id":"402466","typeName":"脑筋急转弯","title":"问：老陈买的明明是真药而不是假药，为什么会被判重刑？","answer":"答：他走私火药","typeId":"njmy"},{"id":"402465","typeName":"脑筋急转弯","title":"问：比黄金更容易招引盗贼的东西是什么？","answer":"答：美貌","typeId":"njmy"},{"id":"402450","typeName":"脑筋急转弯","title":"问：一个手无寸铁的人钻进了狮子笼里，为什么太平无事？","answer":"答：狮子笼是空的","typeId":"njmy"},{"id":"402449","typeName":"脑筋急转弯","title":"问：每个人都最爱的人是谁？","answer":"答：自己","typeId":"njmy"},{"id":"402448","typeName":"脑筋急转弯","title":"问：世界上最洁净的“球”是什么球？","answer":"答：卫生球","typeId":"njmy"},{"id":"400804","typeName":"脑筋急转弯","title":"问：什么情况下，每个人都会主动地发挥赴汤蹈火精神？","answer":"答：吃火锅的时候","typeId":"njmy"},{"id":"400803","typeName":"脑筋急转弯","title":"问：左看像电风扇，右看像电风扇，虽然像电风扇，就是不会转，请问这究竟是什么？","answer":"答：停了电的风扇","typeId":"njmy"},{"id":"400782","typeName":"脑筋急转弯","title":"问：小王跑步为什么总是保持一个姿势不变？","answer":"答：因为他在照片中","typeId":"njmy"},{"id":"400781","typeName":"脑筋急转弯","title":"问：小云和阿花已经结婚了，为什么他们还偷偷摸摸的约会呢？","answer":"答：他们分别是和别人约会","typeId":"njmy"},{"id":"400780","typeName":"脑筋急转弯","title":"问：世界上什么没有标价？","answer":"答：感情","typeId":"njmy"},{"id":"399115","typeName":"脑筋急转弯","title":"问：法王路易十四被砍头后他的儿子当了什么？","answer":"答：孤儿","typeId":"njmy"},{"id":"399114","typeName":"脑筋急转弯","title":"问：醉鬼是什么人？","answer":"答：宣布自己没醉的人","typeId":"njmy"},{"id":"399113","typeName":"脑筋急转弯","title":"问：一个伟大的人和一只伟大的狮子同一天诞生，有什么关系？","answer":"答：没关系","typeId":"njmy"},{"id":"399112","typeName":"脑筋急转弯","title":"问：三个孩子吃三个饼要用3分钟，九十个孩子九十个饼要用多少时间？","answer":"答：三分钟","typeId":"njmy"},{"id":"398296","typeName":"脑筋急转弯","title":"问：做什么事会身不由己？","answer":"答：做梦","typeId":"njmy"},{"id":"398295","typeName":"脑筋急转弯","title":"问：一毛钱可以买几头牛？","answer":"答：九头","typeId":"njmy"},{"id":"188415","typeName":"脑筋急转弯","title":"问：狮子和熊比赛拉粑粑，谁赢了？","answer":"答：狮子赢了","typeId":"njmy"},{"id":"10047","typeName":"脑筋急转弯","title":"问：猜猜什么东西，可以洗，可以碰，可以吃，不能晒，不能吞？","answer":"答：麻将","typeId":"njmy"},{"id":"9878","typeName":"脑筋急转弯","title":"问：地上掉了一张5元的和一张50元的钞票，你看见了会捡哪一张？","answer":"答：两张都捡","typeId":"njmy"}],"maxResult":20,"allNum":936,"allPages":47,"currentPage":1}}
+                }
