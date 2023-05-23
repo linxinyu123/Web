@@ -8,19 +8,45 @@
       "pb": {
         "contentlist": [
           {
-            "id": "402467",
-            "typeName": "脑筋急转弯",
-            "title": "问：what is my city？",
-            "answer": "答：辞海",
-            "typeId": "njmy"
-          },
-          {
-            "id": "402466",
-            "typeName": "脑筋急转弯",
-            "title": "问：老陈买的明明是真药而不是假药，为什么会被判重刑？",
-            "answer": "答：他走私火药",
-            "typeId": "njmy"
-          }
+    "title": "What is the primary source of energy for most life on Earth?",
+    "answer": "Sunlight"
+  },
+  {
+    "title": "What is the largest greenhouse gas responsible for climate change?",
+    "answer": "Carbon dioxide (CO2)"
+  },
+  {
+    "title": "What is the process by which plants convert sunlight into energy?",
+    "answer": "Photosynthesis"
+  },
+  {
+    "title": "What is the term for the gradual increase in the Earth's average temperature due to human activities?",
+    "answer": "Global warming"
+  },
+  {
+    "title": "What is the process of converting saltwater into freshwater called?",
+    "answer": "Desalination"
+  },
+  {
+    "title": "What is the world's most precious natural resource?",
+    "answer": "Water"
+  },
+  {
+    "title": "What is the term for the preservation and responsible use of natural resources?",
+    "answer": "Conservation"
+  },
+  {
+    "title": "What is the primary cause of water pollution in most cities?",
+    "answer": "Sewage and wastewater"
+  },
+  {
+    "title": "What is the term for the gradual loss of a species from an ecosystem?",
+    "answer": "Extinction"
+  },
+  {
+    "title": "What is the primary source of plastic pollution in the oceans?",
+    "answer": "Single-use plastics"
+  }
          
         ],
         "maxResult": 20,
