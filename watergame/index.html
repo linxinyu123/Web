@@ -165,16 +165,17 @@ body,html {
 </body>
 </html>
 <script type="text/javascript">
+	$(".lock").hide();
+			$(".main").fadeIn(700);
 	$(function() {
 		$(".l_btn,.l_btn2").click(function() {
-			$(".lock").hide();
-			$(".main").fadeIn(700);
+			
 			var Name = $(this)[0].className;
-			if(Name == "l_btn") {
+		
 				storage.c = 0;
 				storage.i = 1;
 				ajax();
-			}	
+			
 		});
 		(function() {
 			$("body").bind('touchmove',function(e) {
