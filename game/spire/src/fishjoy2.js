@@ -105,7 +105,7 @@ game.load = function(container)
 
 game.onLoadLoaded = function(e)
 {
-	var content = "正在加载资源中，请稍候...<br>(" + Math.round(e.target.getLoadedSize()/e.target.getTotalSize()*100) + "%)";
+	var content = "A carregar recursos...<br>(" + Math.round(e.target.getLoadedSize()/e.target.getTotalSize()*100) + "%)";
 	//this.loader.innerHTML = content;
 };
 
