@@ -3,57 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site Closed</title>
+    <title>Website Closed</title>
     <style>
+        :root {
+            --main-bg: #eef1f5;
+            --shadow-light: #ffffff;
+            --shadow-dark: #d1d9e6;
+            --text-color: #4385f5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f1f3f6;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: var(--main-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            color: #4385f5;
+            min-height: 100vh;
         }
 
-        .neumorphic-box {
-            background: #f1f3f6;
-            box-shadow: 8px 8px 16px #d1d9e6,
-                        -8px -8px 16px #ffffff;
-            border-radius: 20px;
-            padding: 40px 60px;
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 25px;
+            background: var(--main-bg);
+            box-shadow: 10px 10px 20px var(--shadow-dark),
+                        -10px -10px 20px var(--shadow-light);
             text-align: center;
         }
 
         h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 1rem;
         }
 
         p {
-            font-size: 18px;
-            color: #4385f5;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
 
         @media (max-width: 600px) {
-            .neumorphic-box {
-                padding: 30px 20px;
+            .container {
+                padding: 20px;
+                border-radius: 20px;
             }
 
             h1 {
-                font-size: 24px;
+                font-size: 1.5rem;
             }
 
             p {
-                font-size: 16px;
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="neumorphic-box">
-        <h1>Website Temporarily Closed</h1>
-        <p>We're working on something great. Please check back later.</p>
+    <div class="container">
+        <h1>Website Temporarily Unavailable</h1>
+        <p>We’re currently working on something awesome.<br>Please check back soon.</p>
     </div>
 </body>
 </html>
