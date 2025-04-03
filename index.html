@@ -16,27 +16,32 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
             margin: 0;
-            padding: 40px 20px;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
             background: var(--main-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
 
         .container {
-            max-width: 500px;
             width: 100%;
+            max-width: 500px;
             padding: 30px;
             border-radius: 25px;
             background: var(--main-bg);
             box-shadow: 10px 10px 20px var(--shadow-dark),
                         -10px -10px 20px var(--shadow-light);
             text-align: center;
+            box-sizing: border-box;
+            margin: 0 20px;
         }
 
         h1 {
