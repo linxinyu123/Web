@@ -206,5 +206,15 @@ Projeto).&lt;/p>&lt;p>&lt;br />&lt;/p>&lt;p>Bom trabalho e até breve,&lt;/p>&lt
 	<pubDate>Sat, 17 May 2025 18:06:34 +0100</pubDate>
 
 </item>
+<item>
+	<title>Errei na aula teórica de terça 10:00-12:00</title>
+	<description>&lt;div>Esta mensagem destina-se aos alunos/as que estiveram na aula teórica de hoje às 10:00-12:00.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Na parte final da aula, quando desenhámos juntos (no quadro) a implementação das operações &amp;#34;push&amp;#34; e &amp;#34;pop&amp;#34;, por distração eu disse para assumirmos que o registo &amp;#34;sp&amp;#34; (stack pointer) continha o endereço da próxima entrada livre na pilha e, juntos, construímos uma solução com base nesse pressuposto. Embora seja uma alternativa possível, não é a mais usual.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Na verdade, o pressuposto usual é que &lt;b>o sp aponta para a entrada que existe no top da pilha&lt;/b>.&lt;/div>&lt;div>Consequentemente, a implementação correta de &amp;#34;push rs&amp;#34; deve ser: &lt;/div>&lt;pre>addi sp, sp, -4&lt;br />sw rs, 0(sp)&lt;/pre>&lt;div>E a implementação correta de &amp;#34;pop rd&amp;#34; deve ser:&lt;/div>&lt;pre>lw rd, 0(sp)&lt;br />addi sp, sp, 4&lt;/pre>&lt;div>&lt;br />&lt;/div>&lt;div>O exemplo que vimos no final da aula já é baseado no pressuposto correto.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Muito obrigado ao aluno que, no final da aula, veio ter comigo e alertar-me para a distração.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Bom trabalho e boa sorte com o MAP de EMD mais logo,&lt;/div>&lt;div>João&lt;/div></description>
+	<link>https://fenix.tecnico.ulisboa.pt/disciplinas/IAC236/2024-2025/2-semestre/ver-post/errei-na-aula-teorica-de-terca-1000-1200</link>
+	<author>joao.barreto@tecnico.ulisboa.pt (João Pedro Faria Mendonça Barreto)</author>
+	<guid>https://fenix.tecnico.ulisboa.pt/disciplinas/IAC236/2024-2025/2-semestre/ver-post/errei-na-aula-teorica-de-terca-1000-1200#1689399616228692</guid>
+	<category>Anúncios</category>
+	<pubDate>Tue, 13 May 2025 12:29:44 +0100</pubDate>
+
+</item>
 </channel>
 </rss>
