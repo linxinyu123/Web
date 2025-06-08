@@ -217,6 +217,29 @@ Projeto).&lt;/p>&lt;p>&lt;br />&lt;/p>&lt;p>Bom trabalho e até breve,&lt;/p>&lt
 
 </item>
 <item>
+	<title>Reposição de aula</title>
+	<description>Hoje não houve aula de exercícios para o turno 6, que deveria ter decorrido das 13h às 15h na V1.06.&lt;div>&lt;br />&lt;div>Para substituir esta aula vai haver uma aula na sexta feira, dia 23, das 14h às 16h. A aula vai ser híbrida, e vai ser gravada para que depois possa ser publicada nos Sumários.&lt;/div>&lt;/div></description>
+	<link>https://fenix.tecnico.ulisboa.pt/disciplinas/EMD36/2024-2025/2-semestre/ver-post/reposicao-de-aula</link>
+	<author>tdmourao@gmail.com (Tiago Mourão)</author>
+	<guid>https://fenix.tecnico.ulisboa.pt/disciplinas/EMD36/2024-2025/2-semestre/ver-post/reposicao-de-aula#3378249476352564</guid>
+	<category>Anúncios</category>
+	<pubDate>Tue, 20 May 2025 18:07:17 +0100</pubDate>
+
+</item>
+<item>
+	<title>Início das aulas e aula teórica de substituição</title>
+	<description>Bem vindos a Elementos de Matemática Discreta. &lt;div>As aulas (teóricas e práticas) começam na 2ª feira, dia 28 de Abril, de acordo com o horário.Toda a informação relevante para o funcionamento da UC encontra-se disponível nesta página. Alguma dessa informação (&lt;i>Listas de exercícios&lt;/i> e &lt;i>Ligações remotas&lt;/i>) está disponível apenas para utilizadores autenticados. Alunos que ainda não estejam inscritos na UC devem contactar o docente responsável.
+
+
+&lt;h5>&lt;b>A informação abaixo destina-se apenas aos alunos que frequentam as aulas teóricas do turno de 3ªfeira/5ªfeira. &lt;/b> &lt;/h5>Devido ao feriado de 1 de Maio, haverá uma aula teórica de substituição. Esta aula realiza-se na &lt;b>4ªfeira&lt;/b>, dia &lt;b>30 de abril,&lt;/b> &lt;b>das 14:00 às 16:00&lt;/b> em regime híbrido:&lt;br />&lt;ul>&lt;li>presencialmente na sala C9&lt;/li>&lt;li>online via sessão Zoom - o link está disponível (após autenticação) na secção &lt;i>Ligações remotas&lt;/i>.&lt;/li>&lt;/ul>A aula será gravada e disponibilizada posteriormente. &lt;br />&lt;/div></description>
+	<link>https://fenix.tecnico.ulisboa.pt/disciplinas/EMD36/2024-2025/2-semestre/ver-post/aula-teorica-de-substituicao</link>
+	<author>jaime.ramos@tecnico.ulisboa.pt (Jaime Ramos)</author>
+	<guid>https://fenix.tecnico.ulisboa.pt/disciplinas/EMD36/2024-2025/2-semestre/ver-post/aula-teorica-de-substituicao#3096774499653311</guid>
+	<category>Anúncios</category>
+	<pubDate>Wed, 16 Apr 2025 14:05:31 +0100</pubDate>
+
+</item>
+<item>
 	<title>Errei na aula teórica de terça 10:00-12:00</title>
 	<description>&lt;div>Esta mensagem destina-se aos alunos/as que estiveram na aula teórica de hoje às 10:00-12:00.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Na parte final da aula, quando desenhámos juntos (no quadro) a implementação das operações &amp;#34;push&amp;#34; e &amp;#34;pop&amp;#34;, por distração eu disse para assumirmos que o registo &amp;#34;sp&amp;#34; (stack pointer) continha o endereço da próxima entrada livre na pilha e, juntos, construímos uma solução com base nesse pressuposto. Embora seja uma alternativa possível, não é a mais usual.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Na verdade, o pressuposto usual é que &lt;b>o sp aponta para a entrada que existe no top da pilha&lt;/b>.&lt;/div>&lt;div>Consequentemente, a implementação correta de &amp;#34;push rs&amp;#34; deve ser: &lt;/div>&lt;pre>addi sp, sp, -4&lt;br />sw rs, 0(sp)&lt;/pre>&lt;div>E a implementação correta de &amp;#34;pop rd&amp;#34; deve ser:&lt;/div>&lt;pre>lw rd, 0(sp)&lt;br />addi sp, sp, 4&lt;/pre>&lt;div>&lt;br />&lt;/div>&lt;div>O exemplo que vimos no final da aula já é baseado no pressuposto correto.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Muito obrigado ao aluno que, no final da aula, veio ter comigo e alertar-me para a distração.&lt;/div>&lt;div>&lt;br />&lt;/div>&lt;div>Bom trabalho e boa sorte com o MAP de EMD mais logo,&lt;/div>&lt;div>João&lt;/div></description>
 	<link>https://fenix.tecnico.ulisboa.pt/disciplinas/IAC236/2024-2025/2-semestre/ver-post/errei-na-aula-teorica-de-terca-1000-1200</link>
