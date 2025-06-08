@@ -175,5 +175,36 @@ A revisão de provas será agendada em breve.</description>
 	<pubDate>Fri, 06 Jun 2025 16:40:41 +0100</pubDate>
 
 </item>
+<item>
+	<title>Instalação de versão recente do Ripes &amp;#43; Guião do laboratório 7</title>
+	<description>&lt;p>Olá a todos/as,&lt;br />&lt;br />Este anúncio tem duas partes, por isso leiam-no até ao fim.&lt;/p>&lt;p>&lt;br />&lt;b>1) Instalação de versão recente do Ripes&lt;/b>&lt;br />&lt;br />No
+ 2º projeto, a vossa solução final precisará de abrir e ler ficheiros. 
+Esse será o tema da primeira aula laboratorial da próxima semana.&lt;/p>&lt;p>Infelizmente,
+ as versões mais antigas do Ripes (incluindo a &amp;#34;Release build v.2.2.6&amp;#34; e
+ a versão Web) têm limitações no suporte às &amp;#34;ecall&amp;#34; para a acesso a 
+ficheiros.&lt;/p>&lt;p>Portanto, nesta fase &lt;strong>todos/as precisam de instalar na vossa máquina&lt;/strong> a seguinte versão específica do Ripes que colocámos nesta pasta pública: &lt;a href="https://tinyurl.com/iac-2025-Ripes">https://tinyurl.com/iac-2025-Ripes&lt;/a>&lt;/p>&lt;p>Notem que este pedido aplica-me mesmo àqueles/as que já tinham instalado a versão anterior do Ripes.&lt;/p>&lt;p>Os passos para a instalação encontram-se descritos no nosso &amp;#34;Guia de instalação do Simulador Ripes&amp;#34; (secção &amp;#34;Laboratórios&amp;#34;).&lt;/p>&lt;p>Para
+ alguns sistemas (e.g., portáteis Apple com processadores baseados em 
+ARM64), precisarão de compilar o Ripes. Se for o vosso caso, tenham em 
+conta:&lt;/p>&lt;ul>&lt;li>Atenção que a versão do Ripes que indicamos acima requer o qt6 (e não o qt5 que é indicado no nosso guia de instalação).&lt;/li>&lt;li>Se
+ tiverem alguma dificuldade, coloquem as vossas dúvidas no Fórum dos 
+Laboratórios. É provável que um colega ou docente vos consiga ajudar 
+rapidamente.&lt;/li>&lt;/ul>&lt;p>Se, após tentarem, não conseguirem instalar o 
+simulador no vosso sistema operativo, podem sempre criar uma máquina 
+virtual com um sistema onde saibam que o RIPES funciona, recorrendo a 
+software de virtualização (e.g., VirtualBox).&lt;/p>&lt;p>Finalmente, 
+lembrem-se que é só para a parte de leitura de ficheiros que vai ser 
+necessária esta versão específica. Portanto podem ir avançando com as 
+primeiras etapas do 2º projeto (e.g., as funções dotproduct e matmul) 
+mesmo antes de terem o Ripes instalado/atualizado.&lt;/p>&lt;p>&lt;br />&lt;/p>&lt;p>&lt;b>2) Guião do laboratório 7 (acesso a ficheiros em RISC-V/Ripes)&lt;/b>&lt;/p>&lt;p>Finalmente, acabámos de publicar o guião da primeira aula laboratorial da próxima semana.&lt;/p>&lt;p>É dedicado ao tema da programação com acesso a ficheiros, usando Assembly RISC-V sobre Ripes. &lt;br />&lt;/p>&lt;p>É um laboratório muito alinhado com o 2º Projeto, que pode ajudar-vos muito a resolverem esse desafio no vosso projeto.&lt;/p>&lt;p>Além
+ deste guião, também já podem encontrar um .zip com imagens e matrizes 
+de pesos para usarem pelo classificador no vosso 2º projeto (ver secção 
+Projeto).&lt;/p>&lt;p>&lt;br />&lt;/p>&lt;p>Bom trabalho e até breve,&lt;/p>&lt;p>A equipa docente de IAC &lt;/p></description>
+	<link>https://fenix.tecnico.ulisboa.pt/disciplinas/IAC236/2024-2025/2-semestre/ver-post/instalacao-de-versao-recente-do-ripes-43-guiao-do-laboratorio-7</link>
+	<author>joao.barreto@tecnico.ulisboa.pt (João Pedro Faria Mendonça Barreto)</author>
+	<guid>https://fenix.tecnico.ulisboa.pt/disciplinas/IAC236/2024-2025/2-semestre/ver-post/instalacao-de-versao-recente-do-ripes-43-guiao-do-laboratorio-7#2815299522933599</guid>
+	<category>Anúncios</category>
+	<pubDate>Sat, 17 May 2025 18:06:34 +0100</pubDate>
+
+</item>
 </channel>
 </rss>
