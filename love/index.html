@@ -57,7 +57,6 @@ footer{text-align:center;padding:2rem 1rem;color:#777;font-size:.9rem}
   </section>
 </main>
 
-<footer>© <span id="currentYear"></span> 我们的纪念</footer>
 
 <!-- ===== 全屏预览 ===== -->
 <div id="viewer" onclick="closeViewer()">
@@ -171,8 +170,7 @@ function closeViewer(){
   setTimeout(()=>viewer.style.display='none',250);
 }
 
-/* 年份 */
-document.getElementById('currentYear').textContent=new Date().getFullYear();
+
 </script>
 </body>
 </html>
