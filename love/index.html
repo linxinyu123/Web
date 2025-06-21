@@ -10,7 +10,24 @@
 /* ===== 基础布局，与前相同 ===== */
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;text-align:center;padding:3rem 1rem}
+header {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  padding: 3rem 1rem;
+  z-index: 1;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('https://pb.nichi.co/load-image-carry') center/cover no-repeat;
+  filter: blur(1px);
+  transform: scale(1.1);
+  z-index: -1;
+}
 header h1{font-size:2.5rem;margin-bottom:1rem}.counter.big{font-size:3rem;font-weight:700;margin-top:.5rem}
 main{max-width:900px;margin:2rem auto;padding:0 1rem}
 .milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
