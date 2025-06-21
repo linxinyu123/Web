@@ -45,7 +45,7 @@ footer{text-align:center;padding:2rem 1rem;color:#777;font-size:.9rem}
 </head>
 <body>
 <header>
-  <h1>我们的爱</h1>
+  <h1>美女与野兽</h1>
   <p>已相伴 <span id="daysTogether" class="counter big">0</span> 天</p>
   <p id="yearsTogether"></p>
 </header>
@@ -67,10 +67,18 @@ footer{text-align:center;padding:2rem 1rem;color:#777;font-size:.9rem}
 
 <script>
 /* ===== 数据 ===== */
-const startDate=new Date('2023-05-30');
-const milestones=[{date:'2024-03-14',title:'第一个白色情人节',message:'送给你最甜的糖果，也把我的心交给你。',imgs:[
-  'https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=800&q=60',
-  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=60']},
+const startDate=new Date('2024-08-10');
+const milestones=[
+
+{date:'2025-03-04',title:'我们一起去Cascais啦！',message:'终于去到了久违的地方，还记得上次火车逃票慌张的样子😶',imgs:[
+  'https://lestoy.com/love/IMG_20250409_181930.jpg',
+  'https://lestoy.com/love/IMG_20250304_193658.jpg',
+  'https://lestoy.com/love/IMG_20250304_152135.jpg',
+  'https://lestoy.com/love/IMG_20250304_180401_1.jpg',
+  'https://lestoy.com/love/IMG_20250304_152135.jpg',
+  'https://lestoy.com/love/IMG_20250304_144501.jpg',
+  ]},
+    
 {date:'2024-05-01',title:'第一次旅行',message:'和你一起看过的海，比日落更浪漫。',imgs:[
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60',
   'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=60',
@@ -84,7 +92,7 @@ function updateCounter(){
   document.getElementById('daysTogether').textContent=days;
   let years=now.getFullYear()-startDate.getFullYear();
   if(now.getMonth()<startDate.getMonth()||(now.getMonth()===startDate.getMonth()&&now.getDate()<startDate.getDate()))years--;
-  document.getElementById('yearsTogether').textContent=`已相伴约 ${years} 年`;
+  document.getElementById('yearsTogether').textContent=`在一起约 ${years} 年`;
 }
 updateCounter();setInterval(updateCounter,3600e3);
 
