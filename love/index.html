@@ -1,216 +1,338 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>我们的纪念日</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <style>
-:root{--primary:#ffafcc;--secondary:#bde0fe;--text:#333;--bg:#fff;--gutter:1rem}
-
-/* ===== 基础布局，与前相同 ===== */
-*{box-sizing:border-box;margin:0;padding:0}
+/* ——— 全局配色 ——— */
+:root{
+  --primary:#ffafcc;
+  --birthday:#FE5090;
+  --bg:#fff;--text:#333;
+  --gutter:1rem;
+  --topH:3.2rem;
+}
+/* ——— 通用重置 ——— */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-header {
-  position: relative;
-  overflow: hidden;
-  color: #fff;
-  text-align: center;
-  padding: 3rem 1rem;
-  z-index: 1;
-}
 
-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url('https://lestoy.com/love/IMG_20250304_180401_1.jpg') center/cover no-repeat;
-  filter: blur(0.25px);
-  transform: scale(1.1);
-  z-index: -1;
-}
-header h1{font-size:2.5rem;margin-bottom:1rem}.counter.big{font-size:3rem;font-weight:700;margin-top:.5rem}
-main{max-width:900px;margin:2rem auto;padding:0 1rem}
+/* ——— 顶栏 ——— */
+#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:center;height:var(--topH);background:var(--bg);font-weight:600;font-size:1.05rem;border-bottom:1px solid #0001}
+#toolbar{position:absolute;right:1rem;display:flex;gap:1rem}
+#toolbar img{width:1.35rem;height:1.35rem;cursor:pointer}
+
+/* ——— 相伴天数 ——— */
+#daysLine{text-align:center;font-size:1.2rem;font-weight:600;margin:2rem 0 1.5rem}
+
+/* ——— 卡片列表 / 卡片 ——— */
+main{max-width:900px;margin:0 auto;padding:0 1rem}
 .milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;transition:transform .3s}
-.card:hover{transform:translateY(-6px)}
-.card-content{padding:1rem 1.25rem .75rem}.card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}
+.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;
+      scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}
+.card.visible{opacity:1;transform:translateY(0)}
+.card-content{padding:1rem 1.25rem .75rem}
+.card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}
 .card-content time{display:block;font-size:.9rem;color:#555;margin-bottom:.75rem}
-.banner,.image-grid{padding:0 var(--gutter) var(--gutter)}
+.banner,.image-grid{padding:var(--gutter)}
 .image-grid{display:grid;gap:4px;width:100%}
-.image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+
+/* ——— 图片 skeleton & fade-in ——— */
+.image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}
+.image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}
 .banner img{height:200px;aspect-ratio:auto}
-footer{text-align:center;padding:2rem 1rem;color:#777;font-size:.9rem}
-@media(prefers-color-scheme:dark){
-  :root{--bg:#121212;--text:#eee}
-  body{background:var(--bg);color:var(--text)}
-  .card{background:#1e1e1e}footer{color:#aaa}
-}
 
-/* ===== 预览层 ===== */
-#viewer{position:fixed;inset:0;display:none;overflow:hidden;z-index:9999;touch-action:none;
-        background:rgba(0,0,0,.9);opacity:0;transition:opacity .25s ease}
+/* ——— 页脚 ——— */
+footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
+
+/* ——— 模态 / 日历 / 搜索 / 预览（与前版相同，略） ——— */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:center;justify-content:center;z-index:999}
+.modal.show{display:flex}
+.box{background:var(--bg);border-radius:.85rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}
+@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}
+
+.calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem}
+.cal-head span{cursor:pointer}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}
+.cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none}
+.cal-grid div.other{opacity:.35}
+.cal-grid div.hasData{outline:2px solid var(--primary);outline-offset:-2px}
+.cal-grid div.birthday{background:var(--birthday);color:#fff}
+.cal-grid div.selected{background:var(--primary);color:#fff}
+
+#searchInput{width:calc(100% - 2rem);margin:1.1rem 1rem .5rem;padding:.65rem 1rem;border:1.5px solid var(--primary);border-radius:.7rem;font-size:1rem;outline:none;transition:border-color .25s}
+#searchInput:focus{border-color:var(--primary)}
+#resultList{list-style:none;margin:0 1rem 1.2rem;padding:0;max-height:60vh;overflow:auto}
+#resultList li{padding:.65rem .3rem;border-bottom:1px solid #0001;cursor:pointer}
+#resultList li time{font-size:.8rem;color:#666;margin-left:.4rem}
+mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
+
+#viewer{position:fixed;inset:0;display:none;overflow:hidden;z-index:1000;background:rgba(0,0,0,.9);touch-action:none;opacity:0;transition:opacity .25s}
 #viewer.visible{opacity:1}
-
-/* 轮播平滑动画保留 */
 #carousel{display:flex;height:100%;transition:transform .3s ease}
-
 .viewer-slide{flex:0 0 100%;display:flex;justify-content:center;align-items:center;overflow:hidden}
-.viewer-slide img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;transform-origin:center center;transition:none}
-
+.viewer-slide img{max-width:100%;max-height:100%;object-fit:contain}
 #imgCounter{position:absolute;bottom:20px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;pointer-events:none}
+
+/* ——— 深色模式 ——— */
+@media(prefers-color-scheme:dark){
+ :root{--bg:#121212;--text:#eee}
+ body{background:var(--bg);color:var(--text)}
+ .card{background:#1e1e1e}
+ .box{background:#1e1e1e}
+ .card-content time{color:#aaa}
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>美女与野兽</h1>
-  <p>已相伴 <span id="daysTogether" class="counter big">0</span> 天</p>
-  <p id="yearsTogether"></p>
-</header>
 
+<!-- 顶栏 -->
+<div id="topbar">
+  我们的纪念日
+  <div id="toolbar">
+    <img src="https://lestoy.com/love/search.svg" id="openSearch" alt="搜索">
+    <img src="https://lestoy.com/love/calendar.svg" id="openCalendar" alt="日历">
+  </div>
+</div>
+
+<!-- 相伴天数 -->
+<div id="daysLine">已相伴 <span id="daysTogether"></span> 天</div>
+
+<!-- 卡片列表 -->
 <main>
-  <section>
-    <h2 style="text-align:center;margin-bottom:1.5rem;">美好瞬间</h2>
-    <div class="milestones" id="milestoneContainer"></div>
-  </section>
+  <div class="milestones" id="milestoneContainer"></div>
+  <div id="sentinel" style="height:1px"></div><!-- 懒加载哨兵 -->
 </main>
-
 <footer>── • ──</footer>
 
-<!-- ===== 全屏预览 ===== -->
+<!-- 图片预览 -->
 <div id="viewer" onclick="closeViewer()">
-  <div id="carousel"></div>
-  <div id="imgCounter">1/1</div>
+  <div id="carousel"></div><div id="imgCounter">1/1</div>
+</div>
+
+<!-- 日历模态 -->
+<div id="calendarModal" class="modal" onclick="hideModal(event)">
+  <div class="box calendar" onclick="event.stopPropagation()">
+    <div class="cal-head">
+      <button id="prevM" style="border:none;background:none;font-size:1.4rem">‹</button>
+      <span id="monthLabel"></span>
+      <button id="nextM" style="border:none;background:none;font-size:1.4rem">›</button>
+    </div>
+    <div id="quickYM" style="display:none;margin-bottom:.7rem;text-align:center">
+      <select id="yearSel"></select>
+      <select id="monthSel"></select>
+      <button id="applyYM" style="margin-left:.4rem">确定</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</div>
+
+<!-- 搜索模态 -->
+<div id="searchModal" class="modal" onclick="hideModal(event)">
+  <div class="box" style="width:360px;max-width:92vw" onclick="event.stopPropagation()">
+    <input id="searchInput" placeholder="输入关键词…">
+    <ul id="resultList"></ul>
+  </div>
 </div>
 
 <script>
-/* ===== 数据 ===== */
-const startDate=new Date('2024-08-10');
-const milestones=[
+/* ========= 数据区 ========= */
+const startDate = new Date('2024-08-10');
+const milestones = [
+  {
+    date:'2025-04-06',
+    title:'她的生日，我们身边有对方',
+    message:'这顿晚餐去吃了日料，有你，有笑，有喜欢的食物。还给她拍了张照片，能陪你过生日，就是我最大的幸运。',
+    imgs:[
+      'https://lestoy.com/love/IMG_20250409_184958_250.jpg',
+      'https://lestoy.com/love/mmexport1744221095914.jpg',
+      'https://lestoy.com/love/IMG_20250409_180039.jpg',
+      'https://lestoy.com/love/IMG_20250409_180107.jpg',
+      'https://lestoy.com/love/IMG_20250409_180117.jpg'
+    ]
+  },
+  {
+    date:'2025-03-04',
+    title:'我们一起去Cascais啦！',
+    message:'终于去到了久违的地方，还记得日落时牵着她的手在码头散步。',
+    imgs:[
+      'https://lestoy.com/love/IMG_20250409_181930.jpg',
+      'https://lestoy.com/love/IMG_20250304_193658.jpg',
+      'https://lestoy.com/love/IMG_20250304_180401_1.jpg',
+      'https://lestoy.com/love/IMG_20250304_193420.jpg',
+      'https://lestoy.com/love/IMG_20250304_152135.jpg',
+      'https://lestoy.com/love/IMG_20250304_144501.jpg'
+    ]
+  },
+  {
+    date:'2024-08-10',
+    title:'这次我们赴约，去了罗卡角',
+    message:'去吃了东方滋味，感觉还不错。那天阳光很好，我们终于一起站在了欧洲大陆的最西端。',
+    imgs:[
+      'https://lestoy.com/love/IMG_20240811_170916.jpg',
+      'https://lestoy.com/love/IMG_20240811_214451.jpg'
+    ]
+  }
+];
 
-{
-  date: '2025-04-06',
-  title: '她的生日，我们身边有对方',
-  message: '这顿晚餐去吃了日料，有你，有笑，有喜欢的食物。还给她拍了张照片，能陪你过生日，就是我最大的幸运。',
-  imgs: [
-  'https://lestoy.com/love/IMG_20250409_184958_250.jpg',
-    'https://lestoy.com/love/mmexport1744221095914.jpg',
-    'https://lestoy.com/love/IMG_20250409_180039.jpg',
-    'https://lestoy.com/love/IMG_20250409_180107.jpg',
-    'https://lestoy.com/love/IMG_20250409_180117.jpg', 
-  ]
-},
 
-{date:'2025-03-04',title:'我们一起去Cascais啦！',message:'终于去到了久违的地方，还记得日落时牵着她的手在码头散步。',imgs:[
-  'https://lestoy.com/love/IMG_20250409_181930.jpg',
-  'https://lestoy.com/love/IMG_20250304_193658.jpg',
-  'https://lestoy.com/love/IMG_20250304_180401_1.jpg',
-  'https://lestoy.com/love/IMG_20250304_193420.jpg',
-  'https://lestoy.com/love/IMG_20250304_152135.jpg',
-  'https://lestoy.com/love/IMG_20250304_144501.jpg',
-  ]},
 
-{
-  date: '2024-08-10',
-  title: '这次我们赴约，去了罗卡角',
-  message: '去吃了东方滋味，感觉还不错。那天阳光很好，我们终于一起站在了欧洲大陆的最西端。只不过这个小笨蛋忘记了自己的锁屏密码。',
-  imgs: [
-    'https://lestoy.com/love/IMG_20240811_170916.jpg',
-    'https://lestoy.com/love/IMG_20240811_214451.jpg'
-  ]
-},    
+const birthdays = ['02-01','04-06'];
 
-  ];
+/* ========= 初始化 ========= */
+document.getElementById('daysTogether').textContent = Math.floor((Date.now() - startDate)/864e5);
+milestones.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-/* ===== 计时 ===== */
-function updateCounter(){
-  const now=new Date(),days=Math.floor((now-startDate)/864e5);
-  document.getElementById('daysTogether').textContent=days;
-  let years=now.getFullYear()-startDate.getFullYear();
-  if(now.getMonth()<startDate.getMonth()||(now.getMonth()===startDate.getMonth()&&now.getDate()<startDate.getDate()))years--;
-  document.getElementById('yearsTogether').textContent=`在一起约 ${years} 年`;
+/* ========= 懒加载核心 ========= */
+const BATCH_SIZE = 30;
+let rendered = 0;
+const wrap = document.getElementById('milestoneContainer');
+const cardMap = {};
+milestones.forEach(m => cardMap[m.date] = null);
+
+/* ——— ① 先创建 IntersectionObserver（关键修复） ——— */
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>e.isIntersecting && e.target.classList.add('visible'));
+},{threshold:.15});
+
+/* ——— ①-b 可视卡片同步 Observer ——— */
+const viewObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      selectedDate = entry.target.dataset.date;               // 跟踪当前卡片日期
+      calMonth     = new Date(selectedDate + 'T00:00:00');    // 为日历准备
+    }
+  });
+},{rootMargin:'-40% 0px -55% 0px'});   // 以视口中部 5% 区域作为“当前卡片”
+
+/* ——— 渲染单张卡片 ——— */
+function renderCard(m){
+  const cols = (m.imgs.length===2||m.imgs.length===4)?2:3;
+  const html = `
+    <article class="card" data-date="${m.date}">
+      <div class="card-content">
+        <h3>${m.title}</h3>
+        <time>${m.date}</time>
+        <p>${m.message}</p>
+      </div>
+      <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">
+        ${m.imgs.map(s=>`<img src="${s}" loading="lazy" class="loading" onclick="openViewer('${s}',event)">`).join('')}
+      </div>
+    </article>`;
+  wrap.insertAdjacentHTML('beforeend', html);
+  const node = wrap.lastElementChild;
+  cardMap[m.date] = node;
+  node.querySelectorAll('img').forEach(img=>img.addEventListener('load',()=>{img.classList.remove('loading');img.classList.add('loaded')}));
+  io.observe(node);          // 渐现动画
+viewObserver.observe(node);/* 同步当前可见卡片 */
 }
-updateCounter();setInterval(updateCounter,3600e3);
 
-/* ===== 渲染卡片 ===== */
-function renderMilestones(){
-  const wrap=document.getElementById('milestoneContainer');
-  milestones.forEach(m=>{
-    const cols=(m.imgs.length===2||m.imgs.length===4)?2:3;
-    wrap.insertAdjacentHTML('beforeend',`
-      <article class="card">
-        <div class="card-content"><h3>${m.title}</h3><time>${m.date}</time><p>${m.message}</p></div>
-        <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">
-          ${m.imgs.map(s=>`<img src="${s}" onclick="openViewer('${s}',event)">`).join('')}
-        </div>
-      </article>`);
+
+/* ——— 哨兵，滚动近底部继续加载 ——— */
+const sentinel = document.getElementById('sentinel');
+const bottomObserver = new IntersectionObserver(es=>{
+  if(es[0].isIntersecting) loadBatch();
+},{rootMargin:'800px'});
+bottomObserver.observe(sentinel);
+
+/* ——— 分批加载 ——— */
+function loadBatch(){
+  const next = milestones.slice(rendered, rendered+BATCH_SIZE);
+  next.forEach(renderCard);
+  rendered += next.length;
+  if(rendered >= milestones.length) bottomObserver.disconnect();
+}
+
+/* ——— ② 首屏才加载（放在 io 创建之后） ——— */
+loadBatch();
+/* ——— 滚动到指定日期（若未渲染则强制加载到可见） ——— */
+function scrollToCard(date){
+  let el = cardMap[date];
+  if(!el){
+    const idx = milestones.findIndex(m=>m.date===date);
+    if(idx===-1) return;
+    while(rendered<=idx) loadBatch();
+    el = cardMap[date];
+  }
+  const barH = document.getElementById('topbar').getBoundingClientRect().height;
+  const y = el.getBoundingClientRect().top + window.scrollY - 2*barH;
+  window.scrollTo({top:y,behavior:'smooth'});
+}
+
+/* ========= 日历 / 搜索 / 预览逻辑（与前版一致，仅略去不相关注释） ========= */
+const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let selectedDate = milestones[0].date;
+let calMonth = new Date(selectedDate+'T00:00:00');
+const calGrid = document.getElementById('calGrid'), monthLab = document.getElementById('monthLabel');
+function renderCal(base){
+  monthLab.textContent=`${base.getFullYear()} 年 ${base.getMonth()+1} 月`;
+  calGrid.innerHTML='';
+  const first = new Date(base.getFullYear(),base.getMonth(),1), startW = first.getDay()||7;
+  let cur = new Date(first);cur.setDate(cur.getDate()-(startW-1));
+  for(let i=0;i<42;i++){
+    const d=new Date(cur), key=fmt(d), cell=document.createElement('div');
+    cell.textContent=d.getDate(); cell.dataset.date=key;
+    if(d.getMonth()!==base.getMonth()) cell.classList.add('other');
+    if(birthdays.includes(key.slice(5))) cell.classList.add('birthday');
+    if(cardMap[key]!==undefined) cell.classList.add('hasData');
+    if(key===selectedDate) cell.classList.add('selected');
+    calGrid.appendChild(cell); cur.setDate(cur.getDate()+1);
+  }
+}
+renderCal(calMonth);
+document.getElementById('prevM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth)};
+document.getElementById('nextM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth)};
+calGrid.onclick = e=>{const d=e.target.dataset.date;if(!d) return;selectedDate=d;renderCal(calMonth);hideModal();scrollToCard(d)};
+
+
+/* 搜索 */
+const sModal=document.getElementById('searchModal'), sInput=document.getElementById('searchInput'), sList=document.getElementById('resultList');
+document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('')};
+sInput.oninput=()=>filter(sInput.value.trim());
+function filter(q){
+  sList.innerHTML='';
+  if(!q){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">我们俩的美好瞬间...</li>';return;}
+  const re=new RegExp(q,'i');
+  const hits=milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!hits.length){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">没有找到这个瞬间...</li>';return;}
+  hits.forEach(m=>{
+    const li=document.createElement('li');
+    li.innerHTML=`${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;
+    li.onclick=()=>{hideModal();scrollToCard(m.date)};
+    sList.appendChild(li);
   });
 }
-renderMilestones();
 
-/* ===== 预览逻辑 ===== */
-let imgs=[],current=0,startX=0,startY=0,deltaX=0;
-let imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;
+/* 模态开关 */
+const cModal=document.getElementById('calendarModal');
+function hideModal(e){if(!e||e.target.classList.contains('modal')){cModal.classList.remove('show');sModal.classList.remove('show');quick.style.display='none'}}
+document.getElementById('openCalendar').onclick = ()=>{
+  renderCal(calMonth);     // 保证月份 / 选中状态是最新的
+  cModal.classList.add('show');
+};
 
+/* 预览层（保持原实现） */
+let imgs=[],current=0,startX=0,startY=0,deltaX=0,imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;
 const viewer=document.getElementById('viewer'),carousel=document.getElementById('carousel'),counter=document.getElementById('imgCounter');
-
-function openViewer(src,e){
-  e.preventDefault();
-  imgs=[...e.target.closest('.card').querySelectorAll('.image-grid img,.banner img')].map(i=>i.src);
-  current=imgs.indexOf(src);
-  carousel.innerHTML=imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');
-  viewer.style.display='block';requestAnimationFrame(()=>viewer.classList.add('visible'));
-  updateCarousel(true);
-}
-function updateCarousel(noAnim=false){
-  carousel.style.transition=noAnim?'none':'transform .3s ease';
-  carousel.style.transform=`translateX(-${current*100}vw)`;
-  counter.textContent=`${current+1}/${imgs.length}`;
-  resetTransform();
-}
+function openViewer(src,e){e.preventDefault();imgs=[...e.target.closest('.card').querySelectorAll('img')].map(i=>i.src);current=imgs.indexOf(src);carousel.innerHTML=imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');viewer.style.display='block';requestAnimationFrame(()=>viewer.classList.add('visible'));updateCarousel(true)}
+function updateCarousel(noAnim=false){carousel.style.transition=noAnim?'none':'transform .3s ease';carousel.style.transform=`translateX(-${current*100}vw)`;counter.textContent=`${current+1}/${imgs.length}`;resetTransform()}
 function resetTransform(){imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;getImg().style.transform='translate(0,0) scale(1)'}
 function getImg(){return carousel.children[current].querySelector('img')}
 function setImgTransform(){getImg().style.transform=`translate(${panX}px,${panY}px) scale(${imgScale})`}
-
-/* 手势 */
-viewer.addEventListener('touchstart',e=>{
-  if(e.touches.length===1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;carousel.style.transition='none'}
-  else if(e.touches.length===2){pinchStartDist=dist(e.touches);lastScale=imgScale}
-},{passive:false});
-
-viewer.addEventListener('touchmove',e=>{
-  e.preventDefault();
-  const t=e.touches;
-  if(t.length===1&&imgScale===1){
-    deltaX=t[0].clientX-startX;
-    carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`;
-  }else if(t.length===1&&imgScale>1){
-    panX=lastPanX+t[0].clientX-startX;panY=lastPanY+t[0].clientY-startY;setImgTransform();
-  }else if(t.length===2){
-    imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));setImgTransform();
-  }
-},{passive:false});
-
-viewer.addEventListener('touchend',e=>{
-  if(e.touches.length===0){
-    if(Math.abs(deltaX)>50&&imgScale===1){
-      if(deltaX>0&&current>0)current--;else if(deltaX<0&&current<imgs.length-1)current++;
-    }
-    carousel.style.transition='transform .3s ease';
-    if(imgScale===1)updateCarousel();else{lastPanX=panX;lastPanY=panY}
-  }else if(e.touches.length===1&&imgScale>1){
-    startX=e.touches[0].clientX;startY=e.touches[0].clientY;
-  }
-},{passive:false});
-
+viewer.addEventListener('touchstart',e=>{if(e.touches.length===1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;carousel.style.transition='none'}else if(e.touches.length===2){pinchStartDist=dist(e.touches);lastScale=imgScale}},{passive:false});
+viewer.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches;if(t.length===1&&imgScale===1){deltaX=t[0].clientX-startX;carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`}else if(t.length===1&&imgScale>1){panX=lastPanX+t[0].clientX-startX;panY=lastPanY+t[0].clientY-startY;setImgTransform()}else if(t.length===2){imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));setImgTransform()}},{passive:false});
+viewer.addEventListener('touchend',e=>{if(e.touches.length===0){if(Math.abs(deltaX)>50&&imgScale===1){if(deltaX>0&&current>0)current--;else if(deltaX<0&&current<imgs.length-1)current++;}carousel.style.transition='transform .3s ease';imgScale===1?updateCarousel():(lastPanX=panX,lastPanY=panY);}else if(e.touches.length===1&&imgScale>1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;}},{passive:false});
 function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
+function closeViewer(){viewer.classList.remove('visible');setTimeout(()=>viewer.style.display='none',250)}
 
-/* 关闭 */
-function closeViewer(){
-  viewer.classList.remove('visible');
-  setTimeout(()=>viewer.style.display='none',250);
-}
-
-
+/* 快速选年月（与之前一致） */
+const quick=document.getElementById('quickYM'),ys=document.getElementById('yearSel'),ms=document.getElementById('monthSel');
+function buildYM(){if(!ys.childElementCount){const now=new Date().getFullYear();for(let y=now-5;y<=now+5;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);for(let m=1;m<=12;m++)ms.insertAdjacentHTML('beforeend',`<option>${m}</option>`);}ys.value=calMonth.getFullYear();ms.value=calMonth.getMonth()+1;}
+monthLab.onclick=()=>{quick.style.display=quick.style.display?'':'block';buildYM();};
+document.getElementById('applyYM').onclick=()=>{calMonth=new Date(+ys.value,+ms.value-1,1);renderCal(calMonth);quick.style.display='none';};
 </script>
 </body>
 </html>
