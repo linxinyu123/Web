@@ -331,7 +331,7 @@ function closeViewer(){viewer.classList.remove('visible');setTimeout(()=>viewer.
 
 /* 快速选年月（与之前一致） */
 const quick=document.getElementById('quickYM'),ys=document.getElementById('yearSel'),ms=document.getElementById('monthSel');
-function buildYM(){if(!ys.childElementCount){const now=new Date().getFullYear();for(let y=now-5;y<=now+5;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);for(let m=1;m<=12;m++)ms.insertAdjacentHTML('beforeend',`<option>${m}</option>`);}ys.value=calMonth.getFullYear();ms.value=calMonth.getMonth()+1;}
+function buildYM(){if(!ys.childElementCount){const now=new Date().getFullYear();for(let y=now-1;y<=now+85;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);for(let m=1;m<=12;m++)ms.insertAdjacentHTML('beforeend',`<option>${m}</option>`);}ys.value=calMonth.getFullYear();ms.value=calMonth.getMonth()+1;}
 monthLab.onclick=()=>{quick.style.display=quick.style.display?'':'block';buildYM();};
 document.getElementById('applyYM').onclick=()=>{calMonth=new Date(+ys.value,+ms.value-1,1);renderCal(calMonth);quick.style.display='none';};
 </script>
