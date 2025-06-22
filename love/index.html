@@ -9,7 +9,8 @@
 :root{
   --primary:#ffafcc;
   --birthday:#FE5090;
-  --bg:#fff;--text:#333;
+  --bg:#fff;
+  --text:#333;
   --gutter:1rem;
   --topH:3.2rem;
 }
@@ -53,6 +54,7 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
 .box{background:var(--bg);border-radius:.85rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}
 @keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}
 
+/* ——— 日历 ——— */
 .calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}
 .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem}
 .cal-head span{cursor:pointer}
@@ -63,6 +65,118 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
 .cal-grid div.birthday{background:var(--birthday);color:#fff}
 .cal-grid div.selected{background:var(--primary);color:#fff}
 
+#quickYM {
+  background: #f9f9f9;
+  padding: .5rem;
+  border-radius: .6rem;
+  font-size: .88rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .4rem;  
+}
+
+
+.select-wrap {
+  position: relative;
+  min-width: 88px; /* 或者与 select 宽度一致 */
+  flex-shrink: 0;
+}
+.select-wrap select {
+  appearance: none;
+  padding: .35rem .7rem;
+  padding-right: 1.6rem;
+  font-size: .9rem;
+  border: 1.5px solid #ccc;
+  border-radius: .45rem;
+  background-color: #fff;
+  color: var(--text);
+  outline: none;
+  width: 86px;
+}
+
+.month-wrap select {
+  width: 60px;  /* 原来是 86px，这里缩小为一半左右 */
+}
+
+.select-wrap select:focus {
+  border-color: var(--primary);
+}
+
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(270deg);
+  width: .85rem;
+  height: .85rem;
+  background: url('https://lestoy.com/love/back.svg') no-repeat center center;
+  background-size: contain;
+}
+
+.month-wrap::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(270deg);
+  width: .85rem;
+  height: .85rem;
+  background: url('https://lestoy.com/love/back.svg') no-repeat center center;
+  background-size: contain;
+}
+
+#applyYM {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: .45rem;
+  padding: .41rem .8rem;
+  font-size: .88rem;
+  cursor: pointer;: 0;  
+}
+
+.cal-head button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-head button img {
+  width: 1.2rem;
+  height: 1.2rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+#prevM img, #nextM img {
+  width: 1.1rem;
+  height: 1.1rem;
+  pointer-events: none;
+  user-select: none;
+  background: none;
+}
+
+/* 左箭头保留原样（默认就是向左） */
+.rotate-left {
+  transform: rotate(0deg);
+}
+
+/* 右箭头翻转 180° */
+.rotate-right {
+  transform: rotate(180deg);
+}
+
+/* ———搜索——— */
 #searchInput{width:calc(100% - 2rem);margin:1.1rem 1rem .5rem;padding:.65rem 1rem;border:1.5px solid var(--primary);border-radius:.7rem;font-size:1rem;outline:none;transition:border-color .25s}
 #searchInput:focus{border-color:var(--primary)}
 #resultList{list-style:none;margin:0 1rem 1.2rem;padding:0;max-height:60vh;overflow:auto}
@@ -117,19 +231,26 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 <div id="calendarModal" class="modal" onclick="hideModal(event)">
   <div class="box calendar" onclick="event.stopPropagation()">
     <div class="cal-head">
-      <button id="prevM" style="border:none;background:none;font-size:1.4rem">‹</button>
+        <button id="prevM">
+  <img src="https://lestoy.com/love/back.svg" alt="prev" class="rotate-left">
+</button>    
       <span id="monthLabel"></span>
-      <button id="nextM" style="border:none;background:none;font-size:1.4rem">›</button>
+      <button id="nextM">
+  <img src="https://lestoy.com/love/back.svg" alt="next" class="rotate-right">
+</button>
     </div>
-    <div id="quickYM" style="display:none;margin-bottom:.7rem;text-align:center">
-      <select id="yearSel"></select>
-      <select id="monthSel"></select>
-      <button id="applyYM" style="margin-left:.4rem">确定</button>
-    </div>
+<div id="quickYM" style="display:none;margin-bottom:.7rem;text-align:center">
+  <div class="select-wrap">
+    <select id="yearSel"></select>
+  </div>
+<div class="select-wrap month-wrap">
+  <select id="monthSel"></select>
+</div>
+  <button id="applyYM" style="margin-left:.4rem">确定</button>
+</div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
 </div>
-
 <!-- 搜索模态 -->
 <div id="searchModal" class="modal" onclick="hideModal(event)">
   <div class="box" style="width:360px;max-width:92vw" onclick="event.stopPropagation()">
@@ -336,4 +457,6 @@ monthLab.onclick=()=>{quick.style.display=quick.style.display?'':'block';buildYM
 document.getElementById('applyYM').onclick=()=>{calMonth=new Date(+ys.value,+ms.value-1,1);renderCal(calMonth);quick.style.display='none';};
 </script>
 </body>
+</html>
+>
 </html>
