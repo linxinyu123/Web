@@ -234,6 +234,24 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
   display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
 
+/* —— Loading 遮罩 & 圆环 —— */
+.loader{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(1px);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1200;           /* 盖过弹窗 */
+  visibility:hidden;      /* 默认隐藏 */
+}
+.loader.show{visibility:visible}
+.loader::after{
+  content:'';
+  width:46px;height:46px;
+  border:4px solid var(--primary);
+  border-top-color:transparent;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -321,6 +339,8 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
     </div>
   </div>
 </div>
+
+
 
 <script>
 const workerBase = 'https://square-salad-a885.lin968668171.workers.dev';
@@ -623,64 +643,88 @@ const fileToB64 = f => new Promise((res,rej)=>{
   r.readAsDataURL(f);
 });
 
-/* 真正保存并上传 */
-async function handleSave(){
-  const date    = fDate.value.trim();
-  const title   = fTitle.value.trim();
-  const message = fMsg.value.trim();
-  if(!date || !title){ alert('日期和标题不能为空！'); return; }
+/* =========  真 正 保 存 并 上 传  ========= */
+async function handleSave () {
 
-  /* 1) 先把本地 File → base64 数组 */
-  const filesToSend = await Promise.all(
-    selectedFiles.map(async ({file})=>({
-      filename : `${Date.now()}_${file.name}`,
-      content  : await fileToB64(file)
-    }))
-  );
+  /* ---------- UI：打开 Loading & 禁用按钮 ---------- */
+  loading.classList.add('show');
+  const saveBtn = document.querySelector('.btn-primary');
+  saveBtn.disabled = true;
 
-  /* 2) 调用 /upload-images 拿到回写后的 GitHub 原图 URL */
-  let imgUrls = [];
-  if(filesToSend.length){
-    const r = await fetch(`${workerBase}/upload-images`,{
+  try {
+    /* —— 0. 表单校验 —— */
+    const date    = fDate.value.trim();
+    const title   = fTitle.value.trim();
+    const message = fMsg.value.trim();
+    if (!date || !title) { alert('日期和标题不能为空！'); return; }
+
+    /* —— 1. 本地文件 → base64 —— */
+    const filesToSend = await Promise.all(
+      selectedFiles.map(async ({ file }) => ({
+        filename: `${Date.now()}_${file.name}`,
+        content : await fileToB64(file)
+      }))
+    );
+
+    /* —— 2. 调用 /upload-images —— */
+    let imgUrls = [];
+    if (filesToSend.length) {
+      const r = await fetch(`${workerBase}/upload-images`, {
+        method : 'POST',
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': `Bearer ${AUTH_KEY}`
+        },
+        body : JSON.stringify({ files: filesToSend })
+      });
+
+      if (!r.ok) {
+        const err = await r.text();
+        throw new Error('图片上传失败：' + err);
+      }
+      const { urls } = await r.json();     // Worker 返回 { urls:[…] }
+      imgUrls = urls;
+    }
+
+    /* —— 3. 更新本地数组并排序 —— */
+    milestones.push({ date, title, message, imgs: imgUrls });
+    milestones.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    /* —— 4. 把新数组发给 /update-data —— */
+    const r2 = await fetch(`${workerBase}/update-data`, {
       method : 'POST',
       headers: {
         'Content-Type' : 'application/json',
         'Authorization': `Bearer ${AUTH_KEY}`
       },
-      body : JSON.stringify({files:filesToSend})
+      body: JSON.stringify({ milestones })
     });
-    const rst = await r.json();
-    if(!r.ok){ alert('图片上传失败！'); return; }
-    imgUrls = rst.urls;          // ← Worker 返回 {urls:[…]}
+
+    const { ok, msg } = await r2.json();
+    if (!ok) throw new Error(msg || '更新数据失败！');
+
+    /* —— 5. 重新渲染前端 —— */
+    wrap.innerHTML = '';
+    rendered = 0;
+    Object.keys(cardMap).forEach(k => delete cardMap[k]);
+    loadBatch();
+
+    /* —— 成功提示 & 复位 —— */
+    closeEditor();
+    selectedFiles = [];
+    alert('✅ 已保存到 GitHub！');
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message || '保存失败，请重试！');
+  } finally {
+    /* ---------- UI：关闭 Loading & 还原按钮 ---------- */
+    loading.classList.remove('show');
+    saveBtn.disabled = false;
   }
-
-  /* 3) 把新卡片塞到数组里并排序 */
-  milestones.push({date,title,message,imgs:imgUrls});
-  milestones.sort((a,b)=>new Date(b.date)-new Date(a.date));
-
-  /* 4) 把整个 milestones 数组发给 /update-data */
-  const r2 = await fetch(`${workerBase}/update-data`,{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':`Bearer ${AUTH_KEY}`
-    },
-    body: JSON.stringify({milestones})
-  });
-// ③ 调整 handleSave 中这一段
-const {ok} = await r2.json();
-if(!ok){
-  alert('更新数据失败！');
-  return;
 }
 
-  /* 5) 前端重新渲染 */
-  wrap.innerHTML=''; rendered=0; Object.keys(cardMap).forEach(k=>delete cardMap[k]);
-  loadBatch();
-  closeEditor();
-  selectedFiles = [];
-  alert('✅ 已保存到 GitHub！');
-}
 </script>
+<div class="loader" id="loading"></div>
 </body>
 </html>
