@@ -787,19 +787,22 @@ async function handleSave () {
 const filesToSend = [];
 
 for (const { file } of selectedFiles) {
-  // 1) 原图
+  /* ① 原图：文件名保持用户原样 */
+  const originB64 = await fileToB64(file);
   filesToSend.push({
-  filename: `${Date.now()}_${file.name}`,          // ← 这里
-  content : await fileToB64(file)
-});
+    filename: file.name,          // ← 去掉时间戳
+    content : originB64
+  });
 
-const thumbName = file.name.replace(/\.(\w+)$/, '_thumb.$1');
-filesToSend.push({
-  filename: `${Date.now()}_${thumbName}`,          // ← 这里
-  content : thumbB64
-});
-
+  /* ② 预览图：原名加 _thumb，再压 70% + 80% 质量 */
+  const thumbName = file.name.replace(/\.(\w+)$/, '_thumb.$1');
+  const thumbB64  = await compressAndEncode(file, 0.7, 0.8);
+  filesToSend.push({
+    filename: thumbName,          // ← 同样不加时间戳
+    content : thumbB64
+  });
 }
+
 
 
     /* —— 2. 调用 /upload-images —— */
