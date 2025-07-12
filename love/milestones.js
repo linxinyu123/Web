@@ -1,5 +1,18 @@
 const milestones = [
   {
+    "date": "2025-04-06",
+    "title": "她的生日，我们身边有对方",
+    "message": "这顿晚餐去吃了日料，有你，有笑，有喜欢的食物。还给她拍了张照片，能陪你过生日，就是我最大的幸运。",
+    "imgs": [
+      "https://lestoy.com/love/imgs/1000035819.jpg",
+      "https://lestoy.com/love/imgs/1000035822.jpg",
+      "https://lestoy.com/love/imgs/1000035820.jpg",
+      "https://lestoy.com/love/imgs/1000035825.jpg",
+      "https://lestoy.com/love/imgs/1000035824.jpg",
+      "https://lestoy.com/love/imgs/1000035823.jpg"
+    ]
+  },
+  {
     "date": "2025-03-04",
     "title": "我们一起去Cascais啦！",
     "message": "终于去到了久违的地方，还记得日落时牵着她的手在码头散步。",
