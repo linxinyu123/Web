@@ -41,6 +41,10 @@ main{max-width:900px;margin:0 auto;padding:0 1rem}
 /* ——— 图片 skeleton & fade-in ——— */
 .image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}
 .image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}
+.image-grid img.loaded, .banner img.loaded {
+  animation: none !important;
+}
+
 @keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}
 .banner img{height:200px;aspect-ratio:auto}
@@ -64,6 +68,24 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
 .cal-grid div.hasData{outline:2px solid var(--primary);outline-offset:-2px}
 .cal-grid div.birthday{background:var(--birthday);color:#fff}
 .cal-grid div.selected{background:var(--primary);color:#fff}
+
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--topH);
+  font-weight: 600;
+  font-size: 1.05rem;
+  border-bottom: 1px solid #0001;
+
+  /* 新增毛玻璃效果 */
+  background: rgba(255, 255, 255, 0.75); /* 半透明白 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); /* 兼容 Safari */
+}
 
 #quickYM {
   background: #f9f9f9;
@@ -308,13 +330,17 @@ function renderCard(m){
         <p>${m.message}</p>
       </div>
       <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">
-        ${m.imgs.map(s=>`<img src="${s}" loading="lazy" class="loading" onclick="openViewer('${s}',event)">`).join('')}
+        ${m.imgs.map(s=>`<img src="${s}"  class="loading" onclick="openViewer('${s}',event)">`).join('')}
       </div>
     </article>`;
   wrap.insertAdjacentHTML('beforeend', html);
   const node = wrap.lastElementChild;
   cardMap[m.date] = node;
-  node.querySelectorAll('img').forEach(img=>img.addEventListener('load',()=>{img.classList.remove('loading');img.classList.add('loaded')}));
+  node.querySelectorAll('img').forEach(img=>img.addEventListener('load', () => {
+  if (!img.classList.contains('loaded')) {
+    img.classList.remove('loading');
+    img.classList.add('loaded');
+  }}));
   io.observe(node);          // 渐现动画
 viewObserver.observe(node);/* 同步当前可见卡片 */
 }
