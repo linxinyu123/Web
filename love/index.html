@@ -532,7 +532,7 @@ const quick=document.getElementById('quickYM'),ys=document.getElementById('yearS
 function buildYM(){
   if(!ys.childElementCount){
     const now=new Date().getFullYear();
-    for(let y=now-1;y<=now+85;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);
+    for(let y=now-1;y<=now+10000;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);
     for(let m=1;m<=12;m++)ms.insertAdjacentHTML('beforeend',`<option>${m}</option>`);
   }
   ys.value=calMonth.getFullYear();
