@@ -29,8 +29,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC
 /* ——— 卡片列表 / 卡片 ——— */
 main{max-width:900px;margin:0 auto;padding:0 1rem}
 .milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;
-      scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}
+.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}
 .card.visible{opacity:1;transform:translateY(0)}
 .card-content{padding:1rem 1.25rem .75rem}
 .card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}
@@ -41,10 +40,6 @@ main{max-width:900px;margin:0 auto;padding:0 1rem}
 /* ——— 图片 skeleton & fade-in ——— */
 .image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}
 .image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}
-.image-grid img.loaded, .banner img.loaded {
-  animation: none !important;
-}
-
 @keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}
 .banner img{height:200px;aspect-ratio:auto}
@@ -68,6 +63,7 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
 .cal-grid div.hasData{outline:2px solid var(--primary);outline-offset:-2px}
 .cal-grid div.birthday{background:var(--birthday);color:#fff}
 .cal-grid div.selected{background:var(--primary);color:#fff}
+
 
 #quickYM {
   background: #f9f9f9;
@@ -373,15 +369,16 @@ const io = new IntersectionObserver(entries=>{
   entries.forEach(e=>e.isIntersecting && e.target.classList.add('visible'));
 },{threshold:.15});
 
-/* ——— ①-b 可视卡片同步 Observer ——— */
+/* ——— 当前卡片追踪 Observer ——— */
+let selectedDate;
 const viewObserver = new IntersectionObserver(entries=>{
   entries.forEach(entry=>{
     if(entry.isIntersecting){
-      selectedDate = entry.target.dataset.date;               // 跟踪当前卡片日期
-      calMonth     = new Date(selectedDate + 'T00:00:00');    // 为日历准备
+      selectedDate = entry.target.dataset.date;
+      calMonth     = new Date(selectedDate + 'T00:00:00');
     }
   });
-},{rootMargin:'-40% 0px -55% 0px'});   // 以视口中部 5% 区域作为“当前卡片”
+},{rootMargin:'-40% 0px -55% 0px'});
 
 /* ——— 渲染单张卡片 ——— */
 function renderCard(m){
@@ -448,58 +445,86 @@ function scrollToCard(date){
   window.scrollTo({top:y,behavior:'smooth'});
 }
 
-/* ========= 日历 / 搜索 / 预览逻辑（与前版一致，仅略去不相关注释） ========= */
-const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-let selectedDate = milestones[0].date;
-let calMonth = new Date(selectedDate+'T00:00:00');
-const calGrid = document.getElementById('calGrid'), monthLab = document.getElementById('monthLabel');
+/* ========= 日历 / 搜索 / 预览 ========= */
+const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+let calMonth = new Date(milestones[0].date + 'T00:00:00');
+const calGrid  = document.getElementById('calGrid');
+const monthLab = document.getElementById('monthLabel');
+
 function renderCal(base){
-  monthLab.textContent=`${base.getFullYear()} 年 ${base.getMonth()+1} 月`;
+  monthLab.textContent = `${base.getFullYear()} 年 ${base.getMonth()+1} 月`;
   calGrid.innerHTML='';
-  const first = new Date(base.getFullYear(),base.getMonth(),1), startW = first.getDay()||7;
-  let cur = new Date(first);cur.setDate(cur.getDate()-(startW-1));
+  const first = new Date(base.getFullYear(), base.getMonth(), 1);
+  const startW = first.getDay() || 7;
+  let cur = new Date(first);
+  cur.setDate(cur.getDate() - (startW - 1));
+
   for(let i=0;i<42;i++){
-    const d=new Date(cur), key=fmt(d), cell=document.createElement('div');
-    cell.textContent=d.getDate(); cell.dataset.date=key;
+    const d   = new Date(cur);
+    const key = fmt(d);
+    const cell = document.createElement('div');
+    cell.textContent = d.getDate();
+    cell.dataset.date = key;
     if(d.getMonth()!==base.getMonth()) cell.classList.add('other');
     if(birthdays.includes(key.slice(5))) cell.classList.add('birthday');
     if(cardMap[key]!==undefined) cell.classList.add('hasData');
     if(key===selectedDate) cell.classList.add('selected');
-    calGrid.appendChild(cell); cur.setDate(cur.getDate()+1);
+    calGrid.appendChild(cell);
+    cur.setDate(cur.getDate()+1);
   }
 }
+
 renderCal(calMonth);
+
+/* 日历导航 */
+
 document.getElementById('prevM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth)};
 document.getElementById('nextM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth)};
-calGrid.onclick = e=>{const d=e.target.dataset.date;if(!d) return;selectedDate=d;renderCal(calMonth);hideModal();scrollToCard(d)};
-
+calGrid.onclick = e=>{
+  const d = e.target.dataset.date;
+  if(!d) return;
+  selectedDate = d;
+  renderCal(calMonth);
+  hideModal();
+  scrollToCard(d);
+};
 
 /* 搜索 */
-const sModal=document.getElementById('searchModal'), sInput=document.getElementById('searchInput'), sList=document.getElementById('resultList');
-document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('')};
-sInput.oninput=()=>filter(sInput.value.trim());
+const sModal  = document.getElementById('searchModal');
+const sInput  = document.getElementById('searchInput');
+const sList   = document.getElementById('resultList');
+document.getElementById('openSearch').onclick = ()=>{sModal.classList.add('show');sInput.value='';filter('')};
+
+sInput.oninput = ()=>filter(sInput.value.trim());
+
 function filter(q){
-  sList.innerHTML='';
+  sList.innerHTML = '';
   if(!q){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">我们俩的美好瞬间...</li>';return;}
-  const re=new RegExp(q,'i');
-  const hits=milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const re = new RegExp(q,'i');
+  const hits = milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(!hits.length){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">没有找到这个瞬间...</li>';return;}
   hits.forEach(m=>{
-    const li=document.createElement('li');
-    li.innerHTML=`${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;
-    li.onclick=()=>{hideModal();scrollToCard(m.date)};
+    const li = document.createElement('li');
+    li.innerHTML = `${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;
+    li.onclick = ()=>{hideModal();scrollToCard(m.date)};
     sList.appendChild(li);
   });
 }
 
 /* 模态开关 */
-const cModal=document.getElementById('calendarModal');
-function hideModal(e){if(!e||e.target.classList.contains('modal')){cModal.classList.remove('show');sModal.classList.remove('show');quick.style.display='none'}}
+const cModal = document.getElementById('calendarModal');
+function hideModal(e){
+  if(!e || e.target.classList.contains('modal')){
+    cModal.classList.remove('show');
+    sModal.classList.remove('show');
+    quick.style.display='none';
+  }
+}
+
 document.getElementById('openCalendar').onclick = ()=>{
-  renderCal(calMonth);     // 保证月份 / 选中状态是最新的
+  renderCal(calMonth);
   cModal.classList.add('show');
 };
-
 
 /* 预览层 / 查看大图 */
 let imgs = [], current = 0;
