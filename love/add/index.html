@@ -7,8 +7,8 @@
 <style>
 /* ——— 全局配色 ——— */
 :root{
-  --primary:#ffafcc;
-  --birthday:#FE5090;
+  --primary:#FF7EAE;          /* 粉色主色调 */
+  --birthday:#FF9B7E;
   --bg:#fff;
   --text:#333;
   --gutter:1rem;
@@ -60,9 +60,9 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}
 .cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none}
 .cal-grid div.other{opacity:.35}
-.cal-grid div.hasData{outline:2px solid var(--primary);outline-offset:-2px}
+.cal-grid div.hasData{background:var(--primary);color:#fff}
 .cal-grid div.birthday{background:var(--birthday);color:#fff}
-.cal-grid div.selected{background:var(--primary);color:#fff}
+.cal-grid div.selected{outline:2px solid #FE5090;outline-offset:-2px}
 
 
 #quickYM {
