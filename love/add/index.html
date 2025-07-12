@@ -386,6 +386,11 @@ const viewObserver = new IntersectionObserver(entries=>{
 /* ——— 渲染单张卡片 ——— */
 function renderCard(m){
   const cols = (m.imgs.length===2||m.imgs.length===4)?2:3;
+  const imgHtml = m.imgs.map(src=>{
+    const thumb = src.replace(/(\.[a-zA-Z0-9]+)$/,'_thumb$1');
+    return `<img src="${thumb}" data-full="${src}" loading="lazy" class="loading" onclick="openViewer(this.dataset.full,event)">`;
+  }).join('');
+
   const html = `
     <article class="card" data-date="${m.date}">
       <div class="card-content">
@@ -393,20 +398,22 @@ function renderCard(m){
         <time>${m.date}</time>
         <p>${m.message}</p>
       </div>
-      <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">
-        ${m.imgs.map(s=>`<img src="${s}"  class="loading" onclick="openViewer('${s}',event)">`).join('')}
-      </div>
+      <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">${imgHtml}</div>
     </article>`;
+
   wrap.insertAdjacentHTML('beforeend', html);
   const node = wrap.lastElementChild;
   cardMap[m.date] = node;
-  node.querySelectorAll('img').forEach(img=>img.addEventListener('load', () => {
-  if (!img.classList.contains('loaded')) {
-    img.classList.remove('loading');
-    img.classList.add('loaded');
-  }}));
-  io.observe(node);          // 渐现动画
-viewObserver.observe(node);/* 同步当前可见卡片 */
+
+  node.querySelectorAll('img').forEach(img=>{
+    img.addEventListener('load',()=>{
+      img.classList.remove('loading');
+      img.classList.add('loaded');
+    });
+  });
+
+  io.observe(node);           // 渐现动画
+  viewObserver.observe(node); // 可见范围追踪
 }
 
 
@@ -493,18 +500,98 @@ document.getElementById('openCalendar').onclick = ()=>{
   cModal.classList.add('show');
 };
 
-/* 预览层（保持原实现） */
-let imgs=[],current=0,startX=0,startY=0,deltaX=0,imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;
-const viewer=document.getElementById('viewer'),carousel=document.getElementById('carousel'),counter=document.getElementById('imgCounter');
-function openViewer(src,e){e.preventDefault();imgs=[...e.target.closest('.card').querySelectorAll('img')].map(i=>i.src);current=imgs.indexOf(src);carousel.innerHTML=imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');viewer.style.display='block';requestAnimationFrame(()=>viewer.classList.add('visible'));updateCarousel(true)}
-function updateCarousel(noAnim=false){carousel.style.transition=noAnim?'none':'transform .3s ease';carousel.style.transform=`translateX(-${current*100}vw)`;counter.textContent=`${current+1}/${imgs.length}`;resetTransform()}
-function resetTransform(){imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;getImg().style.transform='translate(0,0) scale(1)'}
+
+/* 预览层 / 查看大图 */
+let imgs = [], current = 0;
+let startX=0,startY=0,deltaX=0;
+let imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;
+const viewer   = document.getElementById('viewer');
+const carousel = document.getElementById('carousel');
+const counter  = document.getElementById('imgCounter');
+const vLoader  = document.getElementById('viewerLoader');
+
+function showLoader(){vLoader.style.display='block'}
+function hideLoader(){vLoader.style.display='none'}
+
+function openViewer(src,e){
+  e.preventDefault();
+  const imgEls = [...e.target.closest('.card').querySelectorAll('img')];
+  imgs = imgEls.map(i=>i.dataset.full || i.src.replace(/_thumb(\.[a-zA-Z0-9]+)$/,'$1'));
+  current = imgs.indexOf(src);
+  carousel.innerHTML = imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');
+  viewer.style.display='block';
+  requestAnimationFrame(()=>viewer.classList.add('visible'));
+  updateCarousel(true);
+}
+
 function getImg(){return carousel.children[current].querySelector('img')}
-function setImgTransform(){getImg().style.transform=`translate(${panX}px,${panY}px) scale(${imgScale})`}
-viewer.addEventListener('touchstart',e=>{if(e.touches.length===1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;carousel.style.transition='none'}else if(e.touches.length===2){pinchStartDist=dist(e.touches);lastScale=imgScale}},{passive:false});
-viewer.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches;if(t.length===1&&imgScale===1){deltaX=t[0].clientX-startX;carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`}else if(t.length===1&&imgScale>1){panX=lastPanX+t[0].clientX-startX;panY=lastPanY+t[0].clientY-startY;setImgTransform()}else if(t.length===2){imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));setImgTransform()}},{passive:false});
-viewer.addEventListener('touchend',e=>{if(e.touches.length===0){if(Math.abs(deltaX)>50&&imgScale===1){if(deltaX>0&&current>0)current--;else if(deltaX<0&&current<imgs.length-1)current++;}carousel.style.transition='transform .3s ease';imgScale===1?updateCarousel():(lastPanX=panX,lastPanY=panY);}else if(e.touches.length===1&&imgScale>1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;}},{passive:false});
+
+function adjustLoader(){
+  const img = getImg();
+  if(img.complete){hideLoader();}
+  else{
+    showLoader();
+    img.addEventListener('load',hideLoader,{once:true});
+  }
+}
+
+function updateCarousel(noAnim=false){
+  carousel.style.transition = noAnim?'none':'transform .3s ease';
+  carousel.style.transform  = `translateX(-${current*100}vw)`;
+  counter.textContent       = `${current+1}/${imgs.length}`;
+  resetTransform();
+  adjustLoader();
+}
+
+function resetTransform(){
+  imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;
+  getImg().style.transform = 'translate(0,0) scale(1)';
+}
+
+function setImgTransform(){
+  getImg().style.transform = `translate(${panX}px,${panY}px) scale(${imgScale})`;
+}
+
+viewer.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;
+    carousel.style.transition='none';
+  }else if(e.touches.length===2){
+    pinchStartDist=dist(e.touches);lastScale=imgScale;
+  }
+},{passive:false});
+
+viewer.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const t=e.touches;
+  if(t.length===1 && imgScale===1){
+    deltaX=t[0].clientX-startX;
+    carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`;
+  }else if(t.length===1 && imgScale>1){
+    panX=lastPanX+t[0].clientX-startX;
+    panY=lastPanY+t[0].clientY-startY;
+    setImgTransform();
+  }else if(t.length===2){
+    imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));
+    setImgTransform();
+  }
+},{passive:false});
+
+viewer.addEventListener('touchend',e=>{
+  if(e.touches.length===0){
+    if(Math.abs(deltaX)>50 && imgScale===1){
+      if(deltaX>0 && current>0)               current--;
+      else if(deltaX<0 && current<imgs.length-1) current++;
+    }
+    carousel.style.transition='transform .3s ease';
+    imgScale===1 ? updateCarousel() : (lastPanX=panX,lastPanY=panY);
+  }else if(e.touches.length===1 && imgScale>1){
+    startX=e.touches[0].clientX;startY=e.touches[0].clientY;
+  }
+},{passive:false});
+
 function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
+
 function closeViewer(){viewer.classList.remove('visible');setTimeout(()=>viewer.style.display='none',250)}
 
 /* 快速选年月（与之前一致） */
@@ -651,6 +738,36 @@ const fileToB64 = f => new Promise((res,rej)=>{
   r.readAsDataURL(f);
 });
 
+
+/* ========= 工具：压缩并输出 base64 ========= */
+async function compressAndEncode(file, scale = 0.7, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = e => (img.src = e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.width  * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        blob => {
+          const fr = new FileReader();
+          fr.onload = e2 => resolve(e2.target.result.split(',')[1]); // 仅返回 base64 部分
+          fr.readAsDataURL(blob);
+        },
+        'image/jpeg',
+        quality               // 0.8 ≈ Instagram 预览质量
+      );
+    };
+  });
+}
+
 /* =========  真 正 保 存 并 上 传  ========= */
 async function handleSave () {
 
@@ -666,13 +783,24 @@ async function handleSave () {
     const message = fMsg.value.trim();
     if (!date || !title) { alert('日期和标题不能为空！'); return; }
 
-    /* —— 1. 本地文件 → base64 —— */
-    const filesToSend = await Promise.all(
-      selectedFiles.map(async ({ file }) => ({
-        filename: `${Date.now()}_${file.name}`,
-        content : await fileToB64(file)
-      }))
-    );
+/* —— 1. 本地文件 → base64（原图 + 预览） —— */
+const filesToSend = [];
+
+for (const { file } of selectedFiles) {
+  // 1) 原图
+  filesToSend.push({
+  filename: `${Date.now()}_${file.name}`,          // ← 这里
+  content : await fileToB64(file)
+});
+
+const thumbName = file.name.replace(/\.(\w+)$/, '_thumb.$1');
+filesToSend.push({
+  filename: `${Date.now()}_${thumbName}`,          // ← 这里
+  content : thumbB64
+});
+
+}
+
 
     /* —— 2. 调用 /upload-images —— */
     let imgUrls = [];
@@ -691,7 +819,8 @@ async function handleSave () {
         throw new Error('图片上传失败：' + err);
       }
       const { urls } = await r.json();     // Worker 返回 { urls:[…] }
-      imgUrls = urls;
+  imgUrls = urls.filter(u => !u.includes('_thumb.'));
+
     }
 
     /* —— 3. 更新本地数组并排序 —— */
