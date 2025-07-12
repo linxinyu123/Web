@@ -78,7 +78,7 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
   border-bottom: 1px solid #0001;
 
   /* 新增毛玻璃效果 */
-  background: rgba(255, 255, 255, 0.5); /* 半透明白 */
+  background: rgba(255, 255, 255, 0.75); /* 半透明白 */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px); /* 兼容 Safari */
 }
@@ -318,6 +318,7 @@ const viewObserver = new IntersectionObserver(entries=>{
 /* ——— 渲染单张卡片 ——— */
 function renderCard(m){
   const cols = (m.imgs.length===2||m.imgs.length===4)?2:3;
+
   const html = `
     <article class="card" data-date="${m.date}">
       <div class="card-content">
@@ -325,28 +326,36 @@ function renderCard(m){
         <time>${m.date}</time>
         <p>${m.message}</p>
       </div>
-      <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">
-        ${m.imgs.map(s=>`<img src="${s}" loading="lazy" class="loading" onclick="openViewer('${s}',event)">`).join('')}
+
+      <div class="${m.imgs.length===1?'banner':'image-grid'}"
+           style="grid-template-columns:repeat(${cols},1fr)">
+        ${m.imgs.map(src=>`
+          <img class="loading"
+               src="${src}"
+               loading="lazy"          /* 首次入屏才下载 */
+               decoding="async"        /* 解码走空闲线程 */
+               fetchpriority="low"     /* 不抢关键资源带宽 */
+               onclick="openViewer('${src}',event)">`).join('')}
       </div>
     </article>`;
+
   wrap.insertAdjacentHTML('beforeend', html);
   const node = wrap.lastElementChild;
   cardMap[m.date] = node;
+
+  /* 图片加载完：去 skeleton + 去 loading 属性 → 不再被回收 */
   node.querySelectorAll('img').forEach(img=>{
-    const done = () => {
+    const done=()=>{
       img.classList.remove('loading');
       img.classList.add('loaded');
-      img.removeAttribute('loading');   // 关键：只保留已加载的像素，浏览器就不会再回收
-      img.removeEventListener('load', done); // 清理
+      img.removeAttribute('loading');
+      img.removeEventListener('load',done);
     };
-    if (img.complete) {                 // 如果文件已在缓存里
-      done();
-    } else {
-      img.addEventListener('load', done);
-    }
+    img.complete ? done() : img.addEventListener('load',done);
   });
-  io.observe(node);          // 渐现动画
-viewObserver.observe(node);/* 同步当前可见卡片 */
+
+  io.observe(node);          // 渐显动画（只加一次 .visible）
+  viewObserver.observe(node);/* 同步日历当前卡片 */
 }
 
 
@@ -489,3 +498,4 @@ document.getElementById('applyYM').onclick = () => {
 </script>
 </body>
 </html>
+
