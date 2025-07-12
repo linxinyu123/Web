@@ -1,5 +1,18 @@
 const milestones = [
   {
+    "date": "2025-04-25",
+    "title": "这次去了海滩！",
+    "message": "某人拿着小拍疯狂拍照📸，阳光照射下，时间仿佛都慢了下来，只剩我们和这一刻的美好，她看海，我看她。海不饿，我们饿，然后去了KFC🤩\\n注:避雷火锅",
+    "imgs": [
+      "https://lestoy.com/love/imgs/1000035841.jpg",
+      "https://lestoy.com/love/imgs/1000035843.jpg",
+      "https://lestoy.com/love/imgs/1000035840.jpg",
+      "https://lestoy.com/love/imgs/1000035844.jpg",
+      "https://lestoy.com/love/imgs/1000035846.jpg",
+      "https://lestoy.com/love/imgs/1000035845.jpg"
+    ]
+  },
+  {
     "date": "2025-04-06",
     "title": "她的生日，我们身边有对方",
     "message": "这顿晚餐去吃了日料，有你，有笑，有喜欢的食物。还给她拍了张照片，能陪你过生日，就是我最大的幸运。",
