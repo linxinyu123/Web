@@ -209,7 +209,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 .fab{position:fixed;right:1.4rem;bottom:1.6rem;z-index:300;width:3.6rem;height:3.6rem;
      border:none;border-radius:50%;background:var(--primary);color:#fff;font-size:2.2rem;
      display:flex;align-items:center;justify-content:center;cursor:pointer;
-     box-shadow:0 4px 12px rgba(0,0,0,.25);transition:background .3s}
+     box-shadow:0 4px 12px rgba(152, 70, 70, 0.25);transition:background .3s}
 .fab:hover{background:#ff9fca}
 
 #editModal .box{width:92vw;max-width:440px;padding:1.2rem}
@@ -222,7 +222,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 
 #editModal .actions{display:flex;gap:.9rem;margin-top:1rem}
 #editModal .actions button{flex:1;padding:.6rem 0;border:none;border-radius:.5rem;font-size:.95rem;cursor:pointer}
-.btn-primary{background:var(--primary);color:#fff}
+.btn-primary{background:#FE4F8F;color:#fff}
 .btn-secondary{background:#eee}
  /* —— 预览项：可删 & 可拖 —— */
 .preview-item{position:relative;cursor:grab}
@@ -318,7 +318,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 <!-- —— 添加 / 编辑弹窗 —— -->
 <div id="editModal" class="modal" onclick="closeEditor(event)">
   <div class="box" onclick="event.stopPropagation()">
-    <h3 id="editorTitle">添加卡片</h3>
+    <h3 id="editorTitle">添加动态</h3>
 
     <label>日期</label>
     <input id="fDate" placeholder="YYYY-MM-DD">
@@ -329,7 +329,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
     <label>内容</label>
     <textarea id="fMsg" rows="4" placeholder="说点什么…"></textarea>
 
-    <label>图片（可多选）</label>
+    <label>图片(最多12张)</label>
     <input type="file" id="fImgs" multiple accept="image/*">
     <div id="imgPreview"></div>
 
@@ -907,11 +907,11 @@ imgUrls = urls
     /* —— 成功提示 & 复位 —— */
     closeEditor();
     selectedFiles = [];
-    alert('✅ 已保存到 GitHub！');
+    alert('成功发布动态！');
 
   } catch (err) {
     console.error(err);
-    alert(err.message || '保存失败，请重试！');
+    alert(err.message || '发布失败，请重试！');
   } finally {
     /* ---------- UI：关闭 Loading & 还原按钮 ---------- */
     loading.classList.remove('show');
