@@ -345,6 +345,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 <script>
 const workerBase = 'https://square-salad-a885.lin968668171.workers.dev';
 const AUTH_KEY   = 'mySecret123';        // 要与 Worker 的 SECRET_KEY 完全一致
+const IMG_ROOT   = 'https://lestoy.com/love/imgs/';
 </script>
 
 <script src="https://lestoy.com/love/milestones.js"></script>
@@ -846,8 +847,15 @@ for (const { file } of selectedFiles) {
         const err = await r.text();
         throw new Error('图片上传失败：' + err);
       }
-      const { urls } = await r.json();     // Worker 返回 { urls:[…] }
-  imgUrls = urls.filter(u => !u.includes('_thumb.'));
+const { urls } = await r.json();
+
+// 把 Worker 返回的「文件名或相对路径」 → 绝对地址
+imgUrls = urls
+  .filter(u => !u.includes('_thumb.'))          // ① 去掉缩略图
+  .map(u => u.startsWith('http')                // ② 已是完整 URL 就直接要
+          ? u
+          : IMG_ROOT + u.replace(/^\.?\/*/, ''));  // ③ 否则拼前缀
+
 
     }
 
