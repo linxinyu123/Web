@@ -77,20 +77,8 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
   align-items: center;
   gap: .4rem;  
   transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  transform: scale(0.95);
+
   display: none;
-}
-
-#quickYM.show {
-  display: flex;
-  opacity: 1;
-  transform: scale(1);
-}
-
-#quickYM.hide {
-  opacity: 0;
-  transform: scale(0.95);
 }
 
 .select-wrap {
@@ -249,13 +237,13 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
   <div class="box calendar" onclick="event.stopPropagation()">
     <div class="cal-head">
         <button id="prevM"><img src="https://lestoy.com/love/icones/back.svg" alt="prev" class="rotate-left"></button>
-      <span id="monthLabel"></span>
+      <span id="monthLabel">日期选择</span>
       <button id="nextM"><img src="https://lestoy.com/love/icones/back.svg" alt="next" class="rotate-right"></button>
     </div>
-    <div id="quickYM" style="display:none;margin-bottom:.7rem;text-align:center">
+    <div id="quickYM" style="display:flex;margin-bottom:.7rem;text-align:center">
       <div class="select-wrap"><select id="yearSel"></select></div>
       <div class="select-wrap month-wrap"><select id="monthSel"></select></div>
-      <button id="applyYM" style="margin-left:.4rem">确定</button>
+      <button id="applyYM" style="margin-left:.4rem">ʕ•ᴥ•ʔ</button>
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
@@ -371,10 +359,9 @@ function scrollToCard(date){
 const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 let calMonth = new Date(milestones[0].date + 'T00:00:00');
 const calGrid  = document.getElementById('calGrid');
-const monthLab = document.getElementById('monthLabel');
+
 
 function renderCal(base){
-  monthLab.textContent = `${base.getFullYear()} 年 ${base.getMonth()+1} 月`;
   calGrid.innerHTML='';
   const first = new Date(base.getFullYear(), base.getMonth(), 1);
   const startW = first.getDay() || 7;
@@ -400,8 +387,8 @@ renderCal(calMonth);
 
 /* 日历导航 */
 
-document.getElementById('prevM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth)};
-document.getElementById('nextM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth)};
+document.getElementById('prevM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth);buildYM();};
+document.getElementById('nextM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth);buildYM();};
 calGrid.onclick = e=>{
   const d = e.target.dataset.date;
   if(!d) return;
@@ -439,7 +426,6 @@ function hideModal(e){
   if(!e || e.target.classList.contains('modal')){
     cModal.classList.remove('show');
     sModal.classList.remove('show');
-    quick.style.display='none';
   }
 }
 
@@ -552,29 +538,16 @@ function buildYM(){
   ys.value=calMonth.getFullYear();
   ms.value=calMonth.getMonth()+1;
 }
-let isQuickVisible=false;
-monthLab.onclick=()=>{
-  buildYM();
-  if(!isQuickVisible){
-    quick.classList.remove('hide');
-    quick.style.display='flex';
-    requestAnimationFrame(()=>quick.classList.add('show'));
-    isQuickVisible=true;
-  }else{
-    quick.classList.remove('show');
-    quick.classList.add('hide');
-    setTimeout(()=>quick.style.display='none',150);
-    isQuickVisible=false;
-  }
-};
+renderCal(calMonth);
+buildYM();                // ★ 新增
 
-document.getElementById('applyYM').onclick=()=>{
-  calMonth=new Date(+ys.value,+ms.value-1,1);
-  renderCal(calMonth);
-  quick.classList.remove('show');
-  quick.classList.add('hide');
-  setTimeout(()=>{quick.style.display='none';isQuickVisible=false;},150);
-};
+/* ★★★ 关键：监听 change，立即刷新 ★★★ */
+function applyYM(){           // 抽成单独函数，复用
+  calMonth = new Date(+ys.value, +ms.value - 1, 1);
+  renderCal(calMonth);        // 重绘网格
+}
+ys.addEventListener('change', applyYM);
+ms.addEventListener('change', applyYM);
 
 </script>
 </body>
