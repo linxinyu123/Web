@@ -765,34 +765,55 @@ const fileToB64 = f => new Promise((res,rej)=>{
 });
 
 
-/* ========= 工具：压缩并输出 base64 ========= */
-async function compressAndEncode(file, scale = 0.7, quality = 0.8) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
+/* ========= 智能压缩并输出 base64 ========= */
+async function compressAndEncodeSmart(file) {
+  const MAX_EDGE     = 1080;        // 长边不超过 1280px（Ins 默认 1080，这里给点冗余）
+  const TARGET_BYTES = 200 * 1024;  // 缩略图目标大小 ≤ 200KB
+  const MIN_QUALITY  = 0.5;         // 不低于 0.5，否则失真明显
 
-    reader.onload = e => (img.src = e.target.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width  = img.width  * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      canvas.toBlob(
-        blob => {
-          const fr = new FileReader();
-          fr.onload = e2 => resolve(e2.target.result.split(',')[1]); // 仅返回 base64 部分
-          fr.readAsDataURL(blob);
-        },
-        'image/jpeg',
-        quality               // 0.8 ≈ Instagram 预览质量
-      );
-    };
+  // 1. 读原图
+  const imgURL = URL.createObjectURL(file);
+  const img    = await new Promise(res => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.src    = imgURL;
   });
+
+  // 2. 计算缩放比例
+  const scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
+
+  // 3. 创建 <canvas> 并绘制
+  const cvs  = document.createElement('canvas');
+  cvs.width  = img.width  * scale;
+  cvs.height = img.height * scale;
+  const ctx  = cvs.getContext('2d');
+  ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+
+  // 4. 迭代降低质量，直到满足目标大小
+  let quality = 0.85;                // 起始质量
+  let blob    = await toJpeg(cvs, quality);
+
+  while (blob.size > TARGET_BYTES && quality > MIN_QUALITY) {
+    quality -= 0.05;
+    blob     = await toJpeg(cvs, quality);
+  }
+
+  // 5. 转 base64（去掉前缀）
+  const b64 = await new Promise(res => {
+    const r  = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.readAsDataURL(blob);
+  });
+
+  URL.revokeObjectURL(imgURL);
+  return b64;
+
+  // 辅助：Canvas → JPEG Blob
+  function toJpeg(canvas, q) {
+    return new Promise(r => canvas.toBlob(b => r(b), 'image/jpeg', q));
+  }
 }
+
 
 /* =========  真 正 保 存 并 上 传  ========= */
 async function handleSave () {
@@ -821,8 +842,9 @@ for (const { file } of selectedFiles) {
   });
 
   /* ② 预览图：原名加 _thumb，再压 70% + 80% 质量 */
+
   const thumbName = file.name.replace(/\.(\w+)$/, '_thumb.$1');
-  const thumbB64  = await compressAndEncode(file, 0.7, 0.8);
+const thumbB64 = await compressAndEncodeSmart(file);
   filesToSend.push({
     filename: thumbName,          // ← 同样不加时间戳
     content : thumbB64
