@@ -332,7 +332,7 @@ document.getElementById('openCalendar').onclick=()=>{renderCal(calMonth);cModal.
   
 /* ========= 搜索 ========= */  
 const sInput=document.getElementById('searchInput'),sList=document.getElementById('resultList');  
-document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('');lockScroll(true);};  
+document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('');};  
 sInput.oninput=()=>filter(sInput.value.trim());  
 function filter(q){  
   sList.innerHTML='';  
