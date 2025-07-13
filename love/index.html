@@ -1,556 +1,397 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<title>我们的动态</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<!DOCTYPE html>  <html lang="zh-CN">  
+<head>  
+<meta charset="utf-8">  
+<title>我们的动态</title>  
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">  <style>  
+/* ——— 全局配色 ——— */  
+:root{  
+  --primary:#FF7EAE;  
+  --birthday:#FF9B7E;  
+  --bg:#fff;  
+  --text:#343434;  
+  --gutter:1rem;  
+  --topH:3.2rem;  
+}  
+/* ——— 通用重置 ——— */  
+/* 放在现有 <style> 里任意位置即可 */  
+body.noscroll{  
+  height:100vh;          /* 防止 iOS “橡皮筋” */  
+  overflow:hidden;       /* 彻底禁掉背景滚动 */  
+  overscroll-behavior:contain; /* 禁止下拉回弹把页面拉动 */  
+}  
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}  
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}  
+  
+/* ——— 顶栏 ——— */  
+#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:center;height:var(--topH);font-weight:600;font-size:1.05rem;border-bottom:1px solid #0001;background:#fff}  
+#toolbar{position:absolute;right:1rem;display:flex;gap:1rem}  
+#toolbar img{width:1.35rem;height:1.35rem;cursor:pointer}  
+  
+/* ——— 相伴天数 ——— */  
+#daysLine{text-align:center;font-size:1.2rem;font-weight:600;margin:2rem 0 1.5rem}  
+  
+/* ——— 卡片  ——— */  
+main{max-width:900px;margin:0 auto;padding:0 1rem}  
+.milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}  
+.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}  
+.card.visible{opacity:1;transform:translateY(0)}  
+.card-content{padding:1rem 1.25rem .75rem}  
+.card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}  
+.card-content time{display:block;font-size:.9rem;color:#555;margin-bottom:.75rem}  
+.banner,.image-grid{padding:var(--gutter)}  
+.image-grid{display:grid;gap:4px;width:100%}  
+  
+/* Skeleton + fade-in */  
+.image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}  
+.image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}  
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}  
+.image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}  
+.banner img{height:200px;aspect-ratio:auto}  
+  
+/* ——— 页脚 ——— */  
+footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}  
+  
+/* ——— 通用弹窗盒子 ——— */  
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:center;justify-content:center;z-index:999}  
+.modal.show{display:flex}  
+.box{background:var(--bg);border-radius:.9rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}  
+@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}  
+  
+/* ——— 日历主体 ——— */  
+.calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}  
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem}  
+.cal-head .ym-tap{cursor:pointer}  
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}  
+.cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none}  
+.cal-grid div.other{opacity:.35}  
+.cal-grid div.hasData{background:var(--primary);color:#fff}  
+.cal-grid div.birthday{background:var(--birthday);color:#fff}  
+.cal-grid div.selected{outline:2px solid #FE5090;outline-offset:-2px}  
+  
+/* ——— 年/月滚轮选择器 ——— */  
 
-<style>
-/* ——— 全局配色 ——— */
-:root{
-  --primary:#FF7EAE;          /* 粉色主色调 */
-  --birthday:#FF9B7E;
-  --bg:#fff;
-  --text:#343434;
-  --gutter:1rem;
-  --topH:3.2rem;
+.picker-col::-webkit-scrollbar{display:none}  
+.picker-col{
+  width: 98px;
+  height: 190px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  scroll-snap-type: y mandatory;   /* ← 新增 */
 }
-
-/* ——— 通用重置 ——— */
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-
-/* ——— 顶栏 ——— */
-#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:center;height:var(--topH);font-weight:600;font-size:1.05rem;border-bottom:1px solid #0001;background:rgba(255,255,255,1);}
-#toolbar{position:absolute;right:1rem;display:flex;gap:1rem}
-#toolbar img{width:1.35rem;height:1.35rem;cursor:pointer}
-
-/* ——— 相伴天数 ——— */
-#daysLine{text-align:center;font-size:1.2rem;font-weight:600;margin:2rem 0 1.5rem}
-
-/* ——— 卡片列表 / 卡片 ——— */
-main{max-width:900px;margin:0 auto;padding:0 1rem}
-.milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}
-.card.visible{opacity:1;transform:translateY(0)}
-.card-content{padding:1rem 1.25rem .75rem}
-.card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}
-.card-content time{display:block;font-size:.9rem;color:#555;margin-bottom:.75rem}
-.banner,.image-grid{padding:var(--gutter)}
-.image-grid{display:grid;gap:4px;width:100%}
-
-/* ——— 图片 skeleton & fade-in ——— */
-.image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}
-.image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}
-@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
-.image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}
-.banner img{height:200px;aspect-ratio:auto}
-
-/* ——— 页脚 ——— */
-footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}
-
-/* ——— 模态 / 日历 / 搜索 / 预览（与前版相同，略） ——— */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:center;justify-content:center;z-index:999}
-.modal.show{display:flex}
-.box{background:var(--bg);border-radius:.85rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}
-@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}
-
-/* ——— 日历 ——— */
-.calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}
-.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem}
-.cal-head span{cursor:pointer}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}
-.cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none}
-.cal-grid div.other{opacity:.35}
-.cal-grid div.hasData{background:var(--primary);color:#fff}
-.cal-grid div.birthday{background:var(--birthday);color:#fff}
-.cal-grid div.selected{outline:2px solid #FE5090;outline-offset:-2px}
-
-
-#quickYM {
-  background: #f9f9f9;
-  padding: .5rem;
-  border-radius: .6rem;
-  font-size: .88rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: .4rem;  
-  transition: opacity 0.3s ease, transform 0.3s ease;
-
-  display: none;
-}
-
-.select-wrap {
-  position: relative;
-  min-width: 88px; /* 或者与 select 宽度一致 */
-  flex-shrink: 0;
-}
-.select-wrap select {
-  appearance: none;
-  padding: .35rem .7rem;
-  padding-right: 1.6rem;
-  font-size: .9rem;
-  border: 1.5px solid #ccc;
-  border-radius: .45rem;
-  background-color: #fff;
-  color: var(--text);
-  outline: none;
-  width: 86px;
-}
-
-.month-wrap select {
-  width: 60px;  /* 原来是 86px，这里缩小为一半左右 */
-}
-
-.select-wrap select:focus {
-  border-color: var(--primary);
-}
-
-.select-wrap::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-  right: .75rem;
-  top: 50%;
-  transform: translateY(-50%) rotate(270deg);
-  width: .85rem;
-  height: .85rem;
-  background: url('https://lestoy.com/love/icones/back.svg') no-repeat center center;
-  background-size: contain;
-}
-
-.month-wrap::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%) rotate(270deg);
-  width: .85rem;
-  height: .85rem;
-  background: url('https://lestoy.com/love/icones/back.svg') no-repeat center center;
-  background-size: contain;
-}
-
-#applyYM {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: .45rem;
-  padding: .41rem .8rem;
-  font-size: .88rem;
-  cursor: pointer;
-}
-
-.cal-head button {
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cal-head button img {
-  width: 1.2rem;
-  height: 1.2rem;
-  pointer-events: none;
-  user-select: none;
-}
-
-#prevM img, #nextM img {
-  width: 1.1rem;
-  height: 1.1rem;
-  pointer-events: none;
-  user-select: none;
-  background: none;
-}
-
-/* 左箭头保留原样（默认就是向左） */
-.rotate-left {
-  transform: rotate(0deg);
-}
-
-/* 右箭头翻转 180° */
-.rotate-right {
-  transform: rotate(180deg);
-}
-
-/* ———搜索——— */
-#searchInput{width:calc(100% - 2rem);margin:1.1rem 1rem .5rem;padding:.65rem 1rem;border:1.5px solid var(--primary);border-radius:.7rem;font-size:1rem;outline:none;transition:border-color .25s}
-#searchInput:focus{border-color:var(--primary)}
-#resultList{list-style:none;margin:0 1rem 1.2rem;padding:0;max-height:60vh;overflow:auto}
-#resultList li{padding:.65rem .3rem;border-bottom:1px solid #0001;cursor:pointer}
-#resultList li time{font-size:.8rem;color:#666;margin-left:.4rem}
-mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
-
-
-/* ——— 预览层加载指示器 —— */
-.spinner{position:absolute;top:50%;left:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border:4px solid rgba(255,175,204,.3);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;display:none;z-index:1001}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-#viewer{position:fixed;inset:0;display:none;overflow:hidden;z-index:1000;background:rgba(0,0,0,.9);touch-action:none;opacity:0;transition:opacity .25s}
-#viewer.visible{opacity:1}
-#carousel{display:flex;height:100%;transition:transform .3s ease}
-.viewer-slide{flex:0 0 100%;display:flex;justify-content:center;align-items:center;overflow:hidden}
-.viewer-slide img{max-width:100%;max-height:100%;object-fit:contain}
-#imgCounter{position:absolute;bottom:20px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;pointer-events:none}
-
-</style>
-
-</style>
-</head>
-<body>
-
-<!-- 顶栏 -->
-<div id="topbar">
-  我们的动态
-  <div id="toolbar">
-    <img src="https://lestoy.com/love/icones/search.svg" id="openSearch" alt="搜索">
-    <img src="https://lestoy.com/love/icones/calendar.svg" id="openCalendar" alt="日历">
-  </div>
-</div>
-
-<!-- 相伴天数 -->
-<div id="daysLine">已相伴 <span id="daysTogether"></span> 天</div>
-
-<!-- 卡片列表 -->
-<main>
-  <div class="milestones" id="milestoneContainer"></div>
-  <div id="sentinel" style="height:1px"></div><!-- 懒加载哨兵 -->
-</main>
-<footer>── • ──</footer>
-
-<!-- 图片预览 -->
-<div id="viewer" onclick="closeViewer()">
-  <div id="carousel"></div>
-  <div id="viewerLoader" class="spinner"></div>
-  <div id="imgCounter">1/1</div>
-</div>
-
-<!-- 日历模态 -->
-<div id="calendarModal" class="modal" onclick="hideModal(event)">
-  <div class="box calendar" onclick="event.stopPropagation()">
-    <div class="cal-head">
-        <button id="prevM"><img src="https://lestoy.com/love/icones/back.svg" alt="prev" class="rotate-left"></button>
-      <span id="monthLabel">日期选择</span>
-      <button id="nextM"><img src="https://lestoy.com/love/icones/back.svg" alt="next" class="rotate-right"></button>
-    </div>
-    <div id="quickYM" style="display:flex;margin-bottom:.7rem;text-align:center">
-      <div class="select-wrap"><select id="yearSel"></select></div>
-      <div class="select-wrap month-wrap"><select id="monthSel"></select></div>
-      <button id="applyYM" style="margin-left:.4rem">ʕ•ᴥ</button>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-  </div>
-</div>
-
-<!-- 搜索模态 -->
-<div id="searchModal" class="modal" onclick="hideModal(event)">
-  <div class="box" style="width:360px;max-width:92vw" onclick="event.stopPropagation()">
-    <input id="searchInput" placeholder="输入关键词…">
-    <ul id="resultList"></ul>
-  </div>
-</div>
-
-<script src="https://lestoy.com/love/milestones.js"></script>
-<script>
-/* ========= 数据区 ========= */
-const startDate = new Date('2024-08-10');
-const birthdays = ['02-01','04-06'];
-
-/* ========= 初始化 ========= */
-document.getElementById('daysTogether').textContent = Math.floor((Date.now() - startDate)/864e5);
-milestones.sort((a,b)=>new Date(b.date)-new Date(a.date));
-
-/* ========= 懒加载核心 ========= */
-const BATCH_SIZE = 30;
-let rendered = 0;
-const wrap = document.getElementById('milestoneContainer');
-const cardMap = {};
-milestones.forEach(m => cardMap[m.date] = null);
-
-/* ——— IntersectionObserver：进入视口渐现 ——— */
-const io = new IntersectionObserver(entries=>{
-  entries.forEach(e=>e.isIntersecting && e.target.classList.add('visible'));
-},{threshold:.15});
-
+.picker-col div{
+  text-align:center;
+  padding:.7rem 0;
+  user-select:none;
+  cursor:pointer;
+  scroll-snap-align: center;       /* ← 新增 */
+} div.active{color:var(--primary);font-weight:600}  
+  
+.cal-head button {  
+  border: none;  
+  background: none;  
+  padding: 0;  
+  margin: 0;  
+  box-shadow: none;  
+  outline: none;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+}  
+  
+#prevM img, #nextM img {  
+  width: 1.1rem;  
+  height: 1.1rem;  
+  pointer-events: none;  
+  user-select: none;  
+  background: none;  
+}  
+  
+/* 左箭头保留原样（默认就是向左） */  
+.rotate-left {  
+  transform: rotate(0deg);  
+}  
+  
+/* 右箭头翻转 180° */  
+.rotate-right {  
+  transform: rotate(180deg);  
+}  
+/* ——— 搜索输入 ——— */  
+#searchInput{width:calc(100% - 2rem);margin:1.1rem 1rem .5rem;padding:.65rem 1rem;border:1.5px solid var(--primary);border-radius:.7rem;font-size:1rem;outline:none;transition:border-color .25s}  
+#resultList{list-style:none;margin:0 1rem 1.2rem;padding:0;max-height:60vh;overflow:auto}  
+#resultList li{padding:.65rem .3rem;border-bottom:1px solid #0001;cursor:pointer}  
+#resultList li time{font-size:.8rem;color:#666;margin-left:.4rem}  
+mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}  
+  
+/* 预览层加载指示器 */  
+.spinner{position:absolute;top:50%;left:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border:4px solid rgba(255,175,204,.3);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;display:none;z-index:1001}  
+@keyframes spin{to{transform:rotate(360deg)}}  
+#viewer{position:fixed;inset:0;display:none;overflow:hidden;z-index:1000;background:rgba(0,0,0,.9);touch-action:none;opacity:0;transition:opacity .25s}  
+#viewer.visible{opacity:1}  
+#carousel{display:flex;height:100%;transition:transform .3s ease}  
+.viewer-slide{flex:0 0 100%;display:flex;justify-content:center;align-items:center;overflow:hidden}  
+.viewer-slide img{max-width:100%;max-height:100%;object-fit:contain}  
+#imgCounter{position:absolute;bottom:20px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;pointer-events:none}  
+.rotate-left{transform:rotate(0deg)}  
+.rotate-right{transform:rotate(180deg)}  
+</style>  </head>  
+<body>  <!-- 顶栏 -->  <div id="topbar">  
+  我们的动态  
+  <div id="toolbar">  
+    <img src="https://lestoy.com/love/icones/search.svg" id="openSearch" alt="搜索">  
+    <img src="https://lestoy.com/love/icones/calendar.svg" id="openCalendar" alt="日历">  
+  </div>  
+</div>  <!-- 相伴天数 -->  <div id="daysLine">已相伴 <span id="daysTogether"></span> 天</div>  <!-- 卡片列表 -->  <main>  
+  <div class="milestones" id="milestoneContainer"></div>  
+  <div id="sentinel" style="height:1px"></div><!-- 懒加载哨兵 -->  
+</main>  
+<footer>── • ──</footer>  <!-- 图片预览 -->  <div id="viewer" onclick="closeViewer()">  
+  <div id="carousel"></div>  
+  <div id="viewerLoader" class="spinner"></div>  
+  <div id="imgCounter">1/1</div>  
+</div>  <!-- 日历主弹窗 -->  <div id="calendarModal" class="modal" onclick="hideModal(event)">  
+  <div class="box calendar" onclick="event.stopPropagation()">  
+    <div class="cal-head">  
+      <button id="prevM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-left"></button>  
+      <div>  
+        <span id="yearLabel" class="ym-tap"></span> 年  
+        <span id="monthLabel" class="ym-tap"></span> 月  
+      </div>  
+      <button id="nextM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-right"></button>  
+    </div>  
+    <div class="cal-grid" id="calGrid"></div>  
+  </div>  
+</div>  <!-- 年/月滚轮选择器弹窗 -->  <div id="pickerModal" class="modal" onclick="closePicker(event)">  
+  <div class="box" style="display:flex;gap:.9rem;padding:1rem" onclick="event.stopPropagation()">  
+    <div class="picker-col" id="yearPicker"></div>  
+    <div class="picker-col" id="monthPicker"></div>  
+  </div>  
+</div>  <!-- 搜索弹窗 -->  <div id="searchModal" class="modal" onclick="hideModal(event)">  
+  <div class="box" style="width:360px;max-width:92vw" onclick="event.stopPropagation()">  
+    <input id="searchInput" placeholder="输入关键词…">  
+    <ul id="resultList"></ul>  
+  </div>  
+</div>  <script src="https://lestoy.com/love/milestones.js"></script>  <script>  
+/* ========= 数据 & 初始化 ========= */  
+const startDate = new Date('2024-08-10');  
+const birthdays = ['02-01','04-06'];  
+document.getElementById('daysTogether').textContent =  
+  Math.floor((Date.now() - startDate)/864e5);  
+milestones.sort((a,b)=>new Date(b.date)-new Date(a.date));  
+  
+/* 工具函数：切换 body 滚动 */  
+function lockScroll(lock){  
+  document.body.classList[lock? 'add':'remove']('noscroll');  
+}  
+  
+/* ========= 懒加载 ========= */  
+const BATCH_SIZE = 30;  
+let rendered = 0;  
+const wrap = document.getElementById('milestoneContainer');  
+const cardMap = {};  
+milestones.forEach(m => cardMap[m.date] = null);  
+  
+const io = new IntersectionObserver(es=>{  
+  es.forEach(e=>e.isIntersecting&&e.target.classList.add('visible'));  
+},{threshold:.15});  
+  
+let selectedDate;  
 /* ——— 当前卡片追踪 Observer ——— */
-let selectedDate;
-const viewObserver = new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      selectedDate = entry.target.dataset.date;
-      calMonth     = new Date(selectedDate + 'T00:00:00');
-      renderCal(calMonth);
-buildYM();                // ★ 新增
+const viewObserver = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      selectedDate = e.target.dataset.date;               // ① 记录可见卡片日期
+      calMonth     = new Date(selectedDate+'T00:00:00');  // ② 对应月份
+      renderCal(calMonth);                                // ③ **立刻刷新日历 + 年月标签**
+      // syncPicker();                                    // ④ ← 如果希望弹出的滚轮同时高亮，取消这行注释
     }
   });
 },{rootMargin:'-40% 0px -55% 0px'});
+  
+function renderCard(m){  
+  const cols=(m.imgs.length===2||m.imgs.length===4)?2:(m.imgs.length===1?1:3);  
+  const imgHtml=m.imgs.map(src=>{  
+    const thumb=src.replace(/(\.[\w\d]+)$/,'_thumb$1');  
+    return `<img src="${thumb}" data-full="${src}" loading="lazy"  
+            class="loading" onclick="openViewer(this.dataset.full,event)">`;  
+  }).join('');  
+  const html=`  
+  <article class="card" data-date="${m.date}">  
+    <div class="card-content">  
+      <h3>${m.title}</h3><time>${m.date}</time><p>${m.message}</p>  
+    </div>  
+    <div class="${m.imgs.length===1?'banner':'image-grid'}"  
+         style="grid-template-columns:repeat(${cols},1fr)">${imgHtml}</div>  
+  </article>`;  
+  wrap.insertAdjacentHTML('beforeend',html);  
+  const node=wrap.lastElementChild;  
+  cardMap[m.date]=node;  
+  node.querySelectorAll('img').forEach(i=>{  
+    i.onload=()=>{i.classList.remove('loading');i.classList.add('loaded');};  
+  });  
+  io.observe(node);viewObserver.observe(node);  
+}  
+  
+const sentinel=document.getElementById('sentinel');  
+const bottomObserver=new IntersectionObserver(es=>{  
+  es[0].isIntersecting&&loadBatch();  
+},{rootMargin:'800px'});  
+bottomObserver.observe(sentinel);  
+  
+function loadBatch(){  
+  const list=milestones.slice(rendered,rendered+BATCH_SIZE);  
+  list.forEach(renderCard);  
+  rendered+=list.length;  
+  if(rendered>=milestones.length)bottomObserver.disconnect();  
+}  
+loadBatch();  
+  
+/* ========= 滚到卡片 ========= */  
+function scrollToCard(dt){  
+  let el=cardMap[dt];  
+  if(!el){  
+    const idx=milestones.findIndex(m=>m.date===dt);  
+    if(idx===-1)return;  
+    while(rendered<=idx)loadBatch();  
+    el=cardMap[dt];  
+  }  
+  const y=el.getBoundingClientRect().top+window.scrollY  
+          -2*document.getElementById('topbar').offsetHeight;  
+  window.scrollTo({top:y,behavior:'smooth'});  
+}  
+  
+/* ========= 日历 ========= */  
+const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;  
+let calMonth=new Date(milestones[0].date+'T00:00:00');  
+const calGrid=document.getElementById('calGrid'),yLab=document.getElementById('yearLabel'),mLab=document.getElementById('monthLabel');  
+  
+function renderCal(b){  
+  yLab.textContent=b.getFullYear();  
+  mLab.textContent=b.getMonth()+1;  
+  calGrid.innerHTML='';  
+  const first=new Date(b.getFullYear(),b.getMonth(),1);  
+  const startW=first.getDay()||7;  
+  let cur=new Date(first);cur.setDate(cur.getDate()-(startW-1));  
+  for(let i=0;i<42;i++){  
+    const d=new Date(cur),key=fmt(d);  
+    const div=document.createElement('div');  
+    div.textContent=d.getDate();div.dataset.date=key;  
+    if(d.getMonth()!==b.getMonth())div.classList.add('other');  
+    if(birthdays.includes(key.slice(5)))div.classList.add('birthday');  
+    if(cardMap[key]!==undefined)div.classList.add('hasData');  
+    if(key===selectedDate)div.classList.add('selected');  
+    calGrid.appendChild(div);cur.setDate(cur.getDate()+1);  
+  }  
+}  
+renderCal(calMonth);  
+  
+document.getElementById('prevM').onclick=()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth);};  
+document.getElementById('nextM').onclick=()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth);};  
+calGrid.onclick=e=>{  
+  const d=e.target.dataset.date;if(!d)return;  
+  selectedDate=d;renderCal(calMonth);hideModal();scrollToCard(d);  
+};  
+  
+/* ========= 年/月滚轮选择 ========= */  
+const pickerModal=document.getElementById('pickerModal');  
+const yPk=document.getElementById('yearPicker'),mPk=document.getElementById('monthPicker');  
+(function buildPickers(){  
+  const now=new Date().getFullYear();  
+  for(let y=now-1;y<=now+100;y++)yPk.insertAdjacentHTML('beforeend',`<div data-y="${y}">${y}</div>`);  
+  for(let m=1;m<=12;m++)mPk.insertAdjacentHTML('beforeend',`<div data-m="${m}">${m}</div>`);  
+})();  
+function syncPicker(){
+  // 1. 激活当前项
+  yPk.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));
+  mPk.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));
+  const yNode = yPk.querySelector(`[data-y="${calMonth.getFullYear()}"]`);
+  const mNode = mPk.querySelector(`[data-m="${calMonth.getMonth()+1}"]`);
+  yNode.classList.add('active');
+  mNode.classList.add('active');
 
-/* ——— 渲染单张卡片 ——— */
-function renderCard(m){
-  const cols = (m.imgs.length===2||m.imgs.length===4)?2:3;
-  const imgHtml = m.imgs.map(src=>{
-    const thumb = src.replace(/(\.[a-zA-Z0-9]+)$/,'_thumb$1');
-    return `<img src="${thumb}" data-full="${src}" loading="lazy" class="loading" onclick="openViewer(this.dataset.full,event)">`;
-  }).join('');
-
-  const html = `
-    <article class="card" data-date="${m.date}">
-      <div class="card-content">
-        <h3>${m.title}</h3>
-        <time>${m.date}</time>
-        <p>${m.message}</p>
-      </div>
-      <div class="${m.imgs.length===1?'banner':'image-grid'}" style="grid-template-columns:repeat(${cols},1fr)">${imgHtml}</div>
-    </article>`;
-
-  wrap.insertAdjacentHTML('beforeend', html);
-  const node = wrap.lastElementChild;
-  cardMap[m.date] = node;
-
-  node.querySelectorAll('img').forEach(img=>{
-    img.addEventListener('load',()=>{
-      img.classList.remove('loading');
-      img.classList.add('loaded');
-    });
-  });
-
-  io.observe(node);           // 渐现动画
-  viewObserver.observe(node); // 可见范围追踪
-}
-
-/* ——— 懒加载批次 —— */
-const sentinel = document.getElementById('sentinel');
-const bottomObserver = new IntersectionObserver(es=>{
-  if(es[0].isIntersecting) loadBatch();
-},{rootMargin:'800px'});
-
-bottomObserver.observe(sentinel);
-
-function loadBatch(){
-  const next = milestones.slice(rendered, rendered + BATCH_SIZE);
-  next.forEach(renderCard);
-  rendered += next.length;
-  if(rendered >= milestones.length) bottomObserver.disconnect();
-}
-
-// 首屏
-loadBatch();
-
-/* ——— 滚到指定日期 ——— */
-function scrollToCard(date){
-  let el = cardMap[date];
-  if(!el){
-    const idx = milestones.findIndex(m=>m.date===date);
-    if(idx===-1) return;
-    while(rendered <= idx) loadBatch();
-    el = cardMap[date];
-  }
-  const barH = document.getElementById('topbar').getBoundingClientRect().height;
-  const y = el.getBoundingClientRect().top + window.scrollY - 2*barH;
-  window.scrollTo({top:y, behavior:'smooth'});
-}
-
-/* ========= 日历 / 搜索 / 预览 ========= */
-const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-let calMonth = new Date(milestones[0].date + 'T00:00:00');
-const calGrid  = document.getElementById('calGrid');
-
-
-function renderCal(base){
-  calGrid.innerHTML='';
-  const first = new Date(base.getFullYear(), base.getMonth(), 1);
-  const startW = first.getDay() || 7;
-  let cur = new Date(first);
-  cur.setDate(cur.getDate() - (startW - 1));
-
-  for(let i=0;i<42;i++){
-    const d   = new Date(cur);
-    const key = fmt(d);
-    const cell = document.createElement('div');
-    cell.textContent = d.getDate();
-    cell.dataset.date = key;
-    if(d.getMonth()!==base.getMonth()) cell.classList.add('other');
-    if(birthdays.includes(key.slice(5))) cell.classList.add('birthday');
-    if(cardMap[key]!==undefined) cell.classList.add('hasData');
-    if(key===selectedDate) cell.classList.add('selected');
-    calGrid.appendChild(cell);
-    cur.setDate(cur.getDate()+1);
-  }
-}
-
-renderCal(calMonth);
-
-/* 日历导航 */
-
-document.getElementById('prevM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth);buildYM();};
-document.getElementById('nextM').onclick = ()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth);buildYM();};
-calGrid.onclick = e=>{
-  const d = e.target.dataset.date;
-  if(!d) return;
-  selectedDate = d;
-  renderCal(calMonth);
-  hideModal();
-  scrollToCard(d);
-};
-
-/* 搜索 */
-const sModal  = document.getElementById('searchModal');
-const sInput  = document.getElementById('searchInput');
-const sList   = document.getElementById('resultList');
-document.getElementById('openSearch').onclick = ()=>{sModal.classList.add('show');sInput.value='';filter('')};
-
-sInput.oninput = ()=>filter(sInput.value.trim());
-
-function filter(q){
-  sList.innerHTML = '';
-  if(!q){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">我们俩的美好瞬间...</li>';return;}
-  const re = new RegExp(q,'i');
-  const hits = milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if(!hits.length){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">没有找到这个瞬间...</li>';return;}
-  hits.forEach(m=>{
-    const li = document.createElement('li');
-    li.innerHTML = `${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;
-    li.onclick = ()=>{hideModal();scrollToCard(m.date)};
-    sList.appendChild(li);
+  // 2. 让它们滚到容器中央 —— 用 scrollIntoView 更稳
+  //    放到 requestAnimationFrame 里，确保弹窗元素已渲染、尺寸确定
+  requestAnimationFrame(()=>{
+    yNode.scrollIntoView({block:'center',behavior:'instant'}); // behaviour:'auto' 也行
+    mNode.scrollIntoView({block:'center',behavior:'instant'});
   });
 }
-
-/* 模态开关 */
-const cModal = document.getElementById('calendarModal');
-function hideModal(e){
-  if(!e || e.target.classList.contains('modal')){
-    cModal.classList.remove('show');
-    sModal.classList.remove('show');
-  }
-}
-
-document.getElementById('openCalendar').onclick = ()=>{
-  renderCal(calMonth);
-  cModal.classList.add('show');
-};
-
-/* 预览层 / 查看大图 */
-let imgs = [], current = 0;
-let startX=0,startY=0,deltaX=0;
-let imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;
-const viewer   = document.getElementById('viewer');
-const carousel = document.getElementById('carousel');
-const counter  = document.getElementById('imgCounter');
-const vLoader  = document.getElementById('viewerLoader');
-
-function showLoader(){vLoader.style.display='block'}
-function hideLoader(){vLoader.style.display='none'}
-
-function openViewer(src,e){
-  e.preventDefault();
-  const imgEls = [...e.target.closest('.card').querySelectorAll('img')];
-  imgs = imgEls.map(i=>i.dataset.full || i.src.replace(/_thumb(\.[a-zA-Z0-9]+)$/,'$1'));
-  current = imgs.indexOf(src);
-  carousel.innerHTML = imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');
-  viewer.style.display='block';
-  requestAnimationFrame(()=>viewer.classList.add('visible'));
-  updateCarousel(true);
-}
-
-function getImg(){return carousel.children[current].querySelector('img')}
-
-function adjustLoader(){
-  const img = getImg();
-  if(img.complete){hideLoader();}
-  else{
-    showLoader();
-    img.addEventListener('load',hideLoader,{once:true});
-  }
-}
-
-function updateCarousel(noAnim=false){
-  carousel.style.transition = noAnim?'none':'transform .3s ease';
-  carousel.style.transform  = `translateX(-${current*100}vw)`;
-  counter.textContent       = `${current+1}/${imgs.length}`;
-  resetTransform();
-  adjustLoader();
-}
-
-function resetTransform(){
-  imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;
-  getImg().style.transform = 'translate(0,0) scale(1)';
-}
-
-function setImgTransform(){
-  getImg().style.transform = `translate(${panX}px,${panY}px) scale(${imgScale})`;
-}
-
-viewer.addEventListener('touchstart',e=>{
-  if(e.touches.length===1){
-    startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;
-    carousel.style.transition='none';
-  }else if(e.touches.length===2){
-    pinchStartDist=dist(e.touches);lastScale=imgScale;
-  }
-},{passive:false});
-
-viewer.addEventListener('touchmove',e=>{
-  e.preventDefault();
-  const t=e.touches;
-  if(t.length===1 && imgScale===1){
-    deltaX=t[0].clientX-startX;
-    carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`;
-  }else if(t.length===1 && imgScale>1){
-    panX=lastPanX+t[0].clientX-startX;
-    panY=lastPanY+t[0].clientY-startY;
-    setImgTransform();
-  }else if(t.length===2){
-    imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));
-    setImgTransform();
-  }
-},{passive:false});
-
-viewer.addEventListener('touchend',e=>{
-  if(e.touches.length===0){
-    if(Math.abs(deltaX)>50 && imgScale===1){
-      if(deltaX>0 && current>0)               current--;
-      else if(deltaX<0 && current<imgs.length-1) current++;
-    }
-    carousel.style.transition='transform .3s ease';
-    imgScale===1 ? updateCarousel() : (lastPanX=panX,lastPanY=panY);
-  }else if(e.touches.length===1 && imgScale>1){
-    startX=e.touches[0].clientX;startY=e.touches[0].clientY;
-  }
-},{passive:false});
-
-function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
-
-function closeViewer(){viewer.classList.remove('visible');setTimeout(()=>viewer.style.display='none',250)}
-
-/* 快速选年月，下拉构建 （同前） */
-const quick=document.getElementById('quickYM'),ys=document.getElementById('yearSel'),ms=document.getElementById('monthSel');
-function buildYM(){
-  if(!ys.childElementCount){
-    const now=new Date().getFullYear();
-    for(let y=now-1;y<=now+10000;y++)ys.insertAdjacentHTML('beforeend',`<option>${y}</option>`);
-    for(let m=1;m<=12;m++)ms.insertAdjacentHTML('beforeend',`<option>${m}</option>`);
-  }
-  ys.value=calMonth.getFullYear();
-  ms.value=calMonth.getMonth()+1;
-}
-renderCal(calMonth);
-buildYM();                // ★ 新增
-
-/* ★★★ 关键：监听 change，立即刷新 ★★★ */
-function applyYM(){           // 抽成单独函数，复用
-  calMonth = new Date(+ys.value, +ms.value - 1, 1);
-  renderCal(calMonth);        // 重绘网格
-}
-ys.addEventListener('change', applyYM);
-ms.addEventListener('change', applyYM);
-
-</script>
-</body>
-</html>
+function openPicker(){syncPicker();pickerModal.classList.add('show');lockScroll(true);}  
+function closePicker(e){if(!e||e.target.classList.contains('modal'))pickerModal.classList.remove('show');lockScroll(false);}  
+yLab.onclick=mLab.onclick=openPicker;  
+yPk.onclick=e=>{  
+  const y=e.target.dataset.y;if(y){calMonth.setFullYear(+y);renderCal(calMonth);pickerModal.classList.remove('show');}  
+};  
+mPk.onclick=e=>{  
+  const m=e.target.dataset.m;if(m){calMonth.setMonth(+m-1);renderCal(calMonth);pickerModal.classList.remove('show');}  
+};  
+  
+/* ========= 打开/关闭主弹窗 ========= */  
+const cModal=document.getElementById('calendarModal'),sModal=document.getElementById('searchModal');  
+function hideModal(e){if(!e||e.target.classList.contains('modal')){cModal.classList.remove('show');sModal.classList.remove('show');}}  
+document.getElementById('openCalendar').onclick=()=>{renderCal(calMonth);cModal.classList.add('show');};  
+  
+/* ========= 搜索 ========= */  
+const sInput=document.getElementById('searchInput'),sList=document.getElementById('resultList');  
+document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('');lockScroll(true);};  
+sInput.oninput=()=>filter(sInput.value.trim());  
+function filter(q){  
+  sList.innerHTML='';  
+  if(!q){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">我们俩的美好瞬间...</li>';return;}  
+  const re=new RegExp(q,'i');  
+  const hits=milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));  
+  if(!hits.length){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">没有找到这个瞬间...</li>';return;}  
+  hits.forEach(m=>{  
+    const li=document.createElement('li');  
+    li.innerHTML=`${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;  
+    li.onclick=()=>{hideModal();scrollToCard(m.date);};  
+    sList.appendChild(li);  
+  });  
+}  
+  
+/* ========= 预览层（与你原逻辑一致） ========= */  
+/* ↓ 如果后续还要改，可在此继续使用原先代码 ↓ */  
+let imgs=[],current=0,startX=0,startY=0,deltaX=0;  
+let imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;  
+const viewer=document.getElementById('viewer'),carousel=document.getElementById('carousel'),  
+      counter=document.getElementById('imgCounter'),vLoader=document.getElementById('viewerLoader');  
+function showLoader(){vLoader.style.display='block'}function hideLoader(){vLoader.style.display='none'}  
+function openViewer(src,e){  
+  e.preventDefault();  
+  const eles=[...e.target.closest('.card').querySelectorAll('img')];  
+  imgs=eles.map(i=>i.dataset.full||i.src.replace(/_thumb(\.[\w\d]+)$/,'$1'));  
+  current=imgs.indexOf(src);  
+  carousel.innerHTML=imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');  
+  viewer.style.display='block';requestAnimationFrame(()=>viewer.classList.add('visible'));  
+  updateCarousel(true);  
+  lockScroll(true);  
+}  
+function getImg(){return carousel.children[current].querySelector('img')}  
+function adjustLoader(){const im=getImg();if(im.complete)hideLoader();else{showLoader();im.onload=hideLoader;}}  
+function updateCarousel(noAnim=false){  
+  carousel.style.transition=noAnim?'none':'transform .3s ease';  
+  carousel.style.transform=`translateX(-${current*100}vw)`;counter.textContent=`${current+1}/${imgs.length}`;  
+  resetTransform();adjustLoader();  
+}  
+function resetTransform(){imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;getImg().style.transform='translate(0,0) scale(1)';}  
+function setImgTransform(){getImg().style.transform=`translate(${panX}px,${panY}px) scale(${imgScale})`;}  
+viewer.addEventListener('touchstart',e=>{  
+  if(e.touches.length===1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;carousel.style.transition='none';}  
+  else if(e.touches.length===2){pinchStartDist=dist(e.touches);lastScale=imgScale;}  
+},{passive:false});  
+viewer.addEventListener('touchmove',e=>{  
+  e.preventDefault();const t=e.touches;  
+  if(t.length===1&&imgScale===1){deltaX=t[0].clientX-startX;carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`;}  
+  else if(t.length===1&&imgScale>1){panX=lastPanX+t[0].clientX-startX;panY=lastPanY+t[0].clientY-startY;setImgTransform();}  
+  else if(t.length===2){imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));setImgTransform();}  
+},{passive:false});  
+viewer.addEventListener('touchend',e=>{  
+  if(e.touches.length===0){  
+    if(Math.abs(deltaX)>50&&imgScale===1){if(deltaX>0&&current>0)current--;else if(deltaX<0&&current<imgs.length-1)current++;}  
+    carousel.style.transition='transform .3s ease';imgScale===1?updateCarousel(): (lastPanX=panX,lastPanY=panY);  
+  }else if(e.touches.length===1&&imgScale>1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;}  
+},{passive:false});  
+function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}  
+function closeViewer(){viewer.classList.remove('visible');  
+setTimeout(()=>{viewer.style.display='none';lockScroll(false);},250);}  
+</script>  </body>  
+</html>  
