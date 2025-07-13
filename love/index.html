@@ -160,7 +160,7 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
     </div>  
     <div class="cal-grid" id="calGrid"></div>  
   </div>  
-</div>  <!-- 年/月滚轮选择器弹窗 -->  <div id="pickerModal" class="modal" onclick="closePicker(event)">  
+</div>  <!-- 年/月滚轮选择器弹窗 -->  <div id="pickerModal" class="modal">  
   <div class="box" style="display:flex;gap:.9rem;padding:1rem" onclick="event.stopPropagation()">  
     <div class="picker-col" id="yearPicker"></div>  
     <div class="picker-col" id="monthPicker"></div>  
@@ -315,14 +315,31 @@ function syncPicker(){
     mNode.scrollIntoView({block:'center',behavior:'instant'});
   });
 }
-function openPicker(){syncPicker();pickerModal.classList.add('show');lockScroll(true);}  
-function closePicker(e){if(!e||e.target.classList.contains('modal'))pickerModal.classList.remove('show');lockScroll(false);}  
+/* ===== picker 显示 / 隐藏 ===== */
+function openPicker(){
+  syncPicker();
+  pickerModal.classList.add('show');
+  lockScroll(true);
+}
+
+function closePicker(){
+  pickerModal.classList.remove('show');
+  lockScroll(false);
+}
+
+/* 事件委托 —— 只有点到黑色遮罩才触发关闭 */
+pickerModal.addEventListener('click', e =>{
+  if (e.target === pickerModal){    // 点击的正是遮罩
+    closePicker();
+  }
+});
+
 yLab.onclick=mLab.onclick=openPicker;  
 yPk.onclick=e=>{  
-  const y=e.target.dataset.y;if(y){calMonth.setFullYear(+y);renderCal(calMonth);pickerModal.classList.remove('show');}  
+  const y=e.target.dataset.y;if(y){calMonth.setFullYear(+y);renderCal(calMonth);pickerModal.classList.remove('show');lockScroll(false);}  
 };  
 mPk.onclick=e=>{  
-  const m=e.target.dataset.m;if(m){calMonth.setMonth(+m-1);renderCal(calMonth);pickerModal.classList.remove('show');}  
+  const m=e.target.dataset.m;if(m){calMonth.setMonth(+m-1);renderCal(calMonth);pickerModal.classList.remove('show');lockScroll(false);}  
 };  
   
 /* ========= 打开/关闭主弹窗 ========= */  
