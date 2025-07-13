@@ -286,6 +286,8 @@ const viewObserver = new IntersectionObserver(entries=>{
     if(entry.isIntersecting){
       selectedDate = entry.target.dataset.date;
       calMonth     = new Date(selectedDate + 'T00:00:00');
+      renderCal(calMonth);
+buildYM();                // ★ 新增
     }
   });
 },{rootMargin:'-40% 0px -55% 0px'});
