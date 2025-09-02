@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>课程表</title>
+<style>
+  :root {
+    --brand-blue: #0069df;
+    --tab-blue: #0069df;
+    --card-shadow: 0 4px 12px rgba(0,0,0,.08);
+    --ongoing-bg: #e8f0fe;   /* 正在上课：浅蓝背景 */
+    --ongoing-text: #0069df; /* 正在上课：蓝色文字 */
+    --upcoming-bg: #f1f8e9;  /* 即将开始：浅绿背景 */
+    --upcoming-text: #2e7d32;/* 即将开始：深绿文字 */
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    background: #f2f5f7;
+    color: #222;
+  }
+
+  /* 顶部栏（居中） */
+  .appbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--brand-blue);
+    color: #fff;
+    padding: 14px 16px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* 横向居中 */
+    text-align: center;       /* 文本居中 */
+  }
+  .appbar h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
+  .subline {
+    font-size: 12px; opacity: .95; margin-top: 6px;
+    display: flex; align-items: center; gap: 8px; justify-content: center; /* 居中 */
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #a8d0ff; display: inline-block; }
+
+  /* 标签栏 */
+  .tabs {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: #fff; border-bottom: 1px solid #e5e9ef;
+  }
+  .tab {
+    text-align: center; padding: 10px 6px; font-size: 15px;
+    color: #5f6b7a; border-bottom: 3px solid transparent; cursor: pointer; user-select: none;
+  }
+  .tab small { display: block; font-size: 11px; opacity: .7; }
+  .tab.active { color: var(--tab-blue); border-bottom-color: var(--tab-blue); font-weight: 600; background: #f7faff; }
+
+  /* 内容区与卡片 */
+  .page { padding: 14px 12px 32px; }
+  .card { background: #fff; border-radius: 12px; box-shadow: var(--card-shadow); padding: 14px 14px 12px; margin: 10px 4px; }
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .title { font-size: 16px; font-weight: 700; line-height: 1.2; color: #24292f; }
+  .room { font-weight: 700; color: #8a94a1; min-width: 54px; text-align: right; }
+  .time { margin-top: 10px; font-size: 14px; color: #5f6b7a; }
+
+  /* 正在上课高亮 */
+  .card.ongoing { background: var(--ongoing-bg); border: 1px solid var(--ongoing-text); }
+  .card.ongoing .title, .card.ongoing .time, .card.ongoing .room { color: var(--ongoing-text); }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 999px; background: var(--ongoing-text); color: #fff; margin-left: 8px; }
+
+  /* 即将开始（仅今日显示且仅一张卡） */
+  .card.upcoming { background: var(--upcoming-bg); border: 1px dashed var(--upcoming-text); }
+  .card.upcoming .title, .card.upcoming .time, .card.upcoming .room { color: var(--upcoming-text); }
+
+  .empty { text-align: center; color: #6b7682; padding: 20px 12px 24px; font-size: 14px; }
+
+  @media (min-width: 560px) { .page { max-width: 520px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+  <div class="appbar">
+    <h1>课程表</h1>
+    <div class="subline">
+      <span class="dot"></span>
+      <span id="clock">里斯本时间 …</span>
+    </div>
+  </div>
+
+  <!-- 标签栏 -->
+  <div class="tabs" role="tablist" aria-label="工作日">
+    <div class="tab" data-day="mon" role="tab" aria-selected="false">周一<small>Mon</small></div>
+    <div class="tab" data-day="tue" role="tab" aria-selected="false">周二<small>Tue</small></div>
+    <div class="tab" data-day="wed" role="tab" aria-selected="false">周三<small>Wed</small></div>
+    <div class="tab" data-day="thu" role="tab" aria-selected="false">周四<small>Thu</small></div>
+    <div class="tab" data-day="fri" role="tab" aria-selected="false">周五<small>Fri</small></div>
+  </div>
+
+  <!-- 内容区 -->
+  <div id="page" class="page" role="tabpanel" aria-live="polite"></div>
+
+<script>
+/** 数据区（你改这里就行） */
+const schedule = {
+  mon: [
+    { title: 'Cálculo Diferencial e Integral III', type: 'TeoricoPrática', room: 'GA4',   start: '13:30', end: '15:00' },
+    { title: 'Programação com Objectos',          type: 'Teórica',        room: 'VA4',   start: '15:30', end: '16:30' },
+  ],
+  tue: [
+    { title: 'Programação com Objectos',          type: 'Teórica',        room: 'QA02.4', start: '13:30', end: '14:30' },
+    { title: 'Programação com Objectos',          type: 'Laboratorial',   room: 'V0.02',  start: '19:30', end: '17:00' },
+  ],
+  wed: [
+    { title: 'Cálculo Diferencial e Integral I',  type: 'TeoricoPrática', room: 'QA02.4', start: '11:30', end: '13:00' },
+    { title: 'Cálculo Diferencial e Integral III',type: 'TeoricoPrática', room: 'QA',     start: '16:00', end: '17:30' },
+    { title: 'Programação com Objectos',          type: 'Teórica',        room: 'FA3',    start: '17:30', end: '18:30' },
+  ],
+  thu: [
+    { title: 'Programação com Objectos',          type: 'Laboratorial',   room: 'V1.34',  start: '15:30', end: '17:00' },
+    { title: 'Programação com Objectos',          type: 'Teórica',        room: 'QA02.3', start: '18:00', end: '19:00' },
+  ],
+  fri: [
+    { title: 'Cálculo Diferencial e Integral I',  type: 'Problemas',      room: 'V1.15',     start: '09:00', end: '10:00' },
+    { title: 'Cálculo Diferencial e Integral I',  type: 'TeoricoPrática', room: 'QA02.1', start: '10:30', end: '12:00' },
+    { title: 'Cálculo Diferencial e Integral III',type: 'Problemas',      room: 'V0.09',  start: '12:30', end: '13:30' },
+    { title: 'Programação com Objectos',          type: 'Teórica',        room: 'FA3',    start: '15:30', end: '16:30' },
+  ]
+};
+
+/* ======= 统一按葡萄牙里斯本时区判断 ======= */
+const TZ = 'Europe/Lisbon';
+function nowLisbon() { return new Date(new Date().toLocaleString('en-US', { timeZone: TZ })); }
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function fmtHM(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function hmToMinutes(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
+
+/** 映射 JS 的 getDay -> 我们的 key */
+function todayKeyLisbon(){
+  const d = nowLisbon().getDay(); // 0-6 (Sun-Sat)
+  const map = {1:'mon',2:'tue',3:'wed',4:'thu',5:'fri'};
+  return map[d] || 'mon';
+}
+
+/** 只对“今天”返回一条需要高亮的项目（正在上课优先，否则下一节） */
+function highlightForDay(dayKey){
+  const todayKey = todayKeyLisbon();
+  if (dayKey !== todayKey) return null;        // 不是今天 -> 不高亮
+  const list = schedule[dayKey] || [];
+  if (!list.length) return null;
+
+  const now = nowLisbon();
+  const nowM = now.getHours()*60 + now.getMinutes();
+
+  // 1) 正在上课（若存在，仅取第一条）
+  for (let i=0;i<list.length;i++){
+    const s = hmToMinutes(list[i].start), e = hmToMinutes(list[i].end);
+    if (nowM >= s && nowM < e) return { index: i, type: 'ongoing' };
+  }
+  // 2) 下一节课（仅今天）
+  let idx = -1, bestDelta = Infinity;
+  for (let i=0;i<list.length;i++){
+    const s = hmToMinutes(list[i].start);
+    if (s > nowM && (s - nowM) < bestDelta) { bestDelta = s - nowM; idx = i; }
+  }
+  return idx >= 0 ? { index: idx, type: 'upcoming' } : null;
+}
+
+/** 渲染某一天（保证同一时刻仅一张卡被标注） */
+let activeDayKey = null;      // 当前激活的标签
+function renderDay(dayKey, autoFocus=true){
+  const container = document.getElementById('page');
+  container.innerHTML = '';
+
+  const list = schedule[dayKey] || [];
+  if (!list.length) {
+    container.innerHTML = '<div class="empty">这一天没有安排课程~</div>';
+    return;
+  }
+
+  const mark = highlightForDay(dayKey);
+  let scrollTarget = null;
+
+  list.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    if (mark && mark.index === i) card.classList.add(mark.type);
+
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = `${item.title} : ${item.type}`;
+
+    if (mark && mark.index === i && mark.type === 'ongoing') {
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = '正在上课';
+      title.appendChild(badge);
+      scrollTarget = card;
+    } else if (mark && mark.index === i && mark.type === 'upcoming') {
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.style.background = 'transparent';
+      badge.style.color = 'var(--upcoming-text)';
+      badge.style.border = '1px solid var(--upcoming-text)';
+      badge.textContent = '即将开始';
+      title.appendChild(badge);
+      scrollTarget = card;
+    }
+
+    const room = document.createElement('div');
+    room.className = 'room';
+    room.textContent = item.room;
+
+    row.appendChild(title);
+    row.appendChild(room);
+
+    const time = document.createElement('div');
+    time.className = 'time';
+    time.textContent = `${item.start} - ${item.end}`;
+
+    card.appendChild(row);
+    card.appendChild(time);
+    container.appendChild(card);
+  });
+
+  if (autoFocus && scrollTarget) {
+    setTimeout(() => scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+  }
+}
+
+/** 切换 tab */
+function activateTab(dayKey, autoFocus=true){
+  activeDayKey = dayKey;
+  document.querySelectorAll('.tab').forEach(el => {
+    const on = el.dataset.day === dayKey;
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  renderDay(dayKey, autoFocus);
+}
+
+/** 时钟（里斯本） + 每分钟刷新状态 */
+let lastMinuteSig = '';       // 记录上次分钟签名
+let lastTodayKey = null;      // 记录上一次“今天”的键
+function startClock(){
+  function tick(){
+    const d = nowLisbon();
+    const y = d.getFullYear(), mo = pad(d.getMonth()+1), da = pad(d.getDate());
+    document.getElementById('clock').textContent = `里斯本时间 ${y}-${mo}-${da} ${fmtHM(d)}`;
+
+    const minuteSig = `${y}-${mo}-${da} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const todayKey = todayKeyLisbon();
+
+    // 每分钟变更时刷新一次
+    if (minuteSig !== lastMinuteSig) {
+      lastMinuteSig = minuteSig;
+
+      // 如果跨天且用户仍停留在“昨天的今天页”，就自动跟随到新的一天
+      if (lastTodayKey && todayKey !== lastTodayKey && activeDayKey === lastTodayKey) {
+        activateTab(todayKey, true);
+      } else if (activeDayKey === todayKey) {
+        // 仍在今天页：仅刷新状态，不自动滚动
+        renderDay(activeDayKey, false);
+      }
+      lastTodayKey = todayKey;
+    }
+  }
+  tick();
+  setInterval(tick, 1000); // 秒级走时；状态按“分钟签名”变化时刷新
+}
+
+/** 初始化：默认打开里斯本“今天”的标签页 */
+function init(){
+  startClock();
+  document.querySelectorAll('.tab').forEach(el => {
+    el.addEventListener('click', () => activateTab(el.dataset.day, false));
+  });
+  const t = todayKeyLisbon();
+  lastTodayKey = t;
+  activateTab(t, true);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
