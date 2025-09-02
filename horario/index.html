@@ -82,8 +82,8 @@
   <div class="appbar">
     <h1>课程表</h1>
     <div class="subline">
-      <span class="dot"></span>
-      <span id="clock">里斯本时间 …</span>
+      <span class="dot"></span>        
+      <span id="clock">生命本就偶然,有意识的生命更难。</span>
     </div>
   </div>
 
@@ -248,7 +248,6 @@ function startClock(){
   function tick(){
     const d = nowLisbon();
     const y = d.getFullYear(), mo = pad(d.getMonth()+1), da = pad(d.getDate());
-    document.getElementById('clock').textContent = `里斯本时间 ${y}-${mo}-${da} ${fmtHM(d)}`;
 
     const minuteSig = `${y}-${mo}-${da} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const todayKey = todayKeyLisbon();
