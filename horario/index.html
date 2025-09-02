@@ -57,7 +57,36 @@
   .tab.active { color: var(--tab-blue); border-bottom-color: var(--tab-blue); font-weight: 600; background: #f7faff; }
 
   /* 内容区与卡片 */
-  .page { padding: 14px 12px 32px; }
+  /* 视口容器：允许垂直滚动，隐藏横向溢出，启用触控优化 */
+  .page {
+    padding: 0;                 /* padding 移到 slide-inner 上 */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;        /* 默认允许纵向滚动，我们手动处理横向 */
+  }
+
+  /* 横向滑动轨道 */
+  .slides {
+    display: flex;
+    width: 100%;
+    will-change: transform;
+    transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+  }
+
+  /* 单页（每页占满视口宽度） */
+  .slide {
+    flex: 0 0 100%;
+  }
+
+  /* 把原来 .page 的内边距挪到这里；同时负责居中排版 */
+  .slide-inner {
+    padding: 14px 12px 32px;
+  }
+  @media (min-width: 560px) {
+    .slide-inner { max-width: 520px; margin: 0 auto; }
+  }
+
   .card { background: #fff; border-radius: 12px; box-shadow: var(--card-shadow); padding: 14px 14px 12px; margin: 10px 4px; }
   .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
   .title { font-size: 16px; font-weight: 700; line-height: 1.2; color: #24292f; }
@@ -74,15 +103,13 @@
   .card.upcoming .title, .card.upcoming .time, .card.upcoming .room { color: var(--upcoming-text); }
 
   .empty { text-align: center; color: #6b7682; padding: 20px 12px 24px; font-size: 14px; }
-
-  @media (min-width: 560px) { .page { max-width: 520px; margin: 0 auto; } }
 </style>
 </head>
 <body>
   <div class="appbar">
     <h1>课程表</h1>
     <div class="subline">
-      <span class="dot"></span>        
+      <span class="dot"></span>
       <span id="clock">生命本就偶然,有意识的生命更难。</span>
     </div>
   </div>
@@ -96,7 +123,7 @@
     <div class="tab" data-day="fri" role="tab" aria-selected="false">周五<small>Fri</small></div>
   </div>
 
-  <!-- 内容区 -->
+  <!-- 内容区（横向滑动容器将由 JS 注入） -->
   <div id="page" class="page" role="tabpanel" aria-live="polite"></div>
 
 <script>
@@ -120,7 +147,7 @@ const schedule = {
     { title: 'Programação com Objectos',          type: 'Teórica',        room: 'QA02.3', start: '18:00', end: '19:00' },
   ],
   fri: [
-    { title: 'Cálculo Diferencial e Integral I',  type: 'Problemas',      room: 'V1.15',     start: '09:00', end: '10:00' },
+    { title: 'Cálculo Diferencial e Integral I',  type: 'Problemas',      room: 'V1.15',  start: '09:00', end: '10:00' },
     { title: 'Cálculo Diferencial e Integral I',  type: 'TeoricoPrática', room: 'QA02.1', start: '10:30', end: '12:00' },
     { title: 'Cálculo Diferencial e Integral III',type: 'Problemas',      room: 'V0.09',  start: '12:30', end: '13:30' },
     { title: 'Programação com Objectos',          type: 'Teórica',        room: 'FA3',    start: '15:30', end: '16:30' },
@@ -131,10 +158,13 @@ const schedule = {
 const TZ = 'Europe/Lisbon';
 function nowLisbon() { return new Date(new Date().toLocaleString('en-US', { timeZone: TZ })); }
 function pad(n){ return n<10 ? '0'+n : ''+n; }
-function fmtHM(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function hmToMinutes(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
 
-/** 映射 JS 的 getDay -> 我们的 key */
+/** getDay -> key & 有序数组（用于滑动索引） */
+const DAY_ORDER = ['mon','tue','wed','thu','fri'];
+const dayIndex = k => DAY_ORDER.indexOf(k);
+const keyByIndex = i => DAY_ORDER[Math.min(DAY_ORDER.length-1, Math.max(0, i))];
+
 function todayKeyLisbon(){
   const d = nowLisbon().getDay(); // 0-6 (Sun-Sat)
   const map = {1:'mon',2:'tue',3:'wed',4:'thu',5:'fri'};
@@ -165,15 +195,24 @@ function highlightForDay(dayKey){
   return idx >= 0 ? { index: idx, type: 'upcoming' } : null;
 }
 
-/** 渲染某一天（保证同一时刻仅一张卡被标注） */
-let activeDayKey = null;      // 当前激活的标签
-function renderDay(dayKey, autoFocus=true){
-  const container = document.getElementById('page');
-  container.innerHTML = '';
+/* =============== 滑动容器渲染 =============== */
+let activeDayKey = null;          // 当前激活的标签（键）
+let activeIndex = 0;              // 当前激活的滑动页（索引）
+let slidesEl = null;              // 轨道
+let pageEl = null;                // 视口（#page）
+let lastTodayKey = null;          // 记录上一次“今天”的键
+let lastMinuteSig = '';           // 上次分钟签名（仅用于判断是否需要刷新）
+
+/** 渲染单天到对应 slide */
+function renderSlide(dayKey, autoFocus=true){
+  const slide = pageEl.querySelector(`.slide[data-day="${dayKey}"]`);
+  if (!slide) return;
+  const inner = slide.querySelector('.slide-inner');
+  inner.innerHTML = '';
 
   const list = schedule[dayKey] || [];
   if (!list.length) {
-    container.innerHTML = '<div class="empty">这一天没有安排课程~</div>';
+    inner.innerHTML = '<div class="empty">这一天没有安排课程~</div>';
     return;
   }
 
@@ -222,7 +261,7 @@ function renderDay(dayKey, autoFocus=true){
 
     card.appendChild(row);
     card.appendChild(time);
-    container.appendChild(card);
+    inner.appendChild(card);
   });
 
   if (autoFocus && scrollTarget) {
@@ -230,38 +269,169 @@ function renderDay(dayKey, autoFocus=true){
   }
 }
 
-/** 切换 tab */
-function activateTab(dayKey, autoFocus=true){
+/** 初始构建 5 个 slide */
+function buildSlides(){
+  pageEl.innerHTML = ''; // 清空旧内容
+  slidesEl = document.createElement('div');
+  slidesEl.className = 'slides';
+  pageEl.appendChild(slidesEl);
+
+  DAY_ORDER.forEach(k => {
+    const slide = document.createElement('section');
+    slide.className = 'slide';
+    slide.dataset.day = k;
+    slide.setAttribute('role', 'tabpanel');
+    slide.setAttribute('aria-hidden', 'true');
+
+    const inner = document.createElement('div');
+    inner.className = 'slide-inner';
+
+    slide.appendChild(inner);
+    slidesEl.appendChild(slide);
+
+    renderSlide(k, false);
+  });
+}
+
+/** 设置激活 tab + 滑动到对应页 */
+function activateTab(dayKey, withAnim=true){
   activeDayKey = dayKey;
+  activeIndex = dayIndex(dayKey);
+
   document.querySelectorAll('.tab').forEach(el => {
     const on = el.dataset.day === dayKey;
     el.classList.toggle('active', on);
     el.setAttribute('aria-selected', on ? 'true' : 'false');
   });
-  renderDay(dayKey, autoFocus);
+
+  // 更新 aria-hidden
+  pageEl.querySelectorAll('.slide').forEach((el, i) => {
+    el.setAttribute('aria-hidden', i === activeIndex ? 'false' : 'true');
+  });
+
+  // 平移动画（百分比，避免计算像素）
+  if (!withAnim) slidesEl.style.transition = 'none';
+  else slidesEl.style.transition = ''; // 使用 CSS 默认过渡
+
+  slidesEl.style.transform = `translateX(${-activeIndex * 100}%)`;
+
+  // 激活页重新算高亮，不滚动
+  renderSlide(dayKey, false);
 }
 
-/** 时钟（里斯本） + 每分钟刷新状态 */
-let lastMinuteSig = '';       // 记录上次分钟签名
-let lastTodayKey = null;      // 记录上一次“今天”的键
+/* =============== 手势交互（安卓式滑动） =============== */
+function installSwipe(){
+  // 移动端：touch 事件；桌面端：mouse 事件
+  let startX = 0, startY = 0, startT = 0;
+  let dragging = false;
+  let dx = 0;
+
+  const thresholdRatio = 0.075;  // 超过视口 25% 即切换
+  const velocityNeed = 0.5;     // 或速度超过 0.6 px/ms
+  const getW = () => pageEl.clientWidth || 1;
+
+  function onStart(clientX, clientY){
+    startX = clientX; startY = clientY; startT = performance.now();
+    dragging = false; dx = 0;
+  }
+  function onMove(clientX, clientY, rawEvent){
+    const moveX = clientX - startX;
+    const moveY = clientY - startY;
+    if (!dragging) {
+      if (Math.abs(moveX) > 8 && Math.abs(moveX) > Math.abs(moveY)) {
+        dragging = true;
+        slidesEl.style.transition = 'none';
+      } else {
+        return; // 还没判定为水平拖动
+      }
+    }
+    dx = moveX;
+    const percent = (-activeIndex * 100) + (dx / getW() * 100);
+    slidesEl.style.transform = `translateX(${percent}%)`;
+    // 防止拖动时页面（或父容器）跟着滚
+    if (rawEvent && rawEvent.cancelable) rawEvent.preventDefault();
+  }
+  function onEnd(){
+    if (!dragging) return;
+    const dt = Math.max(1, performance.now() - startT);
+    const v = Math.abs(dx) / dt; // px/ms
+    const goPrev = dx > 0;
+    const ratio = Math.abs(dx) / getW();
+
+    let target = activeIndex;
+    if (ratio > thresholdRatio || v > velocityNeed) {
+      target = goPrev ? activeIndex - 1 : activeIndex + 1;
+    }
+    target = Math.max(0, Math.min(DAY_ORDER.length - 1, target));
+
+    slidesEl.style.transition = ''; // 恢复过渡
+    activeIndex = target;
+    activateTab(keyByIndex(activeIndex), true);
+  }
+
+  // Touch
+  pageEl.addEventListener('touchstart', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    onStart(t.clientX, t.clientY);
+  }, {passive: true});
+  pageEl.addEventListener('touchmove', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    onMove(t.clientX, t.clientY, e);
+  }, {passive: false});
+  pageEl.addEventListener('touchend', onEnd, {passive: true});
+  pageEl.addEventListener('touchcancel', onEnd, {passive: true});
+
+  // Mouse（桌面端）
+  let mouseDown = false;
+  pageEl.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    mouseDown = true;
+    onStart(e.clientX, e.clientY);
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!mouseDown) return;
+    onMove(e.clientX, e.clientY, e);
+  });
+  window.addEventListener('mouseup', () => {
+    if (!mouseDown) return;
+    mouseDown = false;
+    onEnd();
+  });
+
+  // 键盘左右切换（可选）
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+      activateTab(keyByIndex(activeIndex - 1), true);
+    } else if (e.key === 'ArrowRight') {
+      activateTab(keyByIndex(activeIndex + 1), true);
+    }
+  });
+}
+
+/* =============== 时钟 & 动态刷新 =============== */
 function startClock(){
   function tick(){
     const d = nowLisbon();
     const y = d.getFullYear(), mo = pad(d.getMonth()+1), da = pad(d.getDate());
-
     const minuteSig = `${y}-${mo}-${da} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const todayKey = todayKeyLisbon();
 
-    // 每分钟变更时刷新一次
     if (minuteSig !== lastMinuteSig) {
       lastMinuteSig = minuteSig;
 
-      // 如果跨天且用户仍停留在“昨天的今天页”，就自动跟随到新的一天
+      // 跨天：如果用户仍停留在“昨天的今天页”，就自动跟随到新的一天
       if (lastTodayKey && todayKey !== lastTodayKey && activeDayKey === lastTodayKey) {
+        renderSlide(lastTodayKey, false);
+        renderSlide(todayKey, false);
         activateTab(todayKey, true);
       } else if (activeDayKey === todayKey) {
-        // 仍在今天页：仅刷新状态，不自动滚动
-        renderDay(activeDayKey, false);
+        // 仍在今天页：刷新高亮，不自动滚动
+        renderSlide(todayKey, false);
+      } else {
+        // 其他情况：当日 slide 的高亮可能变化，轻量刷新但不打扰用户
+        renderSlide(todayKey, false);
       }
       lastTodayKey = todayKey;
     }
@@ -270,16 +440,30 @@ function startClock(){
   setInterval(tick, 1000); // 秒级走时；状态按“分钟签名”变化时刷新
 }
 
-/** 初始化：默认打开里斯本“今天”的标签页 */
+/** 初始化：构建滑动轨道 + 事件 + 打开今天 */
 function init(){
-  startClock();
+  pageEl = document.getElementById('page');
+
+  // 构建滑动容器（5页）
+  buildSlides();
+
+  // 顶部 tab 点击
   document.querySelectorAll('.tab').forEach(el => {
-    el.addEventListener('click', () => activateTab(el.dataset.day, false));
+    el.addEventListener('click', () => activateTab(el.dataset.day, true));
   });
+
+  // 默认打开“今天”
   const t = todayKeyLisbon();
   lastTodayKey = t;
-  activateTab(t, true);
+  activateTab(t, false); // 首次定位无需动画
+
+  // 安装滑动手势
+  installSwipe();
+
+  // 启动时钟与自动刷新
+  startClock();
 }
+
 document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
