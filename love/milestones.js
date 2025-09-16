@@ -86,6 +86,25 @@ const milestones = [
     ]
   },
   {
+    "date": "2024-11-03",
+    "title": "动物园",
+    "message": "等待老婆的文案",
+    "imgs": [
+      "https://lestoy.com/love/imgs/1000035777.jpg",
+      "https://lestoy.com/love/imgs/1000035778.jpg",
+      "https://lestoy.com/love/imgs/1000035779.jpg",
+      "https://lestoy.com/love/imgs/1000035780.jpg",
+      "https://lestoy.com/love/imgs/1000035781.jpg",
+      "https://lestoy.com/love/imgs/1000035782.jpg",
+      "https://lestoy.com/love/imgs/1000035783.jpg",
+      "https://lestoy.com/love/imgs/1000035784.jpg",
+      "https://lestoy.com/love/imgs/1000035785.jpg",
+      "https://lestoy.com/love/imgs/1000035786.jpg",
+      "https://lestoy.com/love/imgs/1000035787.jpg",
+      "https://lestoy.com/love/imgs/1000035788.jpg",
+    ]
+  },
+  {
     "date": "2024-08-10",
     "title": "这次我们赴约，去了罗卡角",
     "message": "去吃了东方滋味，感觉还不错。那天阳光很好，我们终于一起站在了欧洲大陆的最西端。",
