@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="logo.png" />
-    <title>纯净文本阅读器 - 编辑页</title>
+    <title>纯净文本阅读器</title>
     <style>
-        /* --- 基础样式 --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: #f4f7f9;
@@ -15,35 +13,27 @@
             padding: 20px;
             display: flex;
             justify-content: center;
-            line-height: 1.7;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
-        /* --- 主容器 --- */
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 800px;
             background-color: #ffffff;
             padding: 25px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
-        /* --- 标题和说明 --- */
         h1 {
             color: #1a73e8;
             border-bottom: 2px solid #eef2f5;
             padding-bottom: 10px;
             margin-top: 0;
         }
-        p.instructions {
-            background-color: #e8f0fe;
-            border-left: 4px solid #1a73e8;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        /* --- 输入框 --- */
         #text-input {
             width: 100%;
-            height: 250px;
+            height: 300px;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -51,41 +41,22 @@
             line-height: 1.6;
             resize: vertical;
             box-sizing: border-box;
-            margin-bottom: 15px;
-        }
-        #text-input:focus {
-            outline: none;
-            border-color: #1a73e8;
-            box-shadow: 0 0 5px rgba(26, 115, 232, 0.5);
-        }
-        /* --- 控制按钮 --- */
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #fff;
             background-color: #1a73e8;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #155ab6;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        button.clear {
-            background-color: #6c757d;
-        }
-        button.clear:hover {
-            background-color: #5a6268;
         }
     </style>
 </head>
@@ -93,78 +64,28 @@
 
     <div class="container">
         <h1>纯净文本阅读器</h1>
-        <p class="instructions">
-            将您想朗读的文本粘贴到下面的输入框，点击“生成阅读页”，将在新标签页中打开纯净的阅读视图。
-        </p>
         <textarea id="text-input" placeholder="在此处粘贴或输入您想朗读的文本..."></textarea>
-        <div class="controls">
-            <button id="render-btn">生成阅读页</button>
-            <button id="clear-btn" class="clear">清空内容</button>
-        </div>
+        <button id="render-btn">生成阅读页</button>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const textInput = document.getElementById('text-input');
             const renderBtn = document.getElementById('render-btn');
-            const clearBtn = document.getElementById('clear-btn');
 
             renderBtn.addEventListener('click', function() {
-                const rawText = textInput.value;
-                if (rawText.trim() === '') {
+                const textToRead = textInput.value;
+                if (textToRead.trim() === '') {
                     alert('请输入一些文本内容！');
                     return;
                 }
 
-                // 为了安全，转义可能存在的HTML特殊字符
-                const escapedText = rawText
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
+                // 1. 将文本存储到 sessionStorage 中
+                // sessionStorage 的生命周期是单个浏览器标签页
+                sessionStorage.setItem('textForReading', textToRead);
 
-                // --- 核心修改部分：使用字符串拼接代替模板字符串 ---
-                // 这样可以避免因特殊字符导致的解析错误，更加稳定。
-                const newPageHTML = 
-                    '<!DOCTYPE html>' +
-                    '<html lang="zh-CN">' +
-                    '<head>' +
-                    '    <meta charset="UTF-8">' +
-                    '    <title>阅读视图</title>' +
-                    '    <style>' +
-                    '        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: #f8f9fa; color: #212529; line-height: 1.8; font-size: 20px; margin: 0; padding: 40px; display: flex; justify-content: center; }' +
-                    '        .content { max-width: 800px; width: 100%; white-space: pre-wrap; word-wrap: break-word; }' +
-                    '    </style>' +
-                    '</head>' +
-                    '<body>' +
-                    '    <div class="content">' + escapedText + '</div>' +
-                    '</body>' +
-                    '</html>';
-                // --- 修改结束 ---
-
-                try {
-                    const blob = new Blob([newPageHTML], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const newWindow = window.open(url, '_blank');
-                    if (!newWindow) {
-                        alert('弹出窗口被阻止，请允许此网站的弹出窗口！');
-                    }
-
-                    // 当新窗口关闭时，释放URL对象以节省内存
-                    newWindow.addEventListener('beforeunload', function() {
-                        URL.revokeObjectURL(url);
-                    });
-
-                } catch (e) {
-                    console.error("创建新页面时出错:", e);
-                    alert("抱歉，创建新页面时发生错误。");
-                }
-            });
-
-            clearBtn.addEventListener('click', function() {
-                textInput.value = '';
+                // 2. 在新标签页中打开 output.html
+                window.open('output.html', '_blank');
             });
         });
     </script>
