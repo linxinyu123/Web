@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阅读视图</title>
+    <style>
+        body {
+            font-family: Georgia, "Times New Roman", "Microsoft YaHei", serif;
+            background-color: #fdfdfd; 
+            color: #1a1a1a;
+            line-height: 1.9; 
+            font-size: 21px; /* 稍大一点的字体，适合阅读 */
+            margin: 0;
+            padding: 40px 50px; /* 넉넉한 여백 */
+            display: flex;
+            justify-content: center;
+        }
+        #content {
+            max-width: 800px;
+            width: 100%;
+            white-space: pre-wrap; /* 保留换行和空格 */
+            word-wrap: break-word; /* 自动换行 */
+        }
+        .error {
+            color: #888;
+            font-style: italic;
+        }
+        .error a {
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="content">正在加载文本...</div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const contentDiv = document.getElementById('content');
+
+            // 1. 从 sessionStorage 中读取之前存储的文本
+            const text = sessionStorage.getItem('textForReading');
+
+            if (text) {
+                // 2. 如果成功读取到文本，就将其显示在页面上
+                // 使用 textContent 可以防止任何潜在的HTML注入，更安全
+                contentDiv.textContent = text;
+
+                // (可选) 读取后可以清除 sessionStorage，以防刷新时出现混淆
+                // 但保留它允许用户刷新阅读页面
+                // sessionStorage.removeItem('textForReading');
+            } else {
+                // 3. 如果没有找到文本 (例如用户直接打开了这个页面)
+                contentDiv.innerHTML = '<p class="error">没有找到要阅读的文本。<br>请返回<a href="index.html">输入页面</a>重新生成。</p>';
+            }
+        });
+    </script>
+
+</body>
+</html>
