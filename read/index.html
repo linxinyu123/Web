@@ -1,1 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纯净文本阅读器</title>
+    <style>
+        /* --- 基础样式 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            line-height: 1.7;
+        }
 
+        /* --- 主容器 --- */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #ffffff;
+            padding: 25px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: padding 0.3s ease;
+        }
+
+        /* --- 标题和说明 --- */
+        h1, h2 {
+            color: #1a73e8;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        p.instructions {
+            background-color: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        /* --- 输入框 --- */
+        #text-input {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        #text-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 5px rgba(26, 115, 232, 0.5);
+        }
+
+        /* --- 控制按钮 --- */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #155ab6;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.clear {
+            background-color: #6c757d;
+        }
+        
+        button.clear:hover {
+            background-color: #5a6268;
+        }
+        
+        /* --- 新增：返回编辑按钮样式 --- */
+        #edit-btn {
+            position: fixed; /* 固定在屏幕上 */
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            z-index: 1000; /* 确保在最上层 */
+        }
+        
+        #edit-btn:hover {
+            background-color: #218838;
+        }
+
+        /* --- 输出区域 --- */
+        #output-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            min-height: 200px;
+            font-size: 18px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        #output-container:empty::before {
+            content: "这里将显示您输入的文本，方便浏览器朗读...";
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* --- 新增：用于隐藏元素的辅助类 --- */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 编辑模式下的所有内容都包裹在这个div中 -->
+        <div id="input-section">
+            <h1>纯净文本阅读器</h1>
+            <p class="instructions">
+                将您想朗读的文本粘贴到下面的输入框，点击“生成阅读视图”。
+            </p>
+
+            <textarea id="text-input" placeholder="在此处粘贴或输入您想朗读的文本..."></textarea>
+
+            <div class="controls">
+                <button id="render-btn">生成阅读视图</button>
+                <button id="clear-btn" class="clear">清空内容</button>
+            </div>
+        </div>
+
+        <!-- 阅读模式下的内容 -->
+        <div id="reading-section">
+            <h2>阅读视图</h2>
+            <div id="output-container"></div>
+        </div>
+    </div>
+
+    <!-- 这个按钮独立于主容器，方便固定定位 -->
+    <button id="edit-btn" class="hidden">返回编辑</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有需要的元素
+            const inputSection = document.getElementById('input-section');
+            const readingSection = document.getElementById('reading-section');
+            const textInput = document.getElementById('text-input');
+            const renderBtn = document.getElementById('render-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const outputContainer = document.getElementById('output-container');
+            const editBtn = document.getElementById('edit-btn');
+
+            // "生成阅读视图" 按钮的点击事件
+            renderBtn.addEventListener('click', function() {
+                const rawText = textInput.value;
+                if (rawText.trim() === '') {
+                    alert('请输入一些文本内容！');
+                    return;
+                }
+                
+                // 1. 更新输出区域的文本
+                outputContainer.textContent = rawText;
+                
+                // 2. 隐藏编辑区
+                inputSection.classList.add('hidden');
+                
+                // 3. 显示返回编辑按钮
+                editBtn.classList.remove('hidden');
+
+                // 4. (可选) 滚动到页面顶部，确保从头开始阅读
+                window.scrollTo(0, 0);
+            });
+
+            // "返回编辑" 按钮的点击事件
+            editBtn.addEventListener('click', function() {
+                // 1. 显示编辑区
+                inputSection.classList.remove('hidden');
+
+                // 2. 隐藏返回编辑按钮
+                editBtn.classList.add('hidden');
+            });
+
+            // "清空内容" 按钮的点击事件
+            clearBtn.addEventListener('click', function() {
+                textInput.value = '';
+                outputContainer.textContent = '';
+            });
+        });
+    </script>
+
+</body>
+</html>
