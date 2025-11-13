@@ -110,8 +110,6 @@
   <div class="appbar">
     <h1>课程表</h1>
     <div class="subline">
-      <span class="dot"></span>
-      <span id="clock">生命本就偶然,有意识的生命更难。</span>
     </div>
   </div>
 
@@ -199,6 +197,57 @@ function highlightForDay(dayKey){
   }
   return idx >= 0 ? { index: idx, type: 'upcoming' } : null;
 }
+
+// ======================= 新增代码 START =======================
+/**
+ * 获取本周周一到周五的日期
+ * @returns {object} e.g. { mon: '11/04', tue: '11/05', ... }
+ */
+function getWeekDates() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 6=周六
+
+    // 计算到周一需要减去的天数。如果今天是周日(0)，则视为上周的最后一天，需减去6天。
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToSubtract);
+
+    const weekDates = {};
+    const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+
+    for (let i = 0; i < 5; i++) {
+        const currentDate = new Date(monday);
+        currentDate.setDate(monday.getDate() + i);
+
+        const month = currentDate.getMonth() + 1; // 月份是从0开始的
+        const date = currentDate.getDate();
+
+        // 格式化为 MM/DD
+        const formattedDate = `${String(month).padStart(2, '0')}/${String(date).padStart(2, '0')}`;
+        weekDates[dayKeys[i]] = formattedDate;
+    }
+    return weekDates;
+}
+
+/**
+ * 更新标签栏的日期显示
+ */
+function updateTabDates() {
+    const dates = getWeekDates();
+    document.querySelectorAll('.tab').forEach(tab => {
+        const dayKey = tab.dataset.day;
+        const dateString = dates[dayKey];
+        if (dateString) {
+            const smallEl = tab.querySelector('small');
+            if (smallEl) {
+                smallEl.textContent = dateString;
+            }
+        }
+    });
+}
+// ======================= 新增代码 END =======================
+
 
 /* =============== 滑动容器渲染 =============== */
 let activeDayKey = null;          // 当前激活的标签（键）
@@ -448,6 +497,9 @@ function startClock(){
 /** 初始化：构建滑动轨道 + 事件 + 打开今天 */
 function init(){
   pageEl = document.getElementById('page');
+
+  // ============== 修改点：在初始化时调用日期更新函数 ==============
+  updateTabDates();
 
   // 构建滑动容器（5页）
   buildSlides();
