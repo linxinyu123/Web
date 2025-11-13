@@ -22,42 +22,63 @@
             width: 100%;
             max-width: 800px;
             background-color: #ffffff;
-            padding: 25px 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
         }
         h1 {
             color: #1a73e8;
             border-bottom: 2px solid #eef2f5;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             margin-top: 0;
+            font-size: 28px;
+            text-align: center;
         }
         #text-input {
             width: 100%;
             height: 300px;
             padding: 15px;
-            border: 1px solid #ccc;
+            border: 2px solid #dde1e5;
             border-radius: 8px;
             font-size: 16px;
             line-height: 1.6;
             resize: vertical;
             box-sizing: border-box;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        #text-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+        }
+        .button-group {
+            display: flex;
+            gap: 15px; /* 按钮之间的间距 */
         }
         button {
-            width: 100%;
+            flex: 1; /* 让两个按钮平分宽度 */
             padding: 12px 20px;
             font-size: 18px;
             font-weight: bold;
             color: #fff;
             background-color: #1a73e8;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
         button:hover {
             background-color: #155ab6;
+            transform: translateY(-2px);
+        }
+        /* 清空按钮的次要样式 */
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -66,27 +87,33 @@
     <div class="container">
         <h1>纯净文本阅读器</h1>
         <textarea id="text-input" placeholder="在此处粘贴或输入您想朗读的文本..."></textarea>
-        <button id="render-btn">生成阅读页</button>
+        <div class="button-group">
+            <button id="clear-btn" class="secondary">清空内容</button>
+            <button id="render-btn">生成阅读页</button>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const textInput = document.getElementById('text-input');
             const renderBtn = document.getElementById('render-btn');
+            const clearBtn = document.getElementById('clear-btn'); // 获取清空按钮
 
+            // “生成阅读页”按钮的点击事件
             renderBtn.addEventListener('click', function() {
                 const textToRead = textInput.value;
                 if (textToRead.trim() === '') {
                     alert('请输入一些文本内容！');
                     return;
                 }
-
-                // 1. 将文本存储到 sessionStorage 中
-                // sessionStorage 的生命周期是单个浏览器标签页
                 sessionStorage.setItem('textForReading', textToRead);
-
-                // 2. 在新标签页中打开 output.html
                 window.open('output.html', '_blank');
+            });
+
+            // “清空”按钮的点击事件
+            clearBtn.addEventListener('click', function() {
+                textInput.value = ''; // 清空文本域
+                textInput.focus(); // 自动聚焦，方便用户继续输入
             });
         });
     </script>
