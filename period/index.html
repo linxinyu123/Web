@@ -233,7 +233,7 @@ footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.8rem}
             <div class="card-title">经期记录</div>
         </div>
         <div class="status-box">
-            <p id="status-text" class="empty-tip">暂无记录，请添加数据以开始预测。</p>
+            <p id="status-text" class="empty-tip">请点击下方按钮添加数据</p>
             
             <button class="btn-main-action" id="mainAddBtn">
                 <img src="https://lestoy.com/love/icones/calendar.svg" class="btn-icon-small">
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
 
         if (sorted.length === 0) {
-            statusText.textContent = "暂无记录，请添加数据以开始预测。";
+            statusText.textContent = "请点击下方按钮添加数据";
             resultsWrapper.style.display = 'none';
         } else {
             const lastDate = sorted[sorted.length-1];
