@@ -108,7 +108,7 @@ main{max-width:600px;margin:0 auto;padding:1.2rem 1rem 0}
 
 /* ——— 周期分析 ——— */
 .card.analysis { border-top: none; } 
-.card.analysis .card-title { color: var(--text); }
+.card.analysis .card-title { color: var(--birthday); }
 .stats-grid { display: flex; justify-content: space-between; gap: 0.8rem; margin-top: 2.25rem; }
 .stat-box {
     flex: 1; background: #FAFAFA; border-radius: 1rem; padding: 1rem 0.2rem;
@@ -116,7 +116,7 @@ main{max-width:600px;margin:0 auto;padding:1.2rem 1rem 0}
 }
 .stat-label { font-size: 0.75rem; color: #999; margin-bottom: 0.4rem; }
 .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-.stat-value.highlight { color: var(--primary); }
+.stat-value.highlight { color: var(--birthday); }
 
 
 /* ——— 5. 弹窗日历样式 ——— */
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: dataArr.map((_, i) => `${i+1}`),
                 datasets: [
                     {
-                        label: '实际天数', data: dataArr,
+                        label: '周期天数', data: dataArr,
                         borderColor: '#FF7EAE', backgroundColor: '#FF7EAE',
                         tension: 0.3, pointRadius: 4,
                     },
@@ -600,3 +600,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
