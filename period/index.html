@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>经期预测工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* * 这是一个庞大的手动转换，从 Tailwind CSS 转换为纯 CSS。
+         * 涵盖了 App.tsx 和 CalendarModal.tsx 中的所有主要样式。
+         */
+        
+        /* 基础和字体 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+                "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+                sans-serif;
+            margin: 0;
+            background-color: #f9fafb; /* bg-gray-50 */
+            color: #1f2937; /* text-gray-800 */
+            padding: 32px 0; /* py-8 */
+        }
+        
+        button, input[type="radio"] {
+            cursor: pointer;
+        }
+
+        /* 布局 */
+        main {
+            max-width: 640px; /* max-w-xl */
+            margin: 0 auto;
+            padding: 0 16px; /* px-4 sm:px-6 lg:px-8 */
+            display: grid;
+            gap: 32px; /* space-y-8 */
+        }
+
+        /* 卡片/区域 */
+        .card {
+            padding: 24px; /* p-6 */
+            background-color: #ffffff; /* bg-white */
+            border-radius: 16px; /* rounded-2xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
+        }
+
+        /* 头部 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            margin: 0;
+        }
+        header .icon-button {
+            padding: 8px; /* p-2 */
+            border-radius: 9999px; /* rounded-full */
+            border: none;
+            background: none;
+            transition: background-color 0.2s;
+        }
+        header .icon-button:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+            color: #4b5563; /* text-gray-600 */
+        }
+
+        /* 历史记录 */
+        h2 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #374151; /* text-gray-700 */
+            margin-bottom: 16px; /* mb-4 */
+        }
+        #records-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px; /* gap-2 */
+            margin-bottom: 16px; /* mb-4 */
+        }
+        #records-list p {
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; /* text-gray-500 */
+            margin: 0;
+        }
+        .record-tag {
+            display: flex;
+            align-items: center;
+            background-color: #fce7f3; /* bg-pink-100 */
+            color: #831843; /* text-pink-800 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            padding: 4px 8px 4px 12px; /* pl-3 pr-2 py-1 */
+            border-radius: 9999px; /* rounded-full */
+        }
+        .delete-record-btn {
+            margin-left: 8px; /* ml-2 */
+            color: #be185d; /* text-pink-600 */
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex;
+        }
+        .delete-record-btn:hover {
+            color: #831843; /* hover:text-pink-800 */
+        }
+        .delete-record-btn .icon-close {
+            width: 16px; /* w-4 */
+            height: 16px; /* h-4 */
+        }
+        
+        /* 按钮 */
+        button {
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        #add-dates-btn {
+            width: 100%;
+            padding: 8px 16px; /* py-2 px-4 */
+            border: 2px dashed #d1d5db; /* border-2 border-dashed border-gray-300 */
+            color: #6b7280; /* text-gray-500 */
+            background: none;
+        }
+        #add-dates-btn:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+            border-color: #9ca3af; /* hover:border-gray-400 */
+        }
+        
+        #predict-btn {
+            width: 100%;
+            margin-top: 24px; /* mt-6 */
+            padding: 12px 16px; /* py-3 px-4 */
+            background-color: #ec4899; /* bg-pink-500 */
+            color: white;
+            font-weight: 600; /* font-semibold */
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
+        }
+        #predict-btn:hover {
+            background-color: #db2777; /* hover:bg-pink-600 */
+        }
+        #predict-btn:disabled {
+            background-color: #f9a8d4; /* disabled:bg-pink-300 */
+            cursor: not-allowed;
+        }
+        
+        /* 模型选择 (已移除) */
+        
+        #error-msg {
+            color: #ef4444; /* text-red-500 */
+            margin-top: 12px; /* mt-3 */
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            min-height: 1.25rem; /* 'em' is better for text, but 'rem' is ok */
+        }
+
+        /* 预测结果 */
+        #prediction-section {
+            display: grid;
+            gap: 24px; /* space-y-6 */
+            animation: fade-in 0.5s ease-out;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .prediction-result {
+            text-align: center;
+        }
+        .prediction-result .label {
+            color: #6b7280; /* text-gray-500 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .prediction-result .date {
+            font-size: 3rem; /* text-5xl */
+            font-weight: 700; /* font-bold */
+            color: #ec4899; /* text-pink-500 */
+            margin: 12px 0; /* my-3 */
+        }
+        .prediction-result .range {
+            font-size: 0.875rem; /* text-sm */
+            color: #4b5563; /* text-gray-600 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            display: inline-block;
+            padding: 4px 12px; /* px-3 py-1 */
+            border-radius: 9999px; /* rounded-full */
+        }
+        
+        /* 周期分析 (图表) */
+        #chart-container {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 24px; /* mb-6 */
+        }
+
+        /* 周期分析 (列表) */
+        .stats-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 16px; /* space-y-4 */
+            font-size: 1rem; /* text-base */
+        }
+        .stats-list li {
+            padding: 0;
+        }
+        .stats-list .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-list .stat-item strong {
+            font-weight: 600; /* font-semibold */
+            padding: 2px 8px; /* px-2 py-0.5 */
+            border-radius: 4px; /* rounded */
+        }
+        .stat-avg strong {
+            background-color: #fce7f3; /* bg-pink-100 */
+            color: #831843; /* text-pink-800 */
+        }
+        .stat-minmax strong {
+            background-color: #f3f4f6; /* bg-gray-100 */
+            font-weight: 500; /* font-medium */
+        }
+        .stats-list .description {
+            font-size: 0.75rem; /* text-xs */
+            color: #6b7280; /* text-gray-500 */
+            margin-top: 4px; /* mt-1 */
+            padding-left: 4px; /* pl-1 */
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding-top: 16px; /* pt-4 */
+            font-size: 0.75rem; /* text-xs */
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* --- 日历 Modal --- */
+        #calendar-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* bg-black bg-opacity-50 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 16px; /* p-4 */
+        }
+        #calendar-modal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 16px; /* rounded-2xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* shadow-xl */
+            width: 100%;
+            max-width: 384px; /* max-w-sm */
+            font-size: 0.875rem; /* text-sm */
+        }
+        
+        .modal-header, .modal-footer, .modal-stats {
+            padding: 16px; /* p-4 */
+        }
+        .modal-header {
+            border-bottom: 1px solid #e5e7eb; /* border-b */
+        }
+        .modal-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px; /* mb-4 */
+        }
+        .modal-header-top h3 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            margin: 0;
+            text-align: left;
+        }
+        .modal-nav {
+            display: flex;
+            gap: 8px; /* space-x-2 */
+        }
+        .modal-nav button {
+            padding: 4px; /* p-1 */
+            border: none;
+            background: none;
+            border-radius: 9999px; /* rounded-full */
+        }
+        .modal-nav button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+        
+        .calendar-grid-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            color: #6b7280; /* text-gray-500 */
+        }
+        
+        .calendar-grid-body {
+            padding: 16px; /* p-4 */
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px 0; /* gap-y-2 */
+            /* --- 新增：为滑动做准备 --- */
+            touch-action: pan-y;
+        }
+        .calendar-grid-body .day-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calendar-grid-body .day-button {
+            width: 40px; /* w-10 */
+            height: 40px; /* h-10 */
+            border-radius: 9999px; /* rounded-full */
+            border: none;
+            background: none;
+        }
+        .calendar-grid-body .day-button:hover:not(.selected) {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+        .calendar-grid-body .day-button.today {
+            background-color: #fbcfe8; /* bg-pink-200 */
+        }
+        .calendar-grid-body .day-button.selected {
+            background-color: #ec4899; /* bg-pink-500 */
+            color: white;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #e5e7eb; /* border-t */
+            display: flex; /* 更改为 flex */
+            justify-content: flex-end; /* 右对齐 */
+            gap: 8px; /* space-x-2 */
+        }
+        
+        /* .modal-stats (已移除) */
+
+        #modal-cancel-btn {
+            padding: 8px 16px; /* px-4 py-2 */
+            color: #4b5563; /* text-gray-600 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            border: none;
+        }
+        #modal-cancel-btn:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+        #modal-save-btn {
+            padding: 8px 16px; /* px-4 py-2 */
+            background-color: #ec4899; /* bg-pink-500 */
+            color: white;
+            border: none;
+        }
+        #modal-save-btn:hover {
+            background-color: #db2777; /* hover:bg-pink-600 */
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>经期预测</h1>
+            <button id="open-calendar-btn" class="icon-button" aria-label="选择日期">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <section class="card">
+            <h2>历史经期记录</h2>
+            <div id="records-list">
+                <p>点击下方按钮或日历图标添加记录。</p>
+            </div>
+            <button id="add-dates-btn">+ 添加/编辑日期</button>
+            
+            <button id="predict-btn" disabled>开始预测</button>
+            <p id="error-msg"></p>
+        </section>
+
+        <div id="prediction-section" style="display: none;">
+            <div class="card prediction-result">
+                <h2 style="margin-bottom: 4px;">下一次经期预测</h2>
+                <p class="label" style="margin-top: 8px;">最可能日期</p>
+                <p class="date" id="predicted-date">2025-12-25</p>
+                <p class="range" id="predicted-range">2025-12-23 ~ 2025-12-27</p>
+            </div>
+            
+            <div class="card" id="analysis-card" style="display: none;">
+                <h2>周期分析</h2>
+
+                <div id="chart-container">
+                    <canvas id="cycle-chart"></canvas>
+                </div>
+                
+                <ul class="stats-list">
+                    <li class="stat-avg">
+                      <div class="stat-item">
+                            <span>平均周期长度</span>
+                            <strong id="stat-avg">... 天</strong>
+                        </div>
+                        <p class="description">根据您历史周期的平均天数计算得出，是预测未来周期的重要依据。</p>
+                    </li>
+                    <li class="stat-minmax">
+                        <div class="stat-item">
+                            <span>最短周期</span>
+                            <strong id="stat-shortest">... 天</strong>
+                        </div>
+                         <p class="description">您记录的最短的一次周期长度，了解周期波动范围有助健康管理。</p>
+                    </li>
+                     <li class="stat-minmax">
+                        <div class="stat-item">
+                            <span>最长周期</span>
+                            <strong id="stat-longest">... 天</strong>
+                        </div>
+                         <p class="description">您记录的最长的一次周期长度，与最短周期一同反映您周期的规律性。</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>所有计算均在您的浏览器中完成，您的数据不会被发送到任何服务器。</p>
+        </footer>
+    </main>
+    
+    <div id="calendar-modal" class="hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-header-top">
+                    <h3 id="modal-month-year">...</h3>
+                    <div class="modal-nav">
+                        <button id="modal-prev-month">&lt;</button>
+                        <button id="modal-next-month">&gt;</button>
+                    </div>
+                </div>
+                <div class="calendar-grid-header">
+                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                </div>
+            </div>
+            <div class="calendar-grid-body" id="calendar-days-grid">
+                </div>
+            <div class="modal-footer">
+                <button id="modal-cancel-btn">取消</button>
+                <button id="modal-save-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. 状态管理 (代替 React State) ---
+            let records = [];
+            let prediction = null;
+            // let predictionModel = 'simple'; // 已移除
+            let defaultCycleLength = 28;
+            let isCalendarOpen = false;
+            let modalCurrentDate = new Date();
+            let modalSelectedDates = new Set();
+            let today = formatDate(new Date());
+            let cycleChart = null; // 用于存储 Chart.js 实例
+
+            // --- 2. DOM 元素引用 ---
+            const openCalendarBtn = document.getElementById('open-calendar-btn');
+            const addDatesBtn = document.getElementById('add-dates-btn');
+            const predictBtn = document.getElementById('predict-btn');
+            const recordsList = document.getElementById('records-list');
+            const errorMsg = document.getElementById('error-msg');
+            const predictionSection = document.getElementById('prediction-section');
+            const predictedDateEl = document.getElementById('predicted-date');
+            const predictedRangeEl = document.getElementById('predicted-range');
+            // const modelDisplayEl = document.getElementById('model-display'); // 已移除
+            const analysisCard = document.getElementById('analysis-card');
+            const chartCanvas = document.getElementById('cycle-chart');
+            const statAvg = document.getElementById('stat-avg');
+            const statShortest = document.getElementById('stat-shortest');
+            const statLongest = document.getElementById('stat-longest');
+            // const radioButtons = document.querySelectorAll('input[name="model"]'); // 已移除
+            
+            // Modal 元素
+            const modal = document.getElementById('calendar-modal');
+            const modalMonthYear = document.getElementById('modal-month-year');
+            const modalPrevMonth = document.getElementById('modal-prev-month');
+            const modalNextMonth = document.getElementById('modal-next-month');
+            const calendarDaysGrid = document.getElementById('calendar-days-grid');
+            // const modalAvgStat = document.getElementById('modal-avg-stat'); // 已移除
+            // const defaultCycleInput = document.getElementById('default-cycle-input'); // 已移除
+            // const setDefaultBtn = document.getElementById('set-default-btn'); // 已移除
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const modalSaveBtn = document.getElementById('modal-save-btn');
+
+            // --- 3. 辅助函数 (来自 App.tsx, CalendarModal.tsx) ---
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function parseDate(dateStr) {
+                // T00:00:00 确保解析为本地时区的午夜
+                return new Date(dateStr + 'T00:00:00');
+            }
+            
+            function clearPrediction() {
+                prediction = null;
+                if (cycleChart) {
+                    cycleChart.destroy();
+                    cycleChart = null;
+                }
+            }
+
+            // --- 4. 核心逻辑 (来自 App.tsx) ---
+            
+            function loadData() {
+                // 加载默认周期
+                try {
+                    const savedDefault = localStorage.getItem('defaultCycleLength');
+                    defaultCycleLength = savedDefault ? parseInt(savedDefault, 10) : 28;
+                } catch (e) {
+                    console.error("Failed to parse defaultCycleLength", e);
+                    defaultCycleLength = 28;
+                }
+                
+                // 加载记录
+                try {
+                    const savedRecords = localStorage.getItem('periodRecords');
+                    if (!savedRecords) {
+                        records = [];
+                        return;
+                    }
+                    const parsed = JSON.parse(savedRecords);
+                    if (Array.isArray(parsed) && (parsed.length === 0 || (typeof parsed[0] === 'object' && parsed[0].startDate))) {
+                        records = parsed.map(r => ({ id: r.id || r.startDate, startDate: r.startDate }));
+                    } else {
+                        records = [];
+                    }
+                } catch (error) {
+                    console.error("Failed to parse records from localStorage", error);
+                    records = [];
+                }
+            }
+            
+            function saveData() {
+                localStorage.setItem('periodRecords', JSON.stringify(records));
+                // 默认周期不再由用户设置，但我们仍然可以保存它（如果将来需要的话）
+                // localStorage.setItem('defaultCycleLength', defaultCycleLength.toString());
+            }
+            
+            function calculateStats(dateRecords) {
+                if (dateRecords.length < 2) return null;
+                const validDates = dateRecords.map(r => parseDate(r.startDate)).sort((a,b) => a.getTime() - b.getTime());
+                const cycleLengths = [];
+                for (let i = 1; i < validDates.length; i++) {
+                    const diffTime = Math.abs(validDates[i].getTime() - validDates[i-1].getTime());
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                    cycleLengths.push(diffDays);
+                }
+                if (cycleLengths.length === 0) return null;
+                const totalDays = cycleLengths.reduce((sum, length) => sum + length, 0);
+                const average = Math.round(totalDays / cycleLengths.length);
+                const shortest = Math.min(...cycleLengths);
+                const longest = Math.max(...cycleLengths);
+                return { average, shortest, longest };
+            }
+
+            function handleDeleteRecord(id) {
+                records = records.filter(r => r.id !== id);
+                clearPrediction(); // 删除记录后清空预测和图表
+                render(); // 重新渲染
+                saveData(); // 保存更改
+            }
+            
+            function handlePredict() {
+                // 模拟 React 的 setIsLoading(true)
+                predictBtn.disabled = true;
+                predictBtn.textContent = '正在计算...';
+                errorMsg.textContent = '';
+                clearPrediction(); // 清除旧预测和图表
+                
+                const sortedRecords = [...records].sort((a, b) => parseDate(a.startDate).getTime() - parseDate(b.startDate).getTime());
+
+                if (sortedRecords.length < 1) {
+                    errorMsg.textContent = '请至少选择一个经期开始日期。';
+                    predictBtn.disabled = false;
+                    predictBtn.textContent = '开始预测';
+                    render();
+                    return;
+                }
+
+                if (sortedRecords.length < 2) {
+                    if (defaultCycleLength > 0 && sortedRecords.length === 1) {
+                        const lastDate = parseDate(sortedRecords[0].startDate);
+                        const predictedDate = new Date(lastDate);
+                        predictedDate.setDate(predictedDate.getDate() + defaultCycleLength);
+
+                        const rangeStart = new Date(predictedDate);
+                        rangeStart.setDate(rangeStart.getDate() - 3); // Default range
+                        const rangeEnd = new Date(predictedDate);
+                        rangeEnd.setDate(rangeEnd.getDate() + 3);
+
+                        prediction = {
+                            stats: { average: defaultCycleLength, shortest: defaultCycleLength, longest: defaultCycleLength },
+                            predictedDate: formatDate(predictedDate),
+                            rangeStart: formatDate(rangeStart),
+                            rangeEnd: formatDate(rangeEnd),
+                            cycleLengths: [],
+                        };
+                        
+                        predictBtn.disabled = false;
+                        predictBtn.textContent = '开始预测';
+                        render();
+                        return;
+                    } else {
+                        errorMsg.textContent = '请至少选择两个经期开始日期，或设置一个默认周期长度并选择一个开始日期。';
+                        predictBtn.disabled = false;
+                        predictBtn.textContent = '开始预测';
+                        render();
+                        return;
+                    }
+                }
+                
+                const validDates = sortedRecords.map(r => parseDate(r.startDate));
+                const cycleLengths = [];
+                for (let i = 1; i < validDates.length; i++) {
+                    const diffTime = Math.abs(validDates[i].getTime() - validDates[i-1].getTime());
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                    cycleLengths.push(diffDays);
+                }
+                
+                if (cycleLengths.length === 0) {
+                    errorMsg.textContent = '无法计算周期长度，请检查输入的日期。';
+                    predictBtn.disabled = false;
+                    predictBtn.textContent = '开始预测';
+                    render();
+                    return;
+                }
+
+                let predictionAverage;
+                // 默认使用加权平均 (如果周期 > 1)
+                if (cycleLengths.length > 1) {
+                    let weightedSum = 0;
+                    let weightSum = 0;
+                    for (let i = 0; i < cycleLengths.length; i++) {
+                        const weight = i + 1; // Increasing weight
+                        weightedSum += cycleLengths[i] * weight;
+                        weightSum += weight;
+                    }
+                    predictionAverage = Math.round(weightedSum / weightSum);
+                } else {
+                    // 否则使用简单平均 (此时 cycleLengths.length === 1)
+                    const totalDays = cycleLengths.reduce((sum, length) => sum + length, 0);
+                    predictionAverage = Math.round(totalDays / cycleLengths.length);
+                }
+
+                const totalDays = cycleLengths.reduce((sum, length) => sum + length, 0);
+                const average = Math.round(totalDays / cycleLengths.length);
+                const shortest = Math.min(...cycleLengths);
+                const longest = Math.max(...cycleLengths);
+
+                const lastDate = validDates[validDates.length - 1];
+                const predictedDate = new Date(lastDate);
+                predictedDate.setDate(predictedDate.getDate() + predictionAverage);
+
+                const variability = Math.round((longest - shortest) / 2);
+                const delta = Math.max(1, Math.min(7, variability));
+
+                const rangeStart = new Date(predictedDate);
+                rangeStart.setDate(rangeStart.getDate() - delta);
+                const rangeEnd = new Date(predictedDate);
+                rangeEnd.setDate(rangeEnd.getDate() + delta);
+
+                prediction = {
+                    stats: { average, shortest, longest },
+                    predictedDate: formatDate(predictedDate),
+                    rangeStart: formatDate(rangeStart),
+                    rangeEnd: formatDate(rangeEnd),
+                    cycleLengths,
+                };
+
+                predictBtn.disabled = false;
+                predictBtn.textContent = '开始预测';
+                render(); // 包含 renderChart 的调用
+            }
+
+            // --- 5. Modal 逻辑 (来自 CalendarModal.tsx) ---
+            
+            function openModal() {
+                modalCurrentDate = new Date(); // 总是重置为当月
+                modalSelectedDates = new Set(records.map(r => r.startDate));
+                isCalendarOpen = true;
+                // defaultCycleInput.value = defaultCycleLength.toString(); // 已移除
+                render(); // 渲染整个应用（会调用 renderModal）
+            }
+
+            function closeModal() {
+                isCalendarOpen = false;
+                render();
+            }
+
+            function handleSaveDates() {
+                const sortedDates = Array.from(modalSelectedDates).sort();
+                records = sortedDates.map(d => ({ id: d, startDate: d }));
+                clearPrediction(); // 更改日期后清空预测和图表
+                closeModal(); // 会触发 render()
+                saveData(); // 保存更改
+            }
+            
+            // handleSetDefault 已移除
+
+            // --- 6. 渲染函数 (代替 React Render) ---
+            
+            // 主渲染函数
+            function render() {
+                renderRecordsList();
+                renderPrediction();
+                renderModal();
+                
+                // 更新按钮状态
+                predictBtn.disabled = records.length < 1;
+            }
+            
+            // 渲染历史记录
+            function renderRecordsList() {
+                if (records.length === 0) {
+                    recordsList.innerHTML = '<p>点击下方按钮或日历图标添加记录。</p>';
+                    return;
+                }
+                
+                recordsList.innerHTML = ''; // 清空
+                const sortedRecords = [...records].sort((a,b) => parseDate(b.startDate).getTime() - parseDate(a.startDate).getTime());
+                
+                sortedRecords.forEach(r => {
+                    const tag = document.createElement('div');
+                    tag.className = 'record-tag';
+                    tag.innerHTML = `
+                        <span>${r.startDate}</span>
+                        <button class="delete-record-btn" data-id="${r.id}">
+                            <svg class="icon-close" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    `;
+                    // 为删除按钮添加事件监听
+                    tag.querySelector('button').addEventListener('click', () => {
+                        handleDeleteRecord(r.id);
+                    });
+                    recordsList.appendChild(tag);
+                });
+            }
+
+            // 渲染预测结果
+            function renderPrediction() {
+                if (!prediction) {
+                    predictionSection.style.display = 'none';
+                    return;
+                }
+                
+                predictionSection.style.display = 'grid';
+                predictedDateEl.textContent = prediction.predictedDate;
+                
+                // --- 修改：在这里添加 "预测范围：" ---
+                predictedRangeEl.textContent = `预测范围：${prediction.rangeStart} ~ ${prediction.rangeEnd}`;
+                // --- 修改结束 ---
+
+                // modelDisplayEl.textContent = ...; // 已移除
+
+                if (prediction.cycleLengths.length > 0) {
+                    analysisCard.style.display = 'block';
+                    statAvg.textContent = `${prediction.stats.average} 天`;
+                    statShortest.textContent = `${prediction.stats.shortest} 天`;
+                    statLongest.textContent = `${prediction.stats.longest} 天`;
+                    renderChart(prediction); // 渲染图表
+                } else {
+                    analysisCard.style.display = 'none';
+                }
+            }
+
+            // 渲染图表
+            function renderChart(prediction) {
+                if (cycleChart) {
+                    cycleChart.destroy(); // 销毁旧图表
+                }
+                
+                const labels = prediction.cycleLengths.map((_, index) => `周期 ${index + 1}`);
+                const cycleData = prediction.cycleLengths;
+                const averageData = Array(prediction.cycleLengths.length).fill(prediction.stats.average);
+
+                const ctx = chartCanvas.getContext('2d');
+                cycleChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '长度(天)',
+                                data: cycleData,
+                                borderColor: '#ec4899', // pink
+                                backgroundColor: '#ec4899',
+                                tension: 0.1,
+                                borderWidth: 2,
+                                fill: false
+                            },
+                            {
+                                label: '平均长度',
+                                data: averageData,
+                                borderColor: '#8884d8', // purple
+                                borderDash: [5, 5],
+                                backgroundColor: '#8884d8',
+                                borderWidth: 2,
+                                pointRadius: 0, // 平均线不需要点
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                // 动态调整 Y 轴范围
+                                suggestedMin: Math.max(0, prediction.stats.shortest - 2),
+                                suggestedMax: prediction.stats.longest + 2
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+            // 渲染 Modal (包括日历)
+            function renderModal() {
+                if (!isCalendarOpen) {
+                    modal.classList.add('hidden');
+                    return;
+                }
+                
+                modal.classList.remove('hidden');
+                
+                // 渲染头部
+                modalMonthYear.textContent = `${modalCurrentDate.getFullYear()} 年 ${modalCurrentDate.getMonth() + 1} 月`;
+                
+                // 渲染日历
+                calendarDaysGrid.innerHTML = ''; // 清空
+                const year = modalCurrentDate.getFullYear();
+                const month = modalCurrentDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                // 前置空格
+                for (let i = 0; i < firstDay; i++) {
+                    calendarDaysGrid.innerHTML += '<div class="day-cell"></div>';
+                }
+
+                // 日期
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dateStr = formatDate(new Date(year, month, i, 12)); // 12点避免时区问题
+                    const isSelected = modalSelectedDates.has(dateStr);
+                    const isToday = dateStr === today;
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    
+                    const button = document.createElement('button');
+                    button.className = 'day-button';
+                    button.textContent = i;
+                    
+                    if (isSelected) button.classList.add('selected');
+                    else if (isToday) button.classList.add('today');
+                    
+                    button.addEventListener('click', () => {
+                        if (modalSelectedDates.has(dateStr)) {
+                            modalSelectedDates.delete(dateStr);
+                        } else {
+                            modalSelectedDates.add(dateStr);
+                        }
+                        renderModal(); // 仅重绘 modal
+                    });
+                    
+                    cell.appendChild(button);
+                    calendarDaysGrid.appendChild(cell);
+                }
+                
+                // renderModalStats(); // 已移除
+            }
+            
+            // renderModalStats 已移除
+
+            // --- 7. 事件监听器 ---
+            
+            // 打开 Modal
+            openCalendarBtn.addEventListener('click', openModal);
+            addDatesBtn.addEventListener('click', openModal);
+
+            // Modal 导航
+            modalPrevMonth.addEventListener('click', () => {
+                modalCurrentDate.setMonth(modalCurrentDate.getMonth() - 1);
+                renderModal();
+            });
+            modalNextMonth.addEventListener('click', () => {
+                modalCurrentDate.setMonth(modalCurrentDate.getMonth() + 1);
+                renderModal();
+            });
+            
+            // --- 新增：日历滑动切换月份 ---
+            let touchStartX = 0;
+            let touchEndX = 0;
+            const swipeThreshold = 50; // 最小滑动距离 (px)
+
+            calendarDaysGrid.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true }); // 使用 passive 提高性能
+
+            calendarDaysGrid.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipedDistance = touchEndX - touchStartX;
+
+                if (Math.abs(swipedDistance) < swipeThreshold) {
+                    return; // 滑动距离太短，不处理
+                }
+
+                if (swipedDistance < 0) {
+                    // 向左滑动 (swipe left) -> 下一个月
+                    modalCurrentDate.setMonth(modalCurrentDate.getMonth() + 1);
+                    renderModal();
+                } else if (swipedDistance > 0) {
+                    // 向右滑动 (swipe right) -> 上一个月
+                    modalCurrentDate.setMonth(modalCurrentDate.getMonth() - 1);
+                    renderModal();
+                }
+                
+                // 重置
+                touchStartX = 0;
+                touchEndX = 0;
+            }
+            // --- 滑动逻辑结束 ---
+            
+            // Modal 操作
+            modalCancelBtn.addEventListener('click', closeModal);
+            modalSaveBtn.addEventListener('click', handleSaveDates);
+            // setDefaultBtn.addEventListener('click', handleSetDefault); // 已移除
+            
+            // 模型选择 (已移除)
+            
+            // 主操作
+            predictBtn.addEventListener('click', handlePredict);
+
+            // --- 8. 初始化 ---
+            loadData(); // 加载数据
+            render(); // 初始渲染
+
+        });
+    </script>
+
+</body>
+</html>
