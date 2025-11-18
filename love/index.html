@@ -1,592 +1,424 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<title>经期 & 排卵预测</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-/* ——— 1. 核心设计语言 ——— */
-:root{
-  --primary:#FF7EAE;       /* 经期粉 */
-  --primary-bg: #FFF0F5;
-  --birthday:#FF9B7E;      /* 辅助橙 */
-  --fertile:#B19CD9;       /* 排卵紫 */
-  --fertile-bg:#F3EFFF;    /* 排卵淡紫背景 */
-  --bg:#F9FAFB;
-  --card-bg:#fff;
-  --text:#343434;
-  --gray-text: #888;
-  --gutter:1rem;
-  --topH:3.5rem;
-  --radius: 1.2rem;
+<!DOCTYPE html>  <html lang="zh-CN">  
+<head>  
+<meta charset="utf-8">  
+<title>我们的动态</title>  
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">  <style>  
+/* ——— 全局配色 ——— */  
+:root{  
+  --primary:#FF7EAE;  
+  --birthday:#FF9B7E;  
+  --bg:#fff;  
+  --text:#343434;  
+  --gutter:1rem;  
+  --topH:3.2rem;  
+}  
+/* ——— 通用重置 ——— */  
+/* 放在现有 <style> 里任意位置即可 */  
+body.noscroll{  
+  height:100vh;          /* 防止 iOS “橡皮筋” */  
+  overflow:hidden;       /* 彻底禁掉背景滚动 */  
+  overscroll-behavior:contain; /* 禁止下拉回弹把页面拉动 */  
+}  
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}  
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}  
+  
+/* ——— 顶栏 ——— */  
+#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:center;height:var(--topH);font-weight:600;font-size:1.05rem;border-bottom:1px solid #0001;background:#fff}  
+#toolbar{position:absolute;right:1rem;display:flex;gap:1rem}  
+#toolbar img{width:1.35rem;height:1.35rem;cursor:pointer}  
+  
+/* ——— 相伴天数 ——— */  
+#daysLine{text-align:center;font-size:1.2rem;font-weight:600;margin:2rem 0 1.5rem}  
+  
+/* ——— 卡片  ——— */  
+main{max-width:900px;margin:0 auto;padding:0 1rem}  
+.milestones{display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}  
+.card{background:#fff;border-radius:1.25rem;box-shadow:0 4px 10px rgba(0,0,0,.1);overflow:hidden;scroll-margin-top:calc(var(--topH) + 12px);opacity:0;transform:translateY(30px);transition:opacity .55s ease,transform .55s ease}  
+.card.visible{opacity:1;transform:translateY(0)}  
+.card-content{padding:1rem 1.25rem .75rem}  
+.card-content h3{font-size:1.25rem;margin-bottom:.5rem;color:var(--primary)}  
+.card-content time{display:block;font-size:.9rem;color:#555;margin-bottom:.75rem}  
+.banner,.image-grid{padding:var(--gutter)}  
+.image-grid{display:grid;gap:4px;width:100%}  
+  
+/* Skeleton + fade-in */  
+.image-grid img,.banner img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:.4rem;cursor:pointer;opacity:0;transform:scale(.95);transition:opacity .5s ease,transform .5s ease;background:#f2f2f2}  
+.image-grid img.loading,.banner img.loading{animation:sk 1.2s linear infinite;background-size:400% 100%}  
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}  
+.image-grid img.loaded,.banner img.loaded{opacity:1;transform:scale(1);background:none}  
+.banner img{height:200px;aspect-ratio:auto}  
+  
+/* ——— 页脚 ——— */  
+footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.9rem}  
+  
+/* ——— 通用弹窗盒子 ——— */  
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:center;justify-content:center;z-index:999}  
+.modal.show{display:flex}  
+.box{background:var(--bg);border-radius:.9rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}  
+@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}  
+  
+/* ——— 日历主体 ——— */  
+.calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}  
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem}  
+.cal-head .ym-tap{cursor:pointer}  
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}  
+.cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none}  
+.cal-grid div.other{opacity:.35}  
+.cal-grid div.hasData{background:var(--primary);color:#fff}  
+.cal-grid div.birthday{background:var(--birthday);color:#fff}  
+.cal-grid div.selected{outline:2px solid #FE5090;outline-offset:-2px}  
+  
+/* ——— 年/月滚轮选择器 ——— */  
+
+.picker-col::-webkit-scrollbar{display:none}  
+.picker-col{
+  width: 98px;
+  height: 190px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  scroll-snap-type: y mandatory;   /* ← 新增 */
 }
-
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-
-body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    line-height:1.6;
-    padding-bottom: 2rem;
-}
-
-body.noscroll { overflow: hidden; }
-
-/* 顶栏 */
-#topbar{
-    position:sticky;top:0;z-index:200;
-    display:flex;align-items:center;justify-content:center;
-    height:var(--topH);
-    font-weight:700;font-size:1.1rem;
-    background:rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-bottom:1px solid rgba(0,0,0,0.05);
-}
-#toolbar{position:absolute;right:1rem;display:flex;gap:1rem}
-#toolbar img{width:1.4rem;height:1.4rem;cursor:pointer; opacity: 0.7; }
-
-/* 卡片系统 */
-main{max-width:600px;margin:0 auto;padding:1.2rem 1rem 0}
-
-.card{
-    background:var(--card-bg);
-    border-radius:var(--radius);
-    box-shadow:0 4px 16px rgba(0,0,0,0.04);
-    overflow:hidden;
-    margin-bottom: 1.5rem;
-    padding: 1.2rem;
-    animation: fadeUp 0.5s ease backwards;
-}
-@keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
-
-.card-header { margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
-.card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
-
-/* ——— 首页状态卡片 ——— */
-.status-box { text-align: center; padding: 1rem 0; }
-.empty-tip { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 1.5rem; }
-.btn-main-action {
-    background: var(--primary); color: #fff; border: none;
-    padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600;
-    box-shadow: 0 4px 12px rgba(255, 126, 174, 0.4); cursor: pointer;
-    transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px;
-}
-.btn-main-action:active { transform: scale(0.96); }
-.btn-icon-small { width: 1.1rem; height: 1.1rem; filter: brightness(0) invert(1); }
-
-/* ——— 预测结果 ——— */
-.prediction-highlight { text-align: center; padding: 0.5rem 0; }
-.prediction-highlight .date { font-size: 2.5rem; font-weight: 700; color: var(--primary); line-height: 1.2; margin: 0.5rem 0; }
-.prediction-highlight .label { font-size: 0.9rem; color: #888; }
-.prediction-highlight .range-badge { 
-    display: inline-block; background: #f4f4f4; color: #666; 
-    padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.85rem; margin-top: 0.5rem; 
-}
-
-/* ——— 排卵与易孕期 ——— */
-.ovulation-card .card-title, .ovulation-highlight .date { color: var(--fertile); }
-.fertile-window-box {
-    background: var(--fertile-bg); border-radius: 1rem; padding: 1rem; margin-top: 1rem;
-    display: flex; align-items: center; justify-content: space-between;
-}
-.fertile-info h4 { color: var(--fertile); font-size: 0.95rem; margin-bottom: 0.2rem; }
-.fertile-info div { font-size: 0.85rem; color: #666; }
-.icon-heart { font-size: 1.5rem; color: var(--fertile); animation: pulse 2s infinite; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
-
-.timeline-container { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f5f5f5; }
-.timeline-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #eee; }
-.t-seg { height: 100%; }
-.t-safe { background: #E0E0E0; flex: 2; }
-.t-fertile { background: var(--fertile); opacity: 0.6; flex: 1; }
-.t-ovulation { background: var(--fertile); flex: 0.4; }
-.t-period { background: var(--primary); flex: 1; }
-.timeline-legend { display: flex; gap: 1rem; justify-content: center; margin-top: 0.8rem; font-size: 0.75rem; color: #888; }
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;}
-
-/* ——— 周期分析 ——— */
-.card.analysis { border-top: none; } 
-.card.analysis .card-title { color: var(--text); }
-.stats-grid { display: flex; justify-content: space-between; gap: 0.8rem; margin-top: 2.25rem; }
-.stat-box {
-    flex: 1; background: #FAFAFA; border-radius: 1rem; padding: 1rem 0.2rem;
-    text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.stat-label { font-size: 0.75rem; color: #999; margin-bottom: 0.4rem; }
-.stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-.stat-value.highlight { color: var(--primary); }
-
-
-/* ——— 5. 弹窗日历样式 ——— */
-.modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    display: none; align-items: center; justify-content: center; z-index: 999;
-    backdrop-filter: blur(3px);
-}
-.modal.show { display: flex; }
-.modal-box {
-    background: #fff; border-radius: 1.5rem;
-    width: 350px; max-width: 92vw;
-    padding: 1.5rem;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-/* 日历头部 */
-.cal-ctrl-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1rem; padding: 0 0.2rem;
-}
-.cal-month-label { font-size: 1.1rem; font-weight: 700; color: var(--text); }
-.btn-month-nav {
-    background: none; border: none; padding: 0.5rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0.6;
-}
-/* 去除点击后的高亮效果 */
-.btn-month-nav:active, .btn-month-nav:focus { outline: none; transform: none; opacity: 0.6; }
-.btn-month-nav:hover { opacity: 1; }
-
-.nav-icon { width: 1.2rem; height: 1.2rem; }
-.rotate-180 { transform: rotate(180deg); }
-
-/* 日历网格 */
-.cal-header-row, .cal-body-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 0.5rem;
-}
-.cal-head { 
-    text-align: center; color: #bbb; font-size: 0.8rem; font-weight: 600; 
-    display: flex; align-items: center; justify-content: center;
-}
-.cal-cell {
-    aspect-ratio: 1/1; display: flex; justify-content: center; align-items: center;
-    border-radius: 50%; font-size: 0.95rem; cursor: pointer;
-    transition: all 0.15s; position: relative; margin: 1px;
-}
-.cal-cell.today { border: 1.5px solid var(--primary); color: var(--primary); font-weight: 700; }
-.cal-cell.has-data { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(255, 126, 174, 0.4); }
-.cal-cell.other-month { color: #eee; font-weight: 400; }
-.cal-cell:active { transform: scale(0.9); }
-
-/* 底部操作栏 (New Layout) */
-.cal-action-bar {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    margin-top: 1.5rem; 
-    padding-top: 1rem; 
-    border-top: 1px solid #f5f5f5;
-}
-
-/* 左侧按钮组 */
-.cal-nav-group {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-jump {
-    font-size: 0.85rem; 
-    color: var(--gray-text); 
-    background: #f7f7f7;
-    border: none; 
-    padding: 0.5rem 1rem; 
-    border-radius: 2rem;
-    cursor: pointer; 
-    font-weight: 500;
-}
-.btn-jump:disabled { opacity: 0.4; cursor: not-allowed; background: #fafafa; }
-/* 去除点击高亮/缩放 */
-.btn-jump:active, .btn-jump:focus { transform: none; outline: none; background: #f7f7f7; } 
-
-/* 右侧关闭按钮 (粉色风格) */
-.btn-close-primary {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1.2rem;
-    border-radius: 2rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(255, 126, 174, 0.3);
-}
-.btn-close-primary:active { transform: scale(0.96); }
-
-footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.8rem}
-</style>
-</head>
-<body>
-
-<div id="topbar">
-    经期预测工具
-    <div id="toolbar">
-                       
-    </div>    
-</div>
-
-<main>
-    <article class="card">
-        <div class="card-header">
-            <div class="card-title">经期记录</div>
-        </div>
-        <div class="status-box">
-            <p id="status-text" class="empty-tip">暂无记录，请添加数据以开始预测。</p>
-            
-            <button class="btn-main-action" id="mainAddBtn">
-                <img src="https://lestoy.com/love/icones/calendar.svg" class="btn-icon-small">
-                管理我的记录
-            </button>
-        </div>
-    </article>
-
-    <div id="results-wrapper" style="display:none;">
-        <article class="card">
-            <div class="card-header"><div class="card-title">下一次经期</div></div>
-            <div class="prediction-highlight">
-                <p class="label">预计开始时间</p>
-                <div class="date" id="predicted-date">--</div>
-                <div class="range-badge" id="predicted-range">预测范围: --</div>
-            </div>
-        </article>
-
-        <article class="card ovulation-card">
-            <div class="card-header"><div class="card-title">排卵与备孕</div></div>
-            <div class="prediction-highlight ovulation-highlight">
-                <p class="label">排卵日 (受孕概率高)</p>
-                <div class="date" id="ovulation-date">--</div>
-            </div>
-            
-            <div class="fertile-window-box">
-                <div class="fertile-info">
-                    <h4>易孕窗口期</h4>
-                    <div id="fertile-range">-- 至 --</div>
-                </div>
-                <div class="icon-heart">💜</div>
-            </div>
-
-            <div class="timeline-container">
-                <div class="timeline-bar">
-                    <div class="t-seg t-safe"></div>
-                    <div class="t-seg t-fertile"></div>
-                    <div class="t-seg t-ovulation"></div>
-                    <div class="t-seg t-fertile"></div>
-                    <div class="t-seg t-safe"></div>
-                    <div class="t-seg t-period"></div>
-                </div>
-                <div class="timeline-legend">
-                    <div class="legend-item"><div class="dot" style="background:var(--fertile)"></div>排卵期</div>
-                    <div class="legend-item"><div class="dot" style="background:var(--primary)"></div>经期</div>
-                </div>
-            </div>
-        </article>
-
-        <article class="card analysis">
-            <div class="card-header"><div class="card-title">周期数据分析</div></div>
-            <div style="height: 200px; width: 100%;">
-                <canvas id="cycle-chart"></canvas>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <span class="stat-label">平均周期</span>
-                    <strong class="stat-value highlight" id="stat-avg">--</strong>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">最短</span>
-                    <strong class="stat-value" id="stat-shortest">--</strong>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">最长</span>
-                    <strong class="stat-value" id="stat-longest">--</strong>
-                </div>
-            </div>
-        </article>
-    </div>
-</main>
-
-<footer>── • ──</footer>
-
-<div id="calendarModal" class="modal">
-    <div class="modal-box">
-        <div class="cal-ctrl-bar">
-            <button class="btn-month-nav" id="prevMonthBtn">
-                <img src="https://lestoy.com/love/icones/back.svg" class="nav-icon">
-            </button>
-            <div class="cal-month-label" id="calMonthLabel">--</div>
-            <button class="btn-month-nav" id="nextMonthBtn">
-                <img src="https://lestoy.com/love/icones/back.svg" class="nav-icon rotate-180">
-            </button>
-        </div>
-
-        <div class="cal-header-row">
-            <div class="cal-head">日</div><div class="cal-head">一</div><div class="cal-head">二</div>
-            <div class="cal-head">三</div><div class="cal-head">四</div><div class="cal-head">五</div><div class="cal-head">六</div>
-        </div>
-        <div class="cal-body-grid" id="calBodyGrid"></div>
-
-        <div class="cal-action-bar">
-            <div class="cal-nav-group">
-                <button class="btn-jump" id="jumpPrevBtn">上个记录</button>
-                <button class="btn-jump" id="jumpNextBtn">下个记录</button>
-            </div>
-            <button class="btn-close-primary" id="closeModalBtn">完成</button>
-        </div>
-    </div>
-</div>
-
+.picker-col div{
+  text-align:center;
+  padding:.7rem 0;
+  user-select:none;
+  cursor:pointer;
+  scroll-snap-align: center;       /* ← 新增 */
+} div.active{color:var(--primary);font-weight:600}  
+  
+.cal-head button {  
+  border: none;  
+  background: none;  
+  padding: 0;  
+  margin: 0;  
+  box-shadow: none;  
+  outline: none;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+}  
+  
+#prevM img, #nextM img {  
+  width: 1.1rem;  
+  height: 1.1rem;  
+  pointer-events: none;  
+  user-select: none;  
+  background: none;  
+}  
+  
+/* 左箭头保留原样（默认就是向左） */  
+.rotate-left {  
+  transform: rotate(0deg);  
+}  
+  
+/* 右箭头翻转 180° */  
+.rotate-right {  
+  transform: rotate(180deg);  
+}  
+/* ——— 搜索输入 ——— */  
+#searchInput{width:calc(100% - 2rem);margin:1.1rem 1rem .5rem;padding:.65rem 1rem;border:1.5px solid var(--primary);border-radius:.7rem;font-size:1rem;outline:none;transition:border-color .25s}  
+#resultList{list-style:none;margin:0 1rem 1.2rem;padding:0;max-height:60vh;overflow:auto}  
+#resultList li{padding:.65rem .3rem;border-bottom:1px solid #0001;cursor:pointer}  
+#resultList li time{font-size:.8rem;color:#666;margin-left:.4rem}  
+mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}  
+  
+/* 预览层加载指示器 */  
+.spinner{position:absolute;top:50%;left:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border:4px solid rgba(255,175,204,.3);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;display:none;z-index:1001}  
+@keyframes spin{to{transform:rotate(360deg)}}  
+#viewer{position:fixed;inset:0;display:none;overflow:hidden;z-index:1000;background:rgba(0,0,0,.9);touch-action:none;opacity:0;transition:opacity .25s}  
+#viewer.visible{opacity:1}  
+#carousel{display:flex;height:100%;transition:transform .3s ease}  
+.viewer-slide{flex:0 0 100%;display:flex;justify-content:center;align-items:center;overflow:hidden}  
+.viewer-slide img{max-width:100%;max-height:100%;object-fit:contain}  
+#imgCounter{position:absolute;bottom:20px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;pointer-events:none}  
+.rotate-left{transform:rotate(0deg)}  
+.rotate-right{transform:rotate(180deg)}  
+</style>  </head>  
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2FCVNFWJ4"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- 数据 ---
-    let records = new Set(); 
-    let displayDate = new Date();
-    let cycleChart = null;
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    // --- DOM ---
-    const mainAddBtn = document.getElementById('mainAddBtn');
-    
-    const statusText = document.getElementById('status-text');
-    const resultsWrapper = document.getElementById('results-wrapper');
-    
-    // Modal
-    const calendarModal = document.getElementById('calendarModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const calMonthLabel = document.getElementById('calMonthLabel');
-    const calBodyGrid = document.getElementById('calBodyGrid');
-    const prevMonthBtn = document.getElementById('prevMonthBtn');
-    const nextMonthBtn = document.getElementById('nextMonthBtn');
-    const jumpPrevBtn = document.getElementById('jumpPrevBtn');
-    const jumpNextBtn = document.getElementById('jumpNextBtn');
-
-    // Results
-    const predictedDateEl = document.getElementById('predicted-date');
-    const predictedRangeEl = document.getElementById('predicted-range');
-    const ovulationDateEl = document.getElementById('ovulation-date');
-    const fertileRangeEl = document.getElementById('fertile-range');
-    const statAvg = document.getElementById('stat-avg');
-    const statShortest = document.getElementById('stat-shortest');
-    const statLongest = document.getElementById('stat-longest');
-    const chartCanvas = document.getElementById('cycle-chart');
-
-    // --- 工具 ---
-    const formatDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const formatDateShort = d => `${d.getMonth()+1}月${d.getDate()}日`;
-    const parseDate = s => new Date(s + 'T00:00:00');
-
-    // --- 1. 初始化 ---
-    function loadData() {
-        try {
-            const saved = localStorage.getItem('periodRecords_v5');
-            if (saved) records = new Set(JSON.parse(saved));
-        } catch(e){ records = new Set(); }
-        updateUI();
-    }
-
-    function saveData() {
-        localStorage.setItem('periodRecords_v5', JSON.stringify(Array.from(records)));
-        updateUI();
-    }
-
-    // --- 2. UI 更新 ---
-    function updateUI() {
-        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
-
-        if (sorted.length === 0) {
-            statusText.textContent = "暂无记录，请添加数据以开始预测。";
-            resultsWrapper.style.display = 'none';
-        } else {
-            const lastDate = sorted[sorted.length-1];
-            statusText.textContent = `最近一次记录：${formatDate(lastDate)}`;
-            
-            if (sorted.length >= 1) { 
-                resultsWrapper.style.display = 'block';
-                calculatePrediction(sorted);
-            }
-        }
-        updateJumpButtons();
-    }
-
-    // --- 3. 预测 ---
-    function calculatePrediction(sortedDates) {
-        let avg = 28;
-        let cycleLengths = [];
-
-        if (sortedDates.length >= 2) {
-            let wSum = 0, wDiv = 0;
-            for(let i=1; i<sortedDates.length; i++){
-                const diff = Math.abs(sortedDates[i] - sortedDates[i-1]);
-                const days = Math.round(diff / 864e5);
-                cycleLengths.push(days);
-                wSum += days * i; wDiv += i;
-            }
-            avg = Math.round(wSum / wDiv);
-        }
-
-        const lastDate = sortedDates[sortedDates.length - 1];
-        const nextDate = new Date(lastDate);
-        nextDate.setDate(nextDate.getDate() + avg);
-        
-        const buffer = cycleLengths.length ? Math.ceil((Math.max(...cycleLengths) - Math.min(...cycleLengths))/2) : 2;
-        const rStart = new Date(nextDate); rStart.setDate(rStart.getDate() - Math.min(buffer, 3));
-        const rEnd = new Date(nextDate); rEnd.setDate(rEnd.getDate() + Math.min(buffer, 3));
-
-        const ovDate = new Date(nextDate); ovDate.setDate(ovDate.getDate() - 14);
-        const fStart = new Date(ovDate); fStart.setDate(fStart.getDate() - 5);
-        const fEnd = new Date(ovDate); fEnd.setDate(fEnd.getDate() + 1);
-
-        predictedDateEl.textContent = formatDate(nextDate);
-        predictedRangeEl.textContent = `最可能开始于：${formatDateShort(rStart)} 至 ${formatDateShort(rEnd)}`;
-        ovulationDateEl.textContent = formatDate(ovDate);
-        fertileRangeEl.textContent = `${formatDateShort(fStart)} 至 ${formatDateShort(fEnd)}`;
-
-        statAvg.textContent = avg + ' 天';
-        statShortest.textContent = (cycleLengths.length ? Math.min(...cycleLengths) : '--') + ' 天';
-        statLongest.textContent = (cycleLengths.length ? Math.max(...cycleLengths) : '--') + ' 天';
-
-        renderChart(cycleLengths, avg);
-    }
-
-    function renderChart(dataArr, avgVal) {
-        if(cycleChart) cycleChart.destroy();
-        const ctx = chartCanvas.getContext('2d');
-        if(dataArr.length === 0) return;
-
-        const avgData = Array(dataArr.length).fill(avgVal);
-
-        cycleChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dataArr.map((_, i) => `周期${i+1}`),
-                datasets: [
-                    {
-                        label: '实际天数', data: dataArr,
-                        borderColor: '#FF7EAE', backgroundColor: '#FF7EAE',
-                        tension: 0.3, pointRadius: 4,
-                    },
-                    {
-                        label: '平均天数', data: avgData,
-                        borderColor: '#FF9B7E', borderDash: [5, 5],
-                        pointRadius: 3, pointBackgroundColor: '#fff', pointBorderColor: '#FF9B7E',
-                        pointBorderWidth: 2, borderWidth: 2, fill: false, tension: 0
-                    }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,                               
-                plugins: { legend: { display: true, position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
-                scales: {
-                    y: { grid: { color: '#f5f5f5' }, ticks: { stepSize: 1, color: '#bbb' } },
-                    x: { grid: { display: false }, ticks: { color: '#bbb' } }
-                }
-            }
-        });
-    }
-
-    // --- 4. Modal ---
-    function openModal() {
-        const sorted = Array.from(records).map(parseDate).sort((a,b) => a-b);
-        if(sorted.length > 0) displayDate = new Date(sorted[sorted.length-1]);
-        else displayDate = new Date();
-        renderCalendar();
-        calendarModal.classList.add('show');
-        document.body.classList.add('noscroll');
-    }
-    
-    function closeModal() {
-        calendarModal.classList.remove('show');
-        document.body.classList.remove('noscroll');
-    }
-
-    function renderCalendar() {
-        const year = displayDate.getFullYear();
-        const month = displayDate.getMonth();
-        calMonthLabel.textContent = `${year}年 ${month + 1}月`;
-        calBodyGrid.innerHTML = '';
-
-        const firstDay = new Date(year, month, 1).getDay(); 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const daysInPrevMonth = new Date(year, month, 0).getDate();
-        const todayStr = formatDate(new Date());
-
-        for (let i = 0; i < 42; i++) {
-            const el = document.createElement('div');
-            el.className = 'cal-cell';
-            const dayOffset = i - firstDay + 1;
-
-            if (dayOffset <= 0) {
-                el.textContent = daysInPrevMonth + dayOffset;
-                el.classList.add('other-month');
-                el.onclick = () => prevMonthBtn.click();
-            } else if (dayOffset > daysInMonth) {
-                el.textContent = dayOffset - daysInMonth;
-                el.classList.add('other-month');
-                el.onclick = () => nextMonthBtn.click();
-            } else {
-                const d = new Date(year, month, dayOffset);
-                const dStr = formatDate(d);
-                el.textContent = dayOffset;
-                if(dStr === todayStr) el.classList.add('today');
-                if(records.has(dStr)) el.classList.add('has-data');
-
-                el.onclick = () => {
-                    if(records.has(dStr)) records.delete(dStr);
-                    else records.add(dStr);
-                    saveData();
-                    el.classList.toggle('has-data');
-                    updateJumpButtons();
-                };
-            }
-            calBodyGrid.appendChild(el);
-        }
-        updateJumpButtons();
-    }
-
-    // --- 5. Controls ---
-    prevMonthBtn.onclick = () => { displayDate.setMonth(displayDate.getMonth()-1); renderCalendar(); };
-    nextMonthBtn.onclick = () => { displayDate.setMonth(displayDate.getMonth()+1); renderCalendar(); };
-    
-    let tx = 0;
-    calBodyGrid.addEventListener('touchstart', e => tx = e.changedTouches[0].screenX, {passive:true});
-    calBodyGrid.addEventListener('touchend', e => {
-        if(Math.abs(e.changedTouches[0].screenX - tx) > 50) {
-            (e.changedTouches[0].screenX - tx) > 0 ? prevMonthBtn.click() : nextMonthBtn.click();
-        }
-    }, {passive:true});
-
-    function updateJumpButtons() {
-        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
-        if(sorted.length === 0) {
-            jumpPrevBtn.disabled = true; jumpNextBtn.disabled = true; return;
-        }
-        const viewStart = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
-        const viewEnd = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0);
-        
-        jumpPrevBtn.disabled = !sorted.some(d => d < viewStart);
-        jumpNextBtn.disabled = !sorted.some(d => d > viewEnd);
-    }
-
-    jumpPrevBtn.onclick = () => {
-        const sorted = Array.from(records).map(parseDate).sort((a,b) => b - a);
-        const viewStart = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
-        const target = sorted.find(d => d < viewStart);
-        if(target) { displayDate = new Date(target); renderCalendar(); }
-    };
-
-    jumpNextBtn.onclick = () => {
-        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
-        const viewEnd = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0);
-        const target = sorted.find(d => d > viewEnd);
-        if(target) { displayDate = new Date(target); renderCalendar(); }
-    };
-
-    mainAddBtn.onclick = openModal;
-    
-    closeModalBtn.onclick = closeModal;
-    calendarModal.onclick = (e) => { if(e.target === calendarModal) closeModal(); };
-
-    loadData();
-});
+  gtag('config', 'G-T2FCVNFWJ4');
 </script>
-</body>
+  
+<body>  <!-- 顶栏 -->  <div id="topbar">  
+  我们的动态  
+  <div id="toolbar">  
+    <img src="https://lestoy.com/love/icones/search.svg" id="openSearch" alt="搜索">  
+    <img src="https://lestoy.com/love/icones/calendar.svg" id="openCalendar" alt="日历">  
+  </div>  
+</div>  <!-- 相伴天数 -->  <div id="daysLine">已相伴 <span id="daysTogether"></span> 天</div>  <!-- 卡片列表 -->  <main>  
+  <div class="milestones" id="milestoneContainer"></div>  
+  <div id="sentinel" style="height:1px"></div><!-- 懒加载哨兵 -->  
+</main>  
+<footer>── • ──</footer>  <!-- 图片预览 -->  <div id="viewer" onclick="closeViewer()">  
+  <div id="carousel"></div>  
+  <div id="viewerLoader" class="spinner"></div>  
+  <div id="imgCounter">1/1</div>  
+</div>  <!-- 日历主弹窗 -->  <div id="calendarModal" class="modal" onclick="hideModal(event)">  
+  <div class="box calendar" onclick="event.stopPropagation()">  
+    <div class="cal-head">  
+      <button id="prevM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-left"></button>  
+      <div>  
+        <span id="yearLabel" class="ym-tap"></span> 年  
+        <span id="monthLabel" class="ym-tap"></span> 月  
+      </div>  
+      <button id="nextM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-right"></button>  
+    </div>  
+    <div class="cal-grid" id="calGrid"></div>  
+  </div>  
+</div>  <!-- 年/月滚轮选择器弹窗 -->  <div id="pickerModal" class="modal">  
+  <div class="box" style="display:flex;gap:.9rem;padding:1rem" onclick="event.stopPropagation()">  
+    <div class="picker-col" id="yearPicker"></div>  
+    <div class="picker-col" id="monthPicker"></div>  
+  </div>  
+</div>  <!-- 搜索弹窗 -->  <div id="searchModal" class="modal" onclick="hideModal(event)">  
+  <div class="box" style="width:360px;max-width:92vw" onclick="event.stopPropagation()">  
+    <input id="searchInput" placeholder="输入关键词…">  
+    <ul id="resultList"></ul>  
+  </div>  
+</div>  <script src="https://lestoy.com/love/milestones.js"></script>  <script>  
+/* ========= 数据 & 初始化 ========= */  
+const startDate = new Date('2024-08-10');  
+const birthdays = ['02-01','04-06'];  
+document.getElementById('daysTogether').textContent =  
+  Math.floor((Date.now() - startDate)/864e5);  
+milestones.sort((a,b)=>new Date(b.date)-new Date(a.date));  
+  
+/* 工具函数：切换 body 滚动 */  
+function lockScroll(lock){  
+  document.body.classList[lock? 'add':'remove']('noscroll');  
+}  
+  
+/* ========= 懒加载 ========= */  
+const BATCH_SIZE = 30;  
+let rendered = 0;  
+const wrap = document.getElementById('milestoneContainer');  
+const cardMap = {};  
+milestones.forEach(m => cardMap[m.date] = null);  
+  
+const io = new IntersectionObserver(es=>{  
+  es.forEach(e=>e.isIntersecting&&e.target.classList.add('visible'));  
+},{threshold:.15});  
+  
+let selectedDate;  
+/* ——— 当前卡片追踪 Observer ——— */
+const viewObserver = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      selectedDate = e.target.dataset.date;               // ① 记录可见卡片日期
+      calMonth     = new Date(selectedDate+'T00:00:00');  // ② 对应月份
+      renderCal(calMonth);                                // ③ **立刻刷新日历 + 年月标签**
+      // syncPicker();                                    // ④ ← 如果希望弹出的滚轮同时高亮，取消这行注释
+    }
+  });
+},{rootMargin:'-40% 0px -55% 0px'});
+  
+function renderCard(m){  
+  const cols=(m.imgs.length===2||m.imgs.length===4)?2:(m.imgs.length===1?1:3);  
+  const imgHtml=m.imgs.map(src=>{  
+    const thumb=src.replace(/(\.[\w\d]+)$/,'_thumb$1');  
+    return `<img src="${thumb}" data-full="${src}" loading="lazy"  
+            class="loading" onclick="openViewer(this.dataset.full,event)">`;  
+  }).join('');  
+  const html=`  
+  <article class="card" data-date="${m.date}">  
+    <div class="card-content">  
+      <h3>${m.title}</h3><time>${m.date}</time><p>${m.message}</p>  
+    </div>  
+    <div class="${m.imgs.length===1?'banner':'image-grid'}"  
+         style="grid-template-columns:repeat(${cols},1fr)">${imgHtml}</div>  
+  </article>`;  
+  wrap.insertAdjacentHTML('beforeend',html);  
+  const node=wrap.lastElementChild;  
+  cardMap[m.date]=node;  
+  node.querySelectorAll('img').forEach(i=>{  
+    i.onload=()=>{i.classList.remove('loading');i.classList.add('loaded');};  
+  });  
+  io.observe(node);viewObserver.observe(node);  
+}  
+  
+const sentinel=document.getElementById('sentinel');  
+const bottomObserver=new IntersectionObserver(es=>{  
+  es[0].isIntersecting&&loadBatch();  
+},{rootMargin:'800px'});  
+bottomObserver.observe(sentinel);  
+  
+function loadBatch(){  
+  const list=milestones.slice(rendered,rendered+BATCH_SIZE);  
+  list.forEach(renderCard);  
+  rendered+=list.length;  
+  if(rendered>=milestones.length)bottomObserver.disconnect();  
+}  
+loadBatch();  
+  
+/* ========= 滚到卡片 ========= */  
+function scrollToCard(dt){  
+  let el=cardMap[dt];  
+  if(!el){  
+    const idx=milestones.findIndex(m=>m.date===dt);  
+    if(idx===-1)return;  
+    while(rendered<=idx)loadBatch();  
+    el=cardMap[dt];  
+  }  
+  const y=el.getBoundingClientRect().top+window.scrollY  
+          -2*document.getElementById('topbar').offsetHeight;  
+  window.scrollTo({top:y,behavior:'smooth'});  
+}  
+  
+/* ========= 日历 ========= */  
+const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;  
+let calMonth=new Date(milestones[0].date+'T00:00:00');  
+const calGrid=document.getElementById('calGrid'),yLab=document.getElementById('yearLabel'),mLab=document.getElementById('monthLabel');  
+  
+function renderCal(b){  
+  yLab.textContent=b.getFullYear();  
+  mLab.textContent=b.getMonth()+1;  
+  calGrid.innerHTML='';  
+  const first=new Date(b.getFullYear(),b.getMonth(),1);  
+  const startW=first.getDay()||7;  
+  let cur=new Date(first);cur.setDate(cur.getDate()-(startW-1));  
+  for(let i=0;i<42;i++){  
+    const d=new Date(cur),key=fmt(d);  
+    const div=document.createElement('div');  
+    div.textContent=d.getDate();div.dataset.date=key;  
+    if(d.getMonth()!==b.getMonth())div.classList.add('other');  
+    if(birthdays.includes(key.slice(5)))div.classList.add('birthday');  
+    if(cardMap[key]!==undefined)div.classList.add('hasData');  
+    if(key===selectedDate)div.classList.add('selected');  
+    calGrid.appendChild(div);cur.setDate(cur.getDate()+1);  
+  }  
+}  
+renderCal(calMonth);  
+  
+document.getElementById('prevM').onclick=()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCal(calMonth);};  
+document.getElementById('nextM').onclick=()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCal(calMonth);};  
+calGrid.onclick=e=>{  
+  const d=e.target.dataset.date;if(!d)return;  
+  selectedDate=d;renderCal(calMonth);hideModal();scrollToCard(d);  
+};  
+  
+/* ========= 年/月滚轮选择 ========= */  
+const pickerModal=document.getElementById('pickerModal');  
+const yPk=document.getElementById('yearPicker'),mPk=document.getElementById('monthPicker');  
+(function buildPickers(){  
+  const now=new Date().getFullYear();  
+  for(let y=now-1;y<=now+100;y++)yPk.insertAdjacentHTML('beforeend',`<div data-y="${y}">${y}</div>`);  
+  for(let m=1;m<=12;m++)mPk.insertAdjacentHTML('beforeend',`<div data-m="${m}">${m}</div>`);  
+})();  
+function syncPicker(){
+  // 1. 激活当前项
+  yPk.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));
+  mPk.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));
+  const yNode = yPk.querySelector(`[data-y="${calMonth.getFullYear()}"]`);
+  const mNode = mPk.querySelector(`[data-m="${calMonth.getMonth()+1}"]`);
+  yNode.classList.add('active');
+  mNode.classList.add('active');
+
+  // 2. 让它们滚到容器中央 —— 用 scrollIntoView 更稳
+  //    放到 requestAnimationFrame 里，确保弹窗元素已渲染、尺寸确定
+  requestAnimationFrame(()=>{
+    yNode.scrollIntoView({block:'center',behavior:'instant'}); // behaviour:'auto' 也行
+    mNode.scrollIntoView({block:'center',behavior:'instant'});
+  });
+}
+/* ===== picker 显示 / 隐藏 ===== */
+function openPicker(){
+  syncPicker();
+  pickerModal.classList.add('show');
+  lockScroll(true);
+}
+
+function closePicker(){
+  pickerModal.classList.remove('show');
+  lockScroll(false);
+}
+
+/* 事件委托 —— 只有点到黑色遮罩才触发关闭 */
+pickerModal.addEventListener('click', e =>{
+  if (e.target === pickerModal){    // 点击的正是遮罩
+    closePicker();
+  }
+});
+
+yLab.onclick=mLab.onclick=openPicker;  
+yPk.onclick=e=>{  
+  const y=e.target.dataset.y;if(y){calMonth.setFullYear(+y);renderCal(calMonth);pickerModal.classList.remove('show');lockScroll(false);}  
+};  
+mPk.onclick=e=>{  
+  const m=e.target.dataset.m;if(m){calMonth.setMonth(+m-1);renderCal(calMonth);pickerModal.classList.remove('show');lockScroll(false);}  
+};  
+  
+/* ========= 打开/关闭主弹窗 ========= */  
+const cModal=document.getElementById('calendarModal'),sModal=document.getElementById('searchModal');  
+function hideModal(e){if(!e||e.target.classList.contains('modal')){cModal.classList.remove('show');sModal.classList.remove('show');}}  
+document.getElementById('openCalendar').onclick=()=>{renderCal(calMonth);cModal.classList.add('show');};  
+  
+/* ========= 搜索 ========= */  
+const sInput=document.getElementById('searchInput'),sList=document.getElementById('resultList');  
+document.getElementById('openSearch').onclick=()=>{sModal.classList.add('show');sInput.value='';filter('');};  
+sInput.oninput=()=>filter(sInput.value.trim());  
+function filter(q){  
+  sList.innerHTML='';  
+  if(!q){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">我们俩的美好瞬间...</li>';return;}  
+  const re=new RegExp(q,'i');  
+  const hits=milestones.filter(m=>re.test(m.title)||re.test(m.message)).sort((a,b)=>new Date(b.date)-new Date(a.date));  
+  if(!hits.length){sList.innerHTML='<li style="padding:1rem;text-align:center;color:#888">没有找到这个瞬间...</li>';return;}  
+  hits.forEach(m=>{  
+    const li=document.createElement('li');  
+    li.innerHTML=`${m.title.replace(re,x=>'<mark>'+x+'</mark>')} <time>${m.date}</time>`;  
+    li.onclick=()=>{hideModal();scrollToCard(m.date);};  
+    sList.appendChild(li);  
+  });  
+}  
+  
+/* ========= 预览层（与你原逻辑一致） ========= */  
+/* ↓ 如果后续还要改，可在此继续使用原先代码 ↓ */  
+let imgs=[],current=0,startX=0,startY=0,deltaX=0;  
+let imgScale=1,lastScale=1,panX=0,panY=0,lastPanX=0,lastPanY=0,pinchStartDist=0;  
+const viewer=document.getElementById('viewer'),carousel=document.getElementById('carousel'),  
+      counter=document.getElementById('imgCounter'),vLoader=document.getElementById('viewerLoader');  
+function showLoader(){vLoader.style.display='block'}function hideLoader(){vLoader.style.display='none'}  
+function openViewer(src,e){  
+  e.preventDefault();  
+  const eles=[...e.target.closest('.card').querySelectorAll('img')];  
+  imgs=eles.map(i=>i.dataset.full||i.src.replace(/_thumb(\.[\w\d]+)$/,'$1'));  
+  current=imgs.indexOf(src);  
+  carousel.innerHTML=imgs.map(s=>`<div class="viewer-slide"><img src="${s}"></div>`).join('');  
+  viewer.style.display='block';requestAnimationFrame(()=>viewer.classList.add('visible'));  
+  updateCarousel(true);  
+  lockScroll(true);  
+}  
+function getImg(){return carousel.children[current].querySelector('img')}  
+function adjustLoader(){const im=getImg();if(im.complete)hideLoader();else{showLoader();im.onload=hideLoader;}}  
+function updateCarousel(noAnim=false){  
+  carousel.style.transition=noAnim?'none':'transform .3s ease';  
+  carousel.style.transform=`translateX(-${current*100}vw)`;counter.textContent=`${current+1}/${imgs.length}`;  
+  resetTransform();adjustLoader();  
+}  
+function resetTransform(){imgScale=lastScale=1;panX=panY=lastPanX=lastPanY=0;getImg().style.transform='translate(0,0) scale(1)';}  
+function setImgTransform(){getImg().style.transform=`translate(${panX}px,${panY}px) scale(${imgScale})`;}  
+viewer.addEventListener('touchstart',e=>{  
+  if(e.touches.length===1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;deltaX=0;carousel.style.transition='none';}  
+  else if(e.touches.length===2){pinchStartDist=dist(e.touches);lastScale=imgScale;}  
+},{passive:false});  
+viewer.addEventListener('touchmove',e=>{  
+  e.preventDefault();const t=e.touches;  
+  if(t.length===1&&imgScale===1){deltaX=t[0].clientX-startX;carousel.style.transform=`translateX(calc(${-current*100}vw + ${deltaX}px))`;}  
+  else if(t.length===1&&imgScale>1){panX=lastPanX+t[0].clientX-startX;panY=lastPanY+t[0].clientY-startY;setImgTransform();}  
+  else if(t.length===2){imgScale=Math.min(3,Math.max(1,lastScale*dist(t)/pinchStartDist));setImgTransform();}  
+},{passive:false});  
+viewer.addEventListener('touchend',e=>{  
+  if(e.touches.length===0){  
+    if(Math.abs(deltaX)>50&&imgScale===1){if(deltaX>0&&current>0)current--;else if(deltaX<0&&current<imgs.length-1)current++;}  
+    carousel.style.transition='transform .3s ease';imgScale===1?updateCarousel(): (lastPanX=panX,lastPanY=panY);  
+  }else if(e.touches.length===1&&imgScale>1){startX=e.touches[0].clientX;startY=e.touches[0].clientY;}  
+},{passive:false});  
+function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}  
+function closeViewer(){viewer.classList.remove('visible');  
+setTimeout(()=>{viewer.style.display='none';lockScroll(false);},250);}  
+</script>  </body>  
 </html>
