@@ -2,28 +2,24 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>经期预测 - 我们的动态风格版</title>
+<title>经期 & 排卵预测</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-/* ——— 1. 核心设计语言 (来自我们的动态) ——— */
-
+/* ——— 1. 核心设计语言 ——— */
 :root{
-  --primary:#FF7EAE;
-  --birthday:#FF9B7E;
-  --bg:#fff;
+  --primary:#FF7EAE;       /* 经期粉 */
+  --primary-bg: #FFF0F5;
+  --birthday:#FF9B7E;      /* 辅助橙 */
+  --fertile:#B19CD9;       /* 排卵紫 */
+  --fertile-bg:#F3EFFF;    /* 排卵淡紫背景 */
+  --bg:#F9FAFB;
+  --card-bg:#fff;
   --text:#343434;
-  --gray-text: #666;
+  --gray-text: #888;
   --gutter:1rem;
-  --topH:3.2rem;
-}
-/* 通用重置 */
-
-body.noscroll{
-  height:100vh;
-  overflow:hidden;
-  overscroll-behavior:contain;
+  --topH:3.5rem;
+  --radius: 1.2rem;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -35,619 +31,560 @@ body{
     line-height:1.6;
     padding-bottom: 2rem;
 }
+
+body.noscroll { overflow: hidden; }
+
 /* 顶栏 */
-
-#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:center;height:var(--topH);font-weight:600;font-size:1.05rem;border-bottom:1px solid #0001;background:#fff}
-
+#topbar{
+    position:sticky;top:0;z-index:200;
+    display:flex;align-items:center;justify-content:center;
+    height:var(--topH);
+    font-weight:700;font-size:1.1rem;
+    background:rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid rgba(0,0,0,0.05);
+}
 #toolbar{position:absolute;right:1rem;display:flex;gap:1rem}
+#toolbar img{width:1.4rem;height:1.4rem;cursor:pointer; opacity: 0.7; }
 
-#toolbar img{width:1.35rem;height:1.35rem;cursor:pointer}
 /* 卡片系统 */
-
-main{max-width:900px;margin:0 auto;padding:1rem 1rem 0}
+main{max-width:600px;margin:0 auto;padding:1.2rem 1rem 0}
 
 .card{
-    background:#fff;
-    border-radius:1.25rem;
-    box-shadow:0 4px 10px rgba(0,0,0,.1);
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:0 4px 16px rgba(0,0,0,0.04);
     overflow:hidden;
     margin-bottom: 1.5rem;
-    animation: fadeUp 0.6s ease backwards;
+    padding: 1.2rem;
+    animation: fadeUp 0.5s ease backwards;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+
+.card-header { margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+
+/* ——— 首页状态卡片 ——— */
+.status-box { text-align: center; padding: 1rem 0; }
+.empty-tip { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 1.5rem; }
+.btn-main-action {
+    background: var(--primary); color: #fff; border: none;
+    padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600;
+    box-shadow: 0 4px 12px rgba(255, 126, 174, 0.4); cursor: pointer;
+    transition: transform 0.2s; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-main-action:active { transform: scale(0.96); }
+.btn-icon-small { width: 1.1rem; height: 1.1rem; filter: brightness(0) invert(1); }
+
+/* ——— 预测结果 ——— */
+.prediction-highlight { text-align: center; padding: 0.5rem 0; }
+.prediction-highlight .date { font-size: 2.5rem; font-weight: 700; color: var(--primary); line-height: 1.2; margin: 0.5rem 0; }
+.prediction-highlight .label { font-size: 0.9rem; color: #888; }
+.prediction-highlight .range-badge { 
+    display: inline-block; background: #f4f4f4; color: #666; 
+    padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.85rem; margin-top: 0.5rem; 
 }
 
-@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-.card-content{padding:1.25rem}
+/* ——— 排卵与易孕期 ——— */
+.ovulation-card .card-title, .ovulation-highlight .date { color: var(--fertile); }
+.fertile-window-box {
+    background: var(--fertile-bg); border-radius: 1rem; padding: 1rem; margin-top: 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.fertile-info h4 { color: var(--fertile); font-size: 0.95rem; margin-bottom: 0.2rem; }
+.fertile-info div { font-size: 0.85rem; color: #666; }
+.icon-heart { font-size: 1.5rem; color: var(--fertile); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
-.card-content h3{font-size:1.15rem;margin-bottom:1rem;color:var(--primary); font-weight: 600; display: flex; align-items: center; justify-content: space-between;}
+.timeline-container { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f5f5f5; }
+.timeline-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #eee; }
+.t-seg { height: 100%; }
+.t-safe { background: #E0E0E0; flex: 2; }
+.t-fertile { background: var(--fertile); opacity: 0.6; flex: 1; }
+.t-ovulation { background: var(--fertile); flex: 0.4; }
+.t-period { background: var(--primary); flex: 1; }
+.timeline-legend { display: flex; gap: 1rem; justify-content: center; margin-top: 0.8rem; font-size: 0.75rem; color: #888; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;}
 
-.card-content p{font-size:.95rem;color:#555;margin-bottom:.5rem}
-/* ——— 2. 经期预测专用样式 (适配风格) ——— */
-/* 按钮风格化 */
+/* ——— 周期分析 ——— */
+.card.analysis { border-top: none; } 
+.card.analysis .card-title { color: var(--text); }
+.stats-grid { display: flex; justify-content: space-between; gap: 0.8rem; margin-top: 2.25rem; }
+.stat-box {
+    flex: 1; background: #FAFAFA; border-radius: 1rem; padding: 1rem 0.2rem;
+    text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.stat-label { font-size: 0.75rem; color: #999; margin-bottom: 0.4rem; }
+.stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+.stat-value.highlight { color: var(--primary); }
 
-.btn-primary {
-    display: block;
-    width: 100%;
+
+/* ——— 5. 弹窗日历样式 ——— */
+.modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center; z-index: 999;
+    backdrop-filter: blur(3px);
+}
+.modal.show { display: flex; }
+.modal-box {
+    background: #fff; border-radius: 1.5rem;
+    width: 350px; max-width: 92vw;
+    padding: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* 日历头部 */
+.cal-ctrl-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem; padding: 0 0.2rem;
+}
+.cal-month-label { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.btn-month-nav {
+    background: none; border: none; padding: 0.5rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.6;
+}
+/* 去除点击后的高亮效果 */
+.btn-month-nav:active, .btn-month-nav:focus { outline: none; transform: none; opacity: 0.6; }
+.btn-month-nav:hover { opacity: 1; }
+
+.nav-icon { width: 1.2rem; height: 1.2rem; }
+.rotate-180 { transform: rotate(180deg); }
+
+/* 日历网格 */
+.cal-header-row, .cal-body-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 0.5rem;
+}
+.cal-head { 
+    text-align: center; color: #bbb; font-size: 0.8rem; font-weight: 600; 
+    display: flex; align-items: center; justify-content: center;
+}
+.cal-cell {
+    aspect-ratio: 1/1; display: flex; justify-content: center; align-items: center;
+    border-radius: 50%; font-size: 0.95rem; cursor: pointer;
+    transition: all 0.15s; position: relative; margin: 1px;
+}
+.cal-cell.today { border: 1.5px solid var(--primary); color: var(--primary); font-weight: 700; }
+.cal-cell.has-data { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(255, 126, 174, 0.4); }
+.cal-cell.other-month { color: #eee; font-weight: 400; }
+.cal-cell:active { transform: scale(0.9); }
+
+/* 底部操作栏 (New Layout) */
+.cal-action-bar {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-top: 1.5rem; 
+    padding-top: 1rem; 
+    border-top: 1px solid #f5f5f5;
+}
+
+/* 左侧按钮组 */
+.cal-nav-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-jump {
+    font-size: 0.85rem; 
+    color: var(--gray-text); 
+    background: #f7f7f7;
+    border: none; 
+    padding: 0.5rem 1rem; 
+    border-radius: 2rem;
+    cursor: pointer; 
+    font-weight: 500;
+}
+.btn-jump:disabled { opacity: 0.4; cursor: not-allowed; background: #fafafa; }
+/* 去除点击高亮/缩放 */
+.btn-jump:active, .btn-jump:focus { transform: none; outline: none; background: #f7f7f7; } 
+
+/* 右侧关闭按钮 (粉色风格) */
+.btn-close-primary {
     background: var(--primary);
     color: #fff;
     border: none;
-    padding: 0.8rem;
+    padding: 0.5rem 1.2rem;
     border-radius: 2rem;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(255, 126, 174, 0.3);
-    transition: transform 0.2s, opacity 0.2s;
-    text-align: center;
+    box-shadow: 0 2px 8px rgba(255, 126, 174, 0.3);
 }
-
-.btn-primary:active { transform: scale(0.98); }
-
-.btn-primary:disabled { background: #f2f2f2; color: #ccc; box-shadow: none; cursor: not-allowed; }
-.btn-outline {
-    background: transparent;
-    border: 1.5px solid var(--primary);
-    color: var(--primary);
-    padding: 0.6rem 1.2rem;
-    border-radius: 2rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-/* 历史记录胶囊样式 */
-
-#records-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-}
-
-.record-tag {
-    background: #FFF0F5; /* 极淡的粉色背景 */
-    color: var(--primary);
-    padding: 0.4rem 0.8rem;
-    border-radius: 1rem;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid rgba(255, 126, 174, 0.2);
-}
-
-.delete-record-btn {
-    color: var(--birthday);
-    border: none;
-    background: none;
-    font-size: 1.1rem;
-    line-height: 1;
-    padding: 0 2px;
-    cursor: pointer;
-}
-/* 预测结果大字 */
-
-.prediction-highlight { text-align: center; padding: 1rem 0; }
-
-.prediction-highlight .date { font-size: 2.5rem; font-weight: 700; color: var(--primary); line-height: 1.2; margin: 0.5rem 0; }
-
-.prediction-highlight .label { font-size: 0.9rem; color: #888; }
-
-.prediction-highlight .range-badge { 
-    display: inline-block; 
-    background: #f4f4f4; 
-    color: #666; 
-    padding: 0.3rem 1rem; 
-    border-radius: 2rem; 
-    font-size: 0.85rem; 
-    margin-top: 0.5rem; 
-}
-/* 统计列表 */
-
-.stats-list { list-style: none; margin-top: 1.5rem; }
-
-.stats-list li { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 0.8rem 0; 
-    border-bottom: 1px solid #f2f2f2; 
-}
-
-.stats-list li:last-child { border-bottom: none; }
-
-.stats-list strong { color: var(--text); font-size: 1.1rem; }
-
-.stats-list span { color: #666; font-size: 0.95rem; }
-
-.stats-list .desc { display: block; font-size: 0.75rem; color: #999; margin-top: 0.2rem; }
-/* 错误信息 */
-
-#error-msg { color: var(--birthday); text-align: center; font-size: 0.9rem; margin-top: 0.5rem; min-height: 1.5em;}
-/* ——— 3. 弹窗与日历 (完全复用 CSS) ——— */
-
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:none;align-items:center;justify-content:center;z-index:999}
-
-.modal.show{display:flex}
-
-.box{background:var(--bg);border-radius:.9rem;max-width:90vw;max-height:88vh;overflow:auto;animation:pop .25s}
-
-@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:scale(1);opacity:1}}
-.calendar{width:320px;max-width:88vw;padding:1.2rem 1rem}
-
-.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;font-weight:600;font-size:1.05rem; color: var(--text);}
-
-.cal-head button { border: none; background: none; padding: 0.5rem; cursor: pointer; display: flex; align-items: center; }
-
-.cal-head img { width: 1.1rem; height: 1.1rem; }
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}
-
-.cal-grid div{aspect-ratio:1/1;display:flex;justify-content:center;align-items:center;border-radius:50%;font-size:.9rem;cursor:pointer;user-select:none; transition: all 0.2s;}
-
-.cal-grid div.head { font-weight: bold; color: #999; cursor: default; font-size: 0.8rem; } /* 星期头 */
-
-.cal-grid div.other{opacity:.3}
-
-.cal-grid div.hasData{background:var(--primary);color:#fff; box-shadow: 0 2px 5px rgba(255, 126, 174, 0.4);} /* 已记录 */
-
-.cal-grid div.today{border: 1.5px solid var(--primary); color: var(--primary); font-weight: 600;} /* 今天 */
-
-.cal-grid div.selected{outline:2px solid var(--birthday);outline-offset:-2px; font-weight: bold;} /* 当前选中操作 */
-/* 弹窗底部操作栏 */
-
-.modal-footer {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #f0f0f0;
-}
-
-.btn-text { border: none; background: none; color: #888; font-size: 0.95rem; padding: 0.5rem 1rem; cursor: pointer; }
-
-.btn-save { background: var(--primary); color: #fff; border: none; padding: 0.5rem 1.2rem; border-radius: 1.5rem; font-size: 0.95rem; cursor: pointer; box-shadow: 0 2px 8px rgba(255, 126, 174, 0.3); }
-/* 旋转类 */
-
-.rotate-right { transform: rotate(180deg); }
-/* 页脚 */
+.btn-close-primary:active { transform: scale(0.96); }
 
 footer{text-align:center;padding:2rem 1rem;color:#d9d9d9;font-size:.8rem}
 </style>
 </head>
 <body>
+
 <div id="topbar">
-  经期预测工具
-  <div id="toolbar">
-    <img src="https://lestoy.com/love/icones/calendar.svg" id="openCalendarIcon" alt="日历">
-  </div>
+    经期预测工具
+    <div id="toolbar">
+                       
+    </div>    
 </div>
+
 <main>
     <article class="card">
-        <div class="card-content">
-            <h3>
-                经期记录
-                <button id="add-dates-btn" class="btn-outline" style="font-size:0.8rem; padding:0.3rem 0.8rem;">
-                    + 添加日期
-                </button>
-            </h3>
-            <div id="records-list">
-                <p style="color:#999; font-size:0.9rem; padding: 1rem 0;">暂无记录，请点击右上角或上方按钮添加。</p>
-            </div>
+        <div class="card-header">
+            <div class="card-title">经期记录</div>
+        </div>
+        <div class="status-box">
+            <p id="status-text" class="empty-tip">暂无记录，请添加数据以开始预测。</p>
             
-            <div style="margin-top: 1.5rem;">
-                <button id="predict-btn" class="btn-primary" disabled>开始预测</button>
-                <p id="error-msg"></p>
-            </div>
+            <button class="btn-main-action" id="mainAddBtn">
+                <img src="https://lestoy.com/love/icones/calendar.svg" class="btn-icon-small">
+                管理我的记录
+            </button>
         </div>
     </article>
-    <article class="card" id="prediction-section" style="display:none;">
-        <div class="card-content">
-            <h3>下一次经期</h3>
+
+    <div id="results-wrapper" style="display:none;">
+        <article class="card">
+            <div class="card-header"><div class="card-title">下一次经期</div></div>
             <div class="prediction-highlight">
-                <p class="label">最可能开始于</p>
+                <p class="label">预计开始时间</p>
                 <div class="date" id="predicted-date">--</div>
                 <div class="range-badge" id="predicted-range">预测范围: --</div>
             </div>
-        </div>
-    </article>
-    <article class="card" id="analysis-card" style="display:none;">
-        <div class="card-content">
-            <h3>周期分析</h3>
-            <div style="height: 220px; position: relative; width:100%;">
+        </article>
+
+        <article class="card ovulation-card">
+            <div class="card-header"><div class="card-title">排卵与备孕</div></div>
+            <div class="prediction-highlight ovulation-highlight">
+                <p class="label">排卵日 (受孕概率高)</p>
+                <div class="date" id="ovulation-date">--</div>
+            </div>
+            
+            <div class="fertile-window-box">
+                <div class="fertile-info">
+                    <h4>易孕窗口期</h4>
+                    <div id="fertile-range">-- 至 --</div>
+                </div>
+                <div class="icon-heart">💜</div>
+            </div>
+
+            <div class="timeline-container">
+                <div class="timeline-bar">
+                    <div class="t-seg t-safe"></div>
+                    <div class="t-seg t-fertile"></div>
+                    <div class="t-seg t-ovulation"></div>
+                    <div class="t-seg t-fertile"></div>
+                    <div class="t-seg t-safe"></div>
+                    <div class="t-seg t-period"></div>
+                </div>
+                <div class="timeline-legend">
+                    <div class="legend-item"><div class="dot" style="background:var(--fertile)"></div>排卵期</div>
+                    <div class="legend-item"><div class="dot" style="background:var(--primary)"></div>经期</div>
+                </div>
+            </div>
+        </article>
+
+        <article class="card analysis">
+            <div class="card-header"><div class="card-title">周期数据分析</div></div>
+            <div style="height: 200px; width: 100%;">
                 <canvas id="cycle-chart"></canvas>
             </div>
-            <ul class="stats-list">
-                <li>
-                    <div>
-                        <span>平均周期</span>
-                        <span class="desc">预测未来的重要依据</span>
-                    </div>
-                    <strong id="stat-avg">-- 天</strong>
-                </li>
-                <li>
-                    <div>
-                        <span>最短周期</span>
-                        <span class="desc">了解波动范围</span>
-                    </div>
-                    <strong id="stat-shortest">-- 天</strong>
-                </li>
-                <li>
-                    <div>
-                        <span>最长周期</span>
-                        <span class="desc">了解规律性</span>
-                    </div>
-                    <strong id="stat-longest">-- 天</strong>
-                </li>
-            </ul>
-        </div>
-    </article>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">平均周期</span>
+                    <strong class="stat-value highlight" id="stat-avg">--</strong>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">最短</span>
+                    <strong class="stat-value" id="stat-shortest">--</strong>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">最长</span>
+                    <strong class="stat-value" id="stat-longest">--</strong>
+                </div>
+            </div>
+        </article>
+    </div>
 </main>
+
 <footer>── • ──</footer>
-<div id="calendarModal" class="modal" onclick="hideModal(event)">
-  <div class="box calendar" onclick="event.stopPropagation()">
-    <div class="cal-head">
-      <button id="prevM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-left"></button>
-      <div>
-        <span id="yearLabel"></span> 年
-        <span id="monthLabel"></span> 月
-      </div>
-      <button id="nextM"><img src="https://lestoy.com/love/icones/back.svg" class="rotate-right"></button>
+
+<div id="calendarModal" class="modal">
+    <div class="modal-box">
+        <div class="cal-ctrl-bar">
+            <button class="btn-month-nav" id="prevMonthBtn">
+                <img src="https://lestoy.com/love/icones/back.svg" class="nav-icon">
+            </button>
+            <div class="cal-month-label" id="calMonthLabel">--</div>
+            <button class="btn-month-nav" id="nextMonthBtn">
+                <img src="https://lestoy.com/love/icones/back.svg" class="nav-icon rotate-180">
+            </button>
+        </div>
+
+        <div class="cal-header-row">
+            <div class="cal-head">日</div><div class="cal-head">一</div><div class="cal-head">二</div>
+            <div class="cal-head">三</div><div class="cal-head">四</div><div class="cal-head">五</div><div class="cal-head">六</div>
+        </div>
+        <div class="cal-body-grid" id="calBodyGrid"></div>
+
+        <div class="cal-action-bar">
+            <div class="cal-nav-group">
+                <button class="btn-jump" id="jumpPrevBtn">上个记录</button>
+                <button class="btn-jump" id="jumpNextBtn">下个记录</button>
+            </div>
+            <button class="btn-close-primary" id="closeModalBtn">完成</button>
+        </div>
     </div>
-    <div class="cal-grid" style="margin-bottom: 0.5rem;">
-        <div class="head">日</div><div class="head">一</div><div class="head">二</div><div class="head">三</div><div class="head">四</div><div class="head">五</div><div class="head">六</div>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-    
-    <div class="modal-footer">
-        <button class="btn-text" onclick="closeModal()">取消</button>
-        <button class="btn-save" id="saveDateBtn">保存日期</button>
-    </div>
-  </div>
 </div>
+
 <script>
-
-/* ========= 逻辑核心 (原 Period Predictor 逻辑) ========= */
-
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 状态
-    let records = [];
-    let prediction = null;
-    let defaultCycleLength = 28;
-    let modalCurrentDate = new Date();
-    let modalSelectedDates = new Set(); // 暂存 Modal 中的选择
+    // --- 数据 ---
+    let records = new Set(); 
+    let displayDate = new Date();
     let cycleChart = null;
+
+    // --- DOM ---
+    const mainAddBtn = document.getElementById('mainAddBtn');
     
-    // 2. DOM
-    const topCalendarIcon = document.getElementById('openCalendarIcon');
-    const addDatesBtn = document.getElementById('add-dates-btn');
-    const predictBtn = document.getElementById('predict-btn');
-    const recordsList = document.getElementById('records-list');
-    const errorMsg = document.getElementById('error-msg');
-    const predictionSection = document.getElementById('prediction-section');
+    const statusText = document.getElementById('status-text');
+    const resultsWrapper = document.getElementById('results-wrapper');
+    
+    // Modal
+    const calendarModal = document.getElementById('calendarModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const calMonthLabel = document.getElementById('calMonthLabel');
+    const calBodyGrid = document.getElementById('calBodyGrid');
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    const jumpPrevBtn = document.getElementById('jumpPrevBtn');
+    const jumpNextBtn = document.getElementById('jumpNextBtn');
+
+    // Results
     const predictedDateEl = document.getElementById('predicted-date');
     const predictedRangeEl = document.getElementById('predicted-range');
-    const analysisCard = document.getElementById('analysis-card');
+    const ovulationDateEl = document.getElementById('ovulation-date');
+    const fertileRangeEl = document.getElementById('fertile-range');
     const statAvg = document.getElementById('stat-avg');
     const statShortest = document.getElementById('stat-shortest');
     const statLongest = document.getElementById('stat-longest');
     const chartCanvas = document.getElementById('cycle-chart');
-    
-    // Modal DOM
-    const calendarModal = document.getElementById('calendarModal');
-    const calGrid = document.getElementById('calGrid');
-    const yearLabel = document.getElementById('yearLabel');
-    const monthLabel = document.getElementById('monthLabel');
-    const prevM = document.getElementById('prevM');
-    const nextM = document.getElementById('nextM');
-    const saveDateBtn = document.getElementById('saveDateBtn');
 
-    // 3. 辅助函数
-    function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-    function parseDate(dateStr) { return new Date(dateStr + 'T00:00:00'); }
-    function lockScroll(lock){ document.body.classList[lock? 'add':'remove']('noscroll'); }
+    // --- 工具 ---
+    const formatDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const formatDateShort = d => `${d.getMonth()+1}月${d.getDate()}日`;
+    const parseDate = s => new Date(s + 'T00:00:00');
 
-    // 4. 数据加载与保存
+    // --- 1. 初始化 ---
     function loadData() {
         try {
-            const savedRecords = localStorage.getItem('periodRecords');
-            if (savedRecords) {
-                const parsed = JSON.parse(savedRecords);
-                records = Array.isArray(parsed) ? parsed.map(r => ({ id: r.id || r.startDate, startDate: r.startDate })) : [];
-            }
-        } catch (e) { records = []; }
-        render();
+            const saved = localStorage.getItem('periodRecords_v5');
+            if (saved) records = new Set(JSON.parse(saved));
+        } catch(e){ records = new Set(); }
+        updateUI();
     }
+
     function saveData() {
-        localStorage.setItem('periodRecords', JSON.stringify(records));
+        localStorage.setItem('periodRecords_v5', JSON.stringify(Array.from(records)));
+        updateUI();
     }
 
-    // 5. 核心计算逻辑
-    function clearPrediction() {
-        prediction = null;
-        if (cycleChart) { cycleChart.destroy(); cycleChart = null; }
-        predictionSection.style.display = 'none';
-        analysisCard.style.display = 'none';
-    }
+    // --- 2. UI 更新 ---
+    function updateUI() {
+        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
 
-    function handlePredict() {
-        predictBtn.textContent = '计算中...';
-        predictBtn.disabled = true;
-        errorMsg.textContent = '';
-        clearPrediction();
-
-        setTimeout(() => { // 模拟一点延迟感
-            const sortedRecords = [...records].sort((a, b) => parseDate(a.startDate).getTime() - parseDate(b.startDate).getTime());
-            
-            if (sortedRecords.length < 2) {
-                // 简单回退逻辑
-                if (sortedRecords.length === 1) {
-                     const lastDate = parseDate(sortedRecords[0].startDate);
-                     const pDate = new Date(lastDate); pDate.setDate(pDate.getDate() + 28);
-                     const rStart = new Date(pDate); rStart.setDate(rStart.getDate() - 3);
-                     const rEnd = new Date(pDate); rEnd.setDate(rEnd.getDate() + 3);
-                     prediction = {
-                        stats: { average: 28, shortest: 28, longest: 28 },
-                        predictedDate: formatDate(pDate),
-                        rangeStart: formatDate(rStart),
-                        rangeEnd: formatDate(rEnd),
-                        cycleLengths: []
-                     };
-                } else {
-                    errorMsg.textContent = '请至少记录两次经期开始日期才能准确预测。';
-                    predictBtn.disabled = false;
-                    predictBtn.textContent = '开始预测';
-                    return;
-                }
-            } else {
-                // 正常计算
-                const validDates = sortedRecords.map(r => parseDate(r.startDate));
-                const cycleLengths = [];
-                for (let i = 1; i < validDates.length; i++) {
-                    const diff = Math.abs(validDates[i] - validDates[i-1]);
-                    cycleLengths.push(Math.round(diff / 864e5));
-                }
-
-                let weightedSum = 0, weightSum = 0;
-                cycleLengths.forEach((len, i) => {
-                    const w = i + 1; weightedSum += len * w; weightSum += w;
-                });
-                const avg = Math.round(weightedSum / weightSum);
-                const lastDate = validDates[validDates.length - 1];
-                const pDate = new Date(lastDate); pDate.setDate(pDate.getDate() + avg);
-                
-                const shortest = Math.min(...cycleLengths);
-                const longest = Math.max(...cycleLengths);
-                const delta = Math.max(1, Math.min(7, Math.round((longest - shortest)/2)));
-                
-                const rStart = new Date(pDate); rStart.setDate(rStart.getDate() - delta);
-                const rEnd = new Date(pDate); rEnd.setDate(rEnd.getDate() + delta);
-
-                prediction = {
-                    stats: { average: Math.round(cycleLengths.reduce((a,b)=>a+b,0)/cycleLengths.length), shortest, longest },
-                    predictedDate: formatDate(pDate),
-                    rangeStart: formatDate(rStart),
-                    rangeEnd: formatDate(rEnd),
-                    cycleLengths
-                };
-            }
-
-            predictBtn.disabled = false;
-            predictBtn.textContent = '开始预测';
-            renderPrediction();
-        }, 1);
-    }
-
-    // 6. 渲染视图
-    function render() {
-        // 渲染列表
-        recordsList.innerHTML = '';
-        if (records.length === 0) {
-            recordsList.innerHTML = '<p style="color:#999;font-size:0.9rem;padding:1rem;width:100%;text-align:center;">暂无记录，请点击上方按钮添加。</p>';
-            predictBtn.disabled = true;
+        if (sorted.length === 0) {
+            statusText.textContent = "暂无记录，请添加数据以开始预测。";
+            resultsWrapper.style.display = 'none';
         } else {
-            const sorted = [...records].sort((a,b) => parseDate(b.startDate) - parseDate(a.startDate));
-            sorted.forEach(r => {
-                const div = document.createElement('div');
-                div.className = 'record-tag';
-                div.innerHTML = `
-                    <span>${r.startDate}</span>
-                    <button class="delete-record-btn" onclick="deleteRecord('${r.id}')">×</button>
-                `;
-                recordsList.appendChild(div);
-            });
-            predictBtn.disabled = false;
+            const lastDate = sorted[sorted.length-1];
+            statusText.textContent = `最近一次记录：${formatDate(lastDate)}`;
+            
+            if (sorted.length >= 1) { 
+                resultsWrapper.style.display = 'block';
+                calculatePrediction(sorted);
+            }
         }
+        updateJumpButtons();
     }
 
-    // 全局暴露删除函数给 HTML onclick 使用
-    window.deleteRecord = function(id) {
-        records = records.filter(r => r.id !== id);
-        clearPrediction();
-        saveData();
-        render();
-    };
+    // --- 3. 预测 ---
+    function calculatePrediction(sortedDates) {
+        let avg = 28;
+        let cycleLengths = [];
 
-    function renderPrediction() {
-        if (!prediction) return;
-        
-        predictionSection.style.display = 'block';
-        predictedDateEl.textContent = prediction.predictedDate;
-        predictedRangeEl.textContent = `预测范围: ${prediction.rangeStart} ~ ${prediction.rangeEnd}`;
-        
-        if (prediction.cycleLengths.length > 0) {
-            analysisCard.style.display = 'block';
-            statAvg.textContent = prediction.stats.average + ' 天';
-            statShortest.textContent = prediction.stats.shortest + ' 天';
-            statLongest.textContent = prediction.stats.longest + ' 天';
-            renderChart(prediction);
+        if (sortedDates.length >= 2) {
+            let wSum = 0, wDiv = 0;
+            for(let i=1; i<sortedDates.length; i++){
+                const diff = Math.abs(sortedDates[i] - sortedDates[i-1]);
+                const days = Math.round(diff / 864e5);
+                cycleLengths.push(days);
+                wSum += days * i; wDiv += i;
+            }
+            avg = Math.round(wSum / wDiv);
         }
+
+        const lastDate = sortedDates[sortedDates.length - 1];
+        const nextDate = new Date(lastDate);
+        nextDate.setDate(nextDate.getDate() + avg);
+        
+        const buffer = cycleLengths.length ? Math.ceil((Math.max(...cycleLengths) - Math.min(...cycleLengths))/2) : 2;
+        const rStart = new Date(nextDate); rStart.setDate(rStart.getDate() - Math.min(buffer, 3));
+        const rEnd = new Date(nextDate); rEnd.setDate(rEnd.getDate() + Math.min(buffer, 3));
+
+        const ovDate = new Date(nextDate); ovDate.setDate(ovDate.getDate() - 14);
+        const fStart = new Date(ovDate); fStart.setDate(fStart.getDate() - 5);
+        const fEnd = new Date(ovDate); fEnd.setDate(fEnd.getDate() + 1);
+
+        predictedDateEl.textContent = formatDate(nextDate);
+        predictedRangeEl.textContent = `最可能开始于：${formatDateShort(rStart)} 至 ${formatDateShort(rEnd)}`;
+        ovulationDateEl.textContent = formatDate(ovDate);
+        fertileRangeEl.textContent = `${formatDateShort(fStart)} 至 ${formatDateShort(fEnd)}`;
+
+        statAvg.textContent = avg + ' 天';
+        statShortest.textContent = (cycleLengths.length ? Math.min(...cycleLengths) : '--') + ' 天';
+        statLongest.textContent = (cycleLengths.length ? Math.max(...cycleLengths) : '--') + ' 天';
+
+        renderChart(cycleLengths, avg);
     }
 
-    // —————— 修改处：增加平均线数据集 ——————
-    function renderChart(data) {
-        if (cycleChart) cycleChart.destroy();
+    function renderChart(dataArr, avgVal) {
+        if(cycleChart) cycleChart.destroy();
         const ctx = chartCanvas.getContext('2d');
-        
-        // 创建一个与 cycleLengths 长度相同的数组，填充平均值
-        const averageLineData = Array(data.cycleLengths.length).fill(data.stats.average);
+        if(dataArr.length === 0) return;
+
+        const avgData = Array(dataArr.length).fill(avgVal);
 
         cycleChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.cycleLengths.map((_, i) => `周期 ${i + 1}`),
+                labels: dataArr.map((_, i) => `周期${i+1}`),
                 datasets: [
-                    // 数据集 1: 实际周期曲线 (粉色)
                     {
-                        label: '周期天数',
-                        data: data.cycleLengths,
-                        borderColor: '#FF7EAE', // primary
-                        backgroundColor: '#FF7EAE',
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderWidth: 2
+                        label: '实际天数', data: dataArr,
+                        borderColor: '#FF7EAE', backgroundColor: '#FF7EAE',
+                        tension: 0.3, pointRadius: 4,
                     },
-                    // 数据集 2: 平均线 (橙色虚线)
                     {
-                        label: '平均天数',
-                        data: averageLineData,
-                        borderColor: '#FF9B7E', // birthday (Orange/Peach)
-                        borderDash: [6, 4],     // 虚线效果
-                        pointRadius: 0,         // 线条上不显示点
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0              // 直线
+                        label: '平均天数', data: avgData,
+                        borderColor: '#FF9B7E', borderDash: [5, 5],
+                        pointRadius: 3, pointBackgroundColor: '#fff', pointBorderColor: '#FF9B7E',
+                        pointBorderWidth: 2, borderWidth: 2, fill: false, tension: 0
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                    // 开启图例，让用户知道虚线是什么
-                    legend: { 
-                        display: true, 
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            usePointStyle: true,
-                            font: { size: 11 }
-                        }
-                    } 
-                },
+                responsive: true, maintainAspectRatio: false,                               
+                plugins: { legend: { display: true, position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
                 scales: {
-                    y: { 
-                        suggestedMin: data.stats.shortest - 3,
-                        suggestedMax: data.stats.longest + 3,
-                        grid: { color: '#f0f0f0' }
-                    },
-                    x: { grid: { display: false } }
+                    y: { grid: { color: '#f5f5f5' }, ticks: { stepSize: 1, color: '#bbb' } },
+                    x: { grid: { display: false }, ticks: { color: '#bbb' } }
                 }
             }
         });
     }
 
-    // 7. 日历 Modal 逻辑 (UI 适配)
-    window.openModal = function() {
-        modalCurrentDate = new Date();
-        modalSelectedDates = new Set(records.map(r => r.startDate));
-        renderCal(modalCurrentDate);
+    // --- 4. Modal ---
+    function openModal() {
+        const sorted = Array.from(records).map(parseDate).sort((a,b) => a-b);
+        if(sorted.length > 0) displayDate = new Date(sorted[sorted.length-1]);
+        else displayDate = new Date();
+        renderCalendar();
         calendarModal.classList.add('show');
-        lockScroll(true);
+        document.body.classList.add('noscroll');
     }
     
-    window.closeModal = function() {
+    function closeModal() {
         calendarModal.classList.remove('show');
-        lockScroll(false);
-    }
-    window.hideModal = function(e) {
-        if(e.target === calendarModal) closeModal();
+        document.body.classList.remove('noscroll');
     }
 
-    function renderCal(date) {
-        yearLabel.textContent = date.getFullYear();
-        monthLabel.textContent = date.getMonth() + 1;
-        calGrid.innerHTML = '';
-        
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const firstDay = new Date(year, month, 1).getDay(); // 0-6 (日-六)
+    function renderCalendar() {
+        const year = displayDate.getFullYear();
+        const month = displayDate.getMonth();
+        calMonthLabel.textContent = `${year}年 ${month + 1}月`;
+        calBodyGrid.innerHTML = '';
+
+        const firstDay = new Date(year, month, 1).getDay(); 
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
         const todayStr = formatDate(new Date());
 
-        // 补空白
-        for(let i=0; i<firstDay; i++){
-            const empty = document.createElement('div');
-            empty.className = 'other'; // 占位
-            calGrid.appendChild(empty);
-        }
-
-        // 渲染日期
-        for(let i=1; i<=daysInMonth; i++){
-            const d = new Date(year, month, i);
-            const dStr = formatDate(d);
+        for (let i = 0; i < 42; i++) {
             const el = document.createElement('div');
-            el.textContent = i;
-            
-            // 样式逻辑
-            if(dStr === todayStr) el.classList.add('today');
-            if(modalSelectedDates.has(dStr)) el.classList.add('hasData'); // 已选中
-            
-            // 点击事件
-            el.onclick = (e) => {
-                e.stopPropagation();
-                if(modalSelectedDates.has(dStr)){
-                    modalSelectedDates.delete(dStr);
-                    el.classList.remove('hasData');
-                } else {
-                    modalSelectedDates.add(dStr);
-                    el.classList.add('hasData');
-                    // 添加一个点击动画效果
-                    el.style.transform = 'scale(0.8)';
-                    setTimeout(()=>el.style.transform='scale(1)', 150);
-                }
-            };
-            
-            calGrid.appendChild(el);
+            el.className = 'cal-cell';
+            const dayOffset = i - firstDay + 1;
+
+            if (dayOffset <= 0) {
+                el.textContent = daysInPrevMonth + dayOffset;
+                el.classList.add('other-month');
+                el.onclick = () => prevMonthBtn.click();
+            } else if (dayOffset > daysInMonth) {
+                el.textContent = dayOffset - daysInMonth;
+                el.classList.add('other-month');
+                el.onclick = () => nextMonthBtn.click();
+            } else {
+                const d = new Date(year, month, dayOffset);
+                const dStr = formatDate(d);
+                el.textContent = dayOffset;
+                if(dStr === todayStr) el.classList.add('today');
+                if(records.has(dStr)) el.classList.add('has-data');
+
+                el.onclick = () => {
+                    if(records.has(dStr)) records.delete(dStr);
+                    else records.add(dStr);
+                    saveData();
+                    el.classList.toggle('has-data');
+                    updateJumpButtons();
+                };
+            }
+            calBodyGrid.appendChild(el);
         }
+        updateJumpButtons();
     }
 
-    // 绑定 Modal 内部按钮
-    prevM.onclick = () => { modalCurrentDate.setMonth(modalCurrentDate.getMonth()-1); renderCal(modalCurrentDate); };
-    nextM.onclick = () => { modalCurrentDate.setMonth(modalCurrentDate.getMonth()+1); renderCal(modalCurrentDate); };
+    // --- 5. Controls ---
+    prevMonthBtn.onclick = () => { displayDate.setMonth(displayDate.getMonth()-1); renderCalendar(); };
+    nextMonthBtn.onclick = () => { displayDate.setMonth(displayDate.getMonth()+1); renderCalendar(); };
     
-    // 滑动切换月份 (保留原逻辑)
-    let tx=0;
-    calGrid.addEventListener('touchstart',e=>tx=e.changedTouches[0].screenX,{passive:true});
-    calGrid.addEventListener('touchend',e=>{
-        const diff = e.changedTouches[0].screenX - tx;
-        if(Math.abs(diff)>50){
-            diff>0 ? prevM.click() : nextM.click();
+    let tx = 0;
+    calBodyGrid.addEventListener('touchstart', e => tx = e.changedTouches[0].screenX, {passive:true});
+    calBodyGrid.addEventListener('touchend', e => {
+        if(Math.abs(e.changedTouches[0].screenX - tx) > 50) {
+            (e.changedTouches[0].screenX - tx) > 0 ? prevMonthBtn.click() : nextMonthBtn.click();
         }
-    },{passive:true});
+    }, {passive:true});
 
-    saveDateBtn.onclick = () => {
-        const sorted = Array.from(modalSelectedDates).sort();
-        records = sorted.map(d => ({ id: d, startDate: d }));
-        saveData();
-        clearPrediction(); // 数据变了，清除旧预测
-        render();
-        closeModal();
+    function updateJumpButtons() {
+        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
+        if(sorted.length === 0) {
+            jumpPrevBtn.disabled = true; jumpNextBtn.disabled = true; return;
+        }
+        const viewStart = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
+        const viewEnd = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0);
+        
+        jumpPrevBtn.disabled = !sorted.some(d => d < viewStart);
+        jumpNextBtn.disabled = !sorted.some(d => d > viewEnd);
+    }
+
+    jumpPrevBtn.onclick = () => {
+        const sorted = Array.from(records).map(parseDate).sort((a,b) => b - a);
+        const viewStart = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
+        const target = sorted.find(d => d < viewStart);
+        if(target) { displayDate = new Date(target); renderCalendar(); }
     };
 
-    // 8. 初始化绑定
-    topCalendarIcon.onclick = openModal;
-    addDatesBtn.onclick = openModal;
-    predictBtn.onclick = handlePredict;
+    jumpNextBtn.onclick = () => {
+        const sorted = Array.from(records).map(parseDate).sort((a,b) => a - b);
+        const viewEnd = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0);
+        const target = sorted.find(d => d > viewEnd);
+        if(target) { displayDate = new Date(target); renderCalendar(); }
+    };
 
-    // 启动
+    mainAddBtn.onclick = openModal;
+    
+    closeModalBtn.onclick = closeModal;
+    calendarModal.onclick = (e) => { if(e.target === calendarModal) closeModal(); };
+
     loadData();
 });
 </script>
