@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面 - The Body Shop 模拟</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; padding: 40px; background-color: #f4f4f4; }
+        .product-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 20px; color: #333; }
+        
+        /* 模拟原网站的 CSS 类 */
+        .price { margin: 20px 0; font-size: 24px; }
+        .product-price { font-weight: bold; color: #004236; }
+        .price-tax { display: block; font-size: 12px; color: #666; font-weight: normal; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="product-card">
+        <h1>Champô Anticaspa de Gengibre</h1>
+        <p>这是一个模拟测试页面，用来欺骗 Worker。</p>
+
+        <!-- 👇👇👇 核心测试区域 👇👇👇 -->
+        <!-- Worker 专门盯着下面这行代码看 -->
+        <div class="price">
+            <span class="product-price">€14,00 </span>
+            <span class="price-tax">Sem impostos: €14,00</span>
+        </div>
+        <!-- 👆👆👆 修改这里的数字即可 👆👆👆 -->
+
+        <button style="background: #004236; color: white; border: none; padding: 10px 20px; width: 100%; margin-top: 10px;">
+            Adicionar ao cesto
+        </button>
+    </div>
+
+</body>
+</html>
