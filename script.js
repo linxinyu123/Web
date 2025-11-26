@@ -1,5 +1,16 @@
 // script.js
 
+const input = document.getElementById('search-input');
+const icon  = document.querySelector('.search-icon');
+
+input.addEventListener('input', () => {
+    if (input.value.trim() !== '') {
+        icon.classList.add('active');
+    } else {
+        icon.classList.remove('active');
+    }
+});
+
 // 1. 首页：加载品牌列表
 async function loadBrands() {
     try {

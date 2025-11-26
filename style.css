@@ -6,8 +6,8 @@
     --bg-page: #f5f5f7; /* 浅灰背景 */
     --bg-card: #ffffff; /* 纯白卡片 */
     --radius: 18px; /* 较大的圆角 */
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-    --shadow-hover: 0 15px 30px rgba(0,0,0,0.1);
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.01);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.01);
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -47,6 +47,27 @@ header {
     gap: 12px;                /* 可选：让多个元素之间留一点间距 */
 }
 
+.nav-left,.nav-right {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.nav-left {
+    left: 0;    /* 靠最左 */
+}
+
+.nav-right {
+    right: 0;   /*（预留）靠最右 */
+}
+
+.back-btn {
+    font-size: 14px;
+    text-decoration: none;
+    color: #0071e3;
+}
 .logo {
     font-size: 17px;
     font-weight: 600;
@@ -76,7 +97,7 @@ header {
     font-size: 21px;
     line-height: 1.38;
     font-weight: 400;
-    color: var(--text-light);
+    color: var(--text-main);
     max-width: 600px;
     margin: 0 auto 40px auto;
 }
@@ -88,22 +109,32 @@ header {
     margin: 0 auto;
 }
 
+
+
+
 #search-input {
     width: 100%;
     padding: 18px 20px 18px 50px; /* 左边留空给图标 */
     border-radius: 12px;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     background: var(--bg-card);
     font-size: 17px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* 柔和阴影 */
+    color:var(--text-main);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02); /* 柔和阴影 */
     outline: none;
     transition: var(--transition);
 }
 
-#search-input:focus {
-    box-shadow: 0 8px 20px rgba(0,113,227,0.15); /* 聚焦时淡淡的蓝光 */
-    border-color: rgba(0,113,227,0.3);
+#search-input::placeholder {
+    color: var(--text-light);   /* 改成你想要的颜色 */
 }
+
+#search-input:focus {
+    border-color:var(--primary);
+    color:var(--text-main);
+}
+
+
 
 .search-icon {
     position: absolute;
@@ -112,6 +143,18 @@ header {
     transform: translateY(-50%);
     color: #86868b;
     font-size: 18px;
+    width: 25px;
+    height: 25px;
+    /* 图标颜色，随时可以改 */
+    background-color: var(--text-light);
+    /* 使用你的 SVG 文件作为 mask  */
+    mask: url('img/search.svg') no-repeat center / contain;
+    -webkit-mask: url('img/search.svg') no-repeat center / contain;
+}
+
+/* 输入框有文字时的图标颜色 */
+.search-icon.active {
+    background-color: var(--text-main); /* 苹果蓝 */
 }
 
 /* --- 商家网格 (干净的卡片) --- */
@@ -167,7 +210,7 @@ header {
     text-align: center;
     padding: 60px 20px;
     background: var(--bg-card);
-    border-radius: 0 0 30px 30px; /* 底部圆角 */
+    border-radius: 0 0 0px 0px; /* 底部圆角 */
     margin-bottom: 40px;
     box-shadow: var(--shadow-sm);
 }
@@ -210,9 +253,13 @@ header {
 .btn-get:hover { opacity: 0.9; }
 
 /* 移动端微调 */
-@media (max-width: 600px) {
-    .hero h1 { font-size: 34px; }
-    .hero p { font-size: 18px; }
+@media (max-width: 736px) {
+    .hero {
+    text-align: center;
+    padding: 73px 20px 60px; /* 大量的留白 */
+}
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 19px; }
     .coupon-card { flex-direction: column; text-align: center; padding: 30px; }
     .btn-get { margin-left: 0; margin-top: 15px; width: 100%; }
 }
