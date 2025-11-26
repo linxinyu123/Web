@@ -1,6 +1,6 @@
 /* style.css */
 :root {
-    --primary: #0071e3; /* 苹果蓝 */
+    --primary: #4385f5; /* 苹果蓝 */
     --text-main: #1d1d1f; /* 苹果黑 */
     --text-light: #86868b; /* 苹果灰 */
     --bg-page: #f5f5f7; /* 浅灰背景 */
@@ -36,13 +36,15 @@ header {
     top: 0;
     z-index: 999;
     border-bottom: 1px solid rgba(0,0,0,0.05);
+
 }
 
 .nav-inner {
     height: 48px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    align-items: center;      /* 垂直居中 */
+    justify-content: center;  /* 水平居中，把所有子元素挤到中间 */
+    gap: 12px;                /* 可选：让多个元素之间留一点间距 */
 }
 
 .logo {
