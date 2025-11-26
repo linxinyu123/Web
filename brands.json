@@ -1,0 +1,32 @@
+[
+  {
+    "id": "worten",
+    "name": "Worten",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Worten.svg/1200px-Worten.svg.png",
+    "url": "worten/"
+  },
+  {
+    "id": "uber",
+    "name": "Uber",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png",
+    "url": "uber/"
+  },
+  {
+    "id": "bolt",
+    "name": "Bolt",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Bolt_Logo_Vectors.svg/1200px-Bolt_Logo_Vectors.svg.png",
+    "url": "bolt/"
+  },
+  {
+    "id": "zalando",
+    "name": "Zalando",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Zalando_logo.svg/2560px-Zalando_logo.svg.png",
+    "url": "zalando/"
+  },
+  {
+    "id": "zara",
+    "name": "Zara",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Zara_Logo.svg/1280px-Zara_Logo.svg.png",
+    "url": "zara/"
+  }
+]
