@@ -1,0 +1,162 @@
+/* style.css */
+:root {
+    --primary: #e02020; /* 促销红 */
+    --secondary: #2d3436; /* 深灰 */
+    --bg: #f8f9fa;
+    --white: #ffffff;
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 8px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 顶部导航 */
+header {
+    background: var(--white);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+/* 首页 Hero 区域 */
+.hero {
+    background: linear-gradient(135deg, #ff4757 0%, #e02020 100%);
+    color: white;
+    text-align: center;
+    padding: 60px 20px;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 40px;
+}
+
+.hero h1 { margin: 0 0 10px; font-size: 2.2rem; }
+.hero p { opacity: 0.9; margin-bottom: 25px; font-size: 1.1rem; }
+
+#search-input {
+    width: 100%;
+    max-width: 500px;
+    padding: 16px 25px;
+    border-radius: 50px;
+    border: none;
+    font-size: 16px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    outline: none;
+}
+
+/* 商家网格 */
+.brands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
+}
+
+.brand-card {
+    background: var(--white);
+    padding: 25px 15px;
+    border-radius: var(--radius);
+    text-align: center;
+    text-decoration: none;
+    color: var(--secondary);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.brand-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.brand-card img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.brand-card span { font-weight: 600; font-size: 14px; }
+
+/* 详情页样式 */
+.brand-intro {
+    background: var(--white);
+    padding: 30px;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+}
+
+.brand-intro img { width: 100px; height: 100px; object-fit: contain; }
+
+.coupon-list { display: flex; flex-direction: column; gap: 20px; }
+
+.coupon-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.coupon-content h3 { margin: 0 0 8px; color: var(--primary); font-size: 1.2rem; }
+.coupon-content p { margin: 0; font-size: 0.95rem; color: #666; }
+.coupon-meta { font-size: 0.8rem; color: #999; margin-top: 5px; }
+
+/* 按钮样式 */
+.btn-get {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+    font-size: 1rem;
+}
+
+.btn-get:hover { opacity: 0.9; }
+
+/* 移动端适配 */
+@media (max-width: 600px) {
+    .coupon-card { flex-direction: column; text-align: center; gap: 15px; }
+    .btn-get { width: 100%; display: block; box-sizing: border-box; }
+}
