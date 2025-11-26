@@ -35,7 +35,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 999;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 0px solid rgba(0,0,0,0.025);
 
 }
 
@@ -210,8 +210,9 @@ header {
     text-align: center;
     padding: 60px 20px;
     background: var(--bg-card);
-    border-radius: 0 0 0px 0px; /* 底部圆角 */
-    margin-bottom: 40px;
+    border-radius: 18px; /* 底部圆角 */
+    margin: 32.5px;
+    margin-top: 0px;
     box-shadow: var(--shadow-sm);
 }
 .brand-hero img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 20px; }
@@ -262,4 +263,7 @@ header {
     .hero p { font-size: 19px; }
     .coupon-card { flex-direction: column; text-align: center; padding: 30px; }
     .btn-get { margin-left: 0; margin-top: 15px; width: 100%; }
+    .brand-hero {
+    margin: 20px;
+}
 }
