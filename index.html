@@ -1,69 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lestoy</title>
-    <style>
-        :root {
-            --main-bg: #eef1f5;
-            --shadow-light: #ffffff;
-            --shadow-dark: #d1d9e6;
-            --text-color: #4385f5;
-        }
+    <title>Cupões Portugal | Códigos Promocionais 2025</title>
+    <meta name="description" content="Encontre os melhores códigos promocionais e descontos para Uber, Worten, Zalando e muito mais em Portugal.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T2FCVNFWJ4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-        * {
-            box-sizing: border-box;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
-        body {
-            background: var(--main-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 25px;
-            background: var(--main-bg);
-            box-shadow: 10px 10px 20px var(--shadow-dark),
-                        -10px -10px 20px var(--shadow-light);
-            text-align: center;
-            box-sizing: border-box;
-            margin: 0 20px;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                border-radius: 20px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+  gtag('config', 'G-T2FCVNFWJ4');
+</script>
 </head>
 <body>
-    <div class="container">
-        <h1>Website Unavailable</h1>
+
+    <header>
+        <div class="container header-inner">
+            <a href="index.html" class="logo">🇵🇹 CupõesPT</a>
+        </div>
+    </header>
+
+    <!-- 搜索区 -->
+    <div class="hero">
+        <div class="container">
+            <h1>Poupe dinheiro nas suas compras online</h1>
+            <p>Os melhores códigos de desconto verificados para Portugal</p>
+            <input type="text" id="search-input" placeholder="Procurar loja (ex: Worten)...">
+        </div>
     </div>
+
+    <!-- 商家列表区 -->
+    <main class="container">
+        <h2 style="margin-bottom: 20px;">Lojas Populares</h2>
+        <div id="brands-container" class="brands-grid">
+            <!-- 商家会由 JS 自动加载到这里 -->
+            <p>A carregar lojas...</p>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 40px; color: #999; font-size: 12px;">
+        <p>&copy; 2024 CupõesPT. Todos os direitos reservados.</p>
+        <p>Este site contém links de afiliados. Podemos ganhar uma comissão se comprar através dos nossos links.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // 运行首页逻辑
+        document.addEventListener('DOMContentLoaded', loadIndexPage);
+    </script>
 </body>
 </html>
