@@ -4,29 +4,6 @@
     "name": "Worten",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Logotipo_Worten.jpg/1200px-Logotipo_Worten.jpg",
     "url": "worten/"
-  },
-  {
-    "id": "uber",
-    "name": "Uber",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png",
-    "url": "uber/"
-  },
-  {
-    "id": "bolt",
-    "name": "Bolt",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Bolt_logo.svg/2560px-Bolt_logo.svg.png",
-    "url": "bolt/"
-  },
-  {
-    "id": "zalando",
-    "name": "Zalando",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Zalando-Logo.svg/1200px-Zalando-Logo.svg.png",
-    "url": "zalando/"
-  },
-  {
-    "id": "zara",
-    "name": "Zara",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Zara_Logo.svg/1280px-Zara_Logo.svg.png",
-    "url": "zara/"
   }
+
 ]
