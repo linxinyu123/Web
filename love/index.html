@@ -133,6 +133,76 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
 #imgCounter{position:absolute;bottom:20px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;pointer-events:none}  
 .rotate-left{transform:rotate(0deg)}  
 .rotate-right{transform:rotate(180deg)}  
+
+/* ——— 密码锁屏样式 ——— */
+#lock-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg); /* 跟随背景色 */
+  z-index: 9999; /* 保证在最顶层 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+#lock-screen.unlocked {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.1);
+}
+.lock-box {
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+.lock-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+  filter: drop-shadow(0 4px 6px rgba(255, 126, 174, 0.4));
+}
+.lock-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+#passInput {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid #eee;
+  border-radius: 0.8rem;
+  font-size: 1.1rem;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background: #f9f9f9;
+  letter-spacing: 2px;
+}
+#passInput:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 126, 174, 0.15);
+}
+#passInput.error {
+  animation: shake 0.4s ease-in-out;
+  border-color: #ff4757;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+.lock-hint {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+
 </style>  </head>  
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2FCVNFWJ4"></script>
@@ -144,7 +214,22 @@ mark{background:var(--primary);color:#fff;border-radius:.2rem;padding:0 .15em}
   gtag('config', 'G-T2FCVNFWJ4');
 </script>
   
-<body>  <!-- 顶栏 -->  <div id="topbar">  
+<body>  <!-- 顶栏 -->  
+  <!-- 密码锁屏 -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <!-- 这里用个简单的 SVG 锁图标 -->
+    <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="#FF7EAE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <div class="lock-title">请输入锁屏密码</div>
+    <input type="password" id="passInput" placeholder="输入密码..." inputmode="numeric">
+    <div class="lock-hint">输入正确自动进入</div>
+  </div>
+</div>
+
+  <div id="topbar">  
   我们的动态  
   <div id="toolbar">  
     <img src="https://lestoy.com/love/icones/search.svg" id="openSearch" alt="搜索">  
@@ -420,5 +505,81 @@ viewer.addEventListener('touchend',e=>{
 function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}  
 function closeViewer(){viewer.classList.remove('visible');  
 setTimeout(()=>{viewer.style.display='none';lockScroll(false);},250);}  
-</script>  </body>  
+</script>  
+<script>
+(function() {
+  // —————— 配置区域 ——————
+  
+  // 1. 这里填入密码的 SHA-256 哈希值
+  // 如果你想改密码，看下面的【修改密码说明】
+  const CORRECT_HASH = "9478f79728b977727e02925562141a029221147571343729e20a2a4b87332279";
+
+  // 2. 存储 Key，改这个可以让之前登录过的用户需要重新输入
+  const STORAGE_KEY = "love_lock_unlocked_v1";
+
+  // —————— 逻辑区域 ——————
+  const lockScreen = document.getElementById('lock-screen');
+  const input = document.getElementById('passInput');
+  
+  // 检查是否已经解锁过
+  if (localStorage.getItem(STORAGE_KEY) === 'yes') {
+    lockScreen.style.display = 'none';
+  } else {
+    // 没解锁，禁止页面滚动
+    document.body.style.overflow = 'hidden';
+  }
+
+  // 监听输入
+  input.addEventListener('input', async (e) => {
+    const val = e.target.value;
+    // 当输入长度足够时尝试校验（这里假设密码至少4位，减少计算量）
+    if (val.length >= 4) {
+      const hash = await sha256(val);
+      if (hash === CORRECT_HASH) {
+        unlock();
+      }
+    }
+  });
+
+  // 监听回车键
+  input.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      const hash = await sha256(input.value);
+      if (hash === CORRECT_HASH) {
+        unlock();
+      } else {
+        showError();
+      }
+    }
+  });
+
+  function unlock() {
+    localStorage.setItem(STORAGE_KEY, 'yes'); // 记住解锁状态
+    document.body.style.overflow = ''; // 恢复滚动
+    lockScreen.classList.add('unlocked');
+    input.blur(); // 收起键盘
+    
+    // 动画结束后移除元素
+    setTimeout(() => {
+      lockScreen.style.display = 'none';
+    }, 450);
+  }
+
+  function showError() {
+    input.classList.add('error');
+    input.value = '';
+    setTimeout(() => input.classList.remove('error'), 400);
+  }
+
+  // 生成 SHA-256 哈希的工具函数（利用浏览器原生加密API，非常安全）
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+})();
+</script>
+
+</body>  
 </html>
