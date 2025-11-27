@@ -2,8 +2,13 @@
   {
     "id": "worten",
     "name": "Worten",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Logotipo_Worten.jpg/1200px-Logotipo_Worten.jpg",
+    "logo": "https://lestoy.com/worten/logo.png",
     "url": "worten/"
+  },
+    {
+    "id": "wells",
+    "name": "Wells",
+    "logo": "https://lestoy.com/wells/logo.png",
+    "url": "wells/"
   }
-
 ]
