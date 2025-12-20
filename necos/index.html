@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neco's Custom Cake</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neco's Custom Cake</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
         /* --- 1. 设计系统 --- */
         :root {
             --primary: #102940; /* 深蓝 */
@@ -19,9 +19,7 @@
             --shadow: 0 8px 24px rgba(16, 41, 64, 0.08);
             --header-h: 70px;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
         body, button, input, select, textarea {
             font-family: 'Nunito', sans-serif;
         }
@@ -36,7 +34,6 @@
             padding-bottom: 82px;
             overflow-x: hidden;
         }
-
         /* --- 2. Header --- */
         .smart-header {
             position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
@@ -47,7 +44,6 @@
         }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 54px; width: auto; }
-
         .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; }
         .lang-btn {
             border: none; background: transparent; padding: 6px 10px;
@@ -55,14 +51,11 @@
             cursor: pointer; transition: all 0.2s;
         }
         .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
         /* --- 3. 布局 --- */
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-
         /* ✅ 改：去掉整页 fadeIn（love 是卡片动，不是整页闪） */
         .view-section { display: none; }
         .view-section.active { display: block; }
-
         /* [NEW] 常驻搜索框 (Google Style) */
         .search-hero { margin-bottom: 30px; }
         .search-hero-inner {
@@ -73,47 +66,39 @@
             transition: box-shadow 0.2s;
         }
         .search-hero-inner:focus-within { box-shadow: 0 8px 30px rgba(16, 41, 64, 0.15); }
-
       .search-icon {
         width: 20px;
         height: 20px;
         background-color: #999;
-
         -webkit-mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
         -webkit-mask-size: contain;
         mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
         mask-size: contain;
-
         display: inline-block;
       }
       .search-hero-inner:has(#search-input:not(:placeholder-shown)) .search-icon{
         background-color: var(--primary);
         color: var(--primary);
       }
-
       #search-input:placeholder-shown ~ .search-clear{
         opacity:0;
         pointer-events:none;
       }
-
         .search-input {
             flex: 1; border: none; outline: none; background: transparent;
             font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 600;
             color: var(--primary);
         }
         .search-input::placeholder { color: #999; }
-
         .search-clear { cursor: pointer; color:var(--primary); font-size: 18px; display: none; }
         input[type="search"]::-webkit-search-cancel-button {
           -webkit-appearance: none;
           appearance: none;
           display: none;
         }
-
         input[type="search"]::-webkit-search-decoration {
           -webkit-appearance: none;
         }
-
         /* --- 4. 首页分类 --- */
         .category-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px;
@@ -131,7 +116,6 @@
         .cat-info { padding: 20px; border-top: 1px solid var(--border); }
         .cat-title { font-size: 20px; font-weight: 900; margin: 0 0 6px 0; color: var(--primary); }
         .cat-desc { font-size: 14px; color: var(--text-gray); line-height: 1.4; }
-
         /* --- 5. 列表页 --- */
         .back-nav {
           display: flex;
@@ -139,14 +123,12 @@
           gap: 12px;
           margin-bottom: 20px;
         }
-
         .nav-title {
           font-size: 15px;
           font-weight: 600;
           color: #6e6e73;
           white-space: nowrap;
         }
-
         .btn-back {
             background: var(--white); border: 1px solid #E5E7EB;
             padding: 12px 24px 12px 18.5px; border-radius: var(--radius-btn);
@@ -154,26 +136,20 @@
             font-weight: 800; font-size: 16px; color: var(--primary); cursor: pointer;
               color: var(--primary);
         }
-
         .back-nav {
           --nav-icon: url("https://i.ibb.co/Q3hkmW9x/IMG-20251219-145724.png");
           --nav-icon-size: 22px;
         }
-
         .back-icon {
           width: var(--nav-icon-size);
           height: var(--nav-icon-size);
           background-color: currentColor;
-
           -webkit-mask: var(--nav-icon) no-repeat center;
           -webkit-mask-size: contain;
-
           mask: var(--nav-icon) no-repeat center;
           mask-size: contain;
-
           display: inline-block;
         }
-
         .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .prod-card {
             background: var(--white); border-radius: var(--radius-box); overflow: hidden;
@@ -192,7 +168,6 @@
             background: var(--accent); color: var(--primary); border: none;
             padding: 10px 24px; border-radius: var(--radius-btn); font-weight: 800; font-size: 14px; cursor: pointer;
         }
-
         /* --- 6. 弹窗 (Modal) --- */
         .modal-overlay, .cart-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -201,12 +176,10 @@
         }
         .cart-overlay { z-index: 2000; }
         .modal-overlay { z-index: 2100; }
-
         @media(min-width: 768px) {
             .modal-overlay, .cart-overlay { align-items: center; }
             .modal-shell, .cart-shell { max-width: 480px !important; border-radius: 24px !important; height: 85vh !important; }
         }
-
         .modal-shell, .cart-shell {
             background: var(--white); width: 100%; height: 91.25%;
             border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
@@ -215,9 +188,7 @@
             transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .modal-shell.open, .cart-shell.open { transform: translateY(0); }
-
         .cart-shell { background: #F5F7FA; }
-
         .close-btn {
             position: absolute; top: 15px; right: 15px;
             background: rgba(255,255,255,0.9); width: 36px; height: 36px; border-radius: 50%;
@@ -225,13 +196,11 @@
             font-size: 20px; cursor: pointer; z-index: 30;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
         .modal-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; }
         .modal-hero-img { width: 100%; height: 280px; object-fit: cover; display: block; }
         .modal-content-box { padding: 24px; }
         .m-title { font-size: 24px; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
         .m-desc { font-size: 15px; color: var(--text-gray); line-height: 1.6; margin-bottom: 30px; }
-
         .variant-section { border-top: 1px solid var(--border); padding-top: 20px; }
         .v-label { font-size: 13px; font-weight: 800; color: #999; margin-bottom: 15px; display: block; text-transform: uppercase; letter-spacing: 1px; }
         .v-item {
@@ -251,7 +220,6 @@
         .v-info { display: flex; align-items: center; }
         .v-text { font-weight: 700; font-size: 16px; color: var(--primary); }
         .v-price { font-weight: 800; font-size: 16px; color: var(--primary); }
-
         .modal-footer {
             padding: 25px 20px 25px 20px; background: var(--white);
             border-top: 0px solid var(--border); z-index: 20;
@@ -271,7 +239,6 @@
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 5px 15px rgba(244, 192, 75, 0.3);
         }
-
         .cart-header {
             padding: 14px 18px; background: white; text-align: center;
             font-weight: 900; font-size: 18px; border-bottom: 1px solid var(--border);
@@ -296,7 +263,6 @@
         }
         .mini-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .edit-hint { font-size: 11px; color: #AAA; font-weight: 600; text-transform: uppercase; }
-
         .sticky-cart {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px; background: var(--primary); color: white;
@@ -307,7 +273,6 @@
         }
         .sticky-cart:active { transform: translateX(-50%) scale(0.96); }
         .badge { background: var(--accent); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 14px; margin-right: 10px; }
-
         .toast {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.85); color: white; padding: 16px 30px;
@@ -319,7 +284,6 @@
             padding: 12px; border-radius: var(--radius-btn); font-weight: 800;
             margin-top: 10px; cursor: pointer;
         }
-
         /* [NEW] Variant rows with per-variant quantity */
         .v-item{
             cursor: default;
@@ -340,7 +304,6 @@
         .v-qty-val{
             min-width: 18px; text-align:center; font-weight: 900;
         }
-
         /* [NEW] Cart total row (below items, footer still single button) */
         .cart-total-row{
             padding: 18px 18px 0px 18px;
@@ -352,14 +315,11 @@
             font-weight: 900;
             font-size: 17px;
         }
-
         /* Make modal scroll feel roomier */
         .modal-scroll{ padding-bottom: 10px; }
-
         /* =========================================================
            [LOVE PORT] Card enter animation + Image skeleton shimmer
            ========================================================= */
-
         .reveal-card{
             opacity: 0;
             translate: 0 30px;
@@ -387,19 +347,17 @@
                 transition: none !important;
             }
         }
-
-        .skel-img{
-            opacity: 0;
-            transform: scale(.95);
-            background: #f2f2f2;
-            transition: opacity .5s ease, transform .5s ease;
-            display: block;
-        }
+        ..skel-img{
+  opacity: 0;
+  transform: none;                 /* ✅ 去掉缩放 */
+  background: #f2f2f2;
+  transition: opacity .5s ease;    /* ✅ 只保留透明度过渡 */
+  display: block;
+}
         .cat-img.skel-img,
         .prod-img.skel-img{
             transition: opacity .5s ease, transform .5s ease;
         }
-
         .skel-img.is-loading{
             background-image: linear-gradient(
                 90deg,
@@ -415,136 +373,132 @@
             0%{ background-position: 100% 0; }
             100%{ background-position: -100% 0; }
         }
-        .skel-img.is-loaded{
-            opacity: 1;
-            transform: scale(1);
-            background: none;
-            animation: none;
-        }
+    .skel-img.is-loaded{
+  opacity: 1;
+  transform: none;                 /* ✅ 保持不缩放 */
+  background: none;
+  animation: none;
+}
         .skel-img.is-error{
             opacity: 1;
             transform: scale(1);
             background: #f2f2f2;
             animation: none;
         }
-
         .skel-img.is-loaded.is-loading{
             animation: none;
             background: none;
         }
-
         @supports (scale: 1){
             .cat-card:active { transform: none; scale: 0.98; }
         }
-    </style>
+</style>
 </head>
 <body>
-
-    <!-- Header -->
-    <div class="smart-header">
-        <div class="header-left">
-            <img src="https://i.ibb.co/sJtMRwDB/IMG-20251219-091347.png" class="logo-img" alt="Neco's">
-        </div>
-        <div class="lang-switch">
-            <button class="lang-btn" onclick="setLang('en')">EN</button>
-            <button class="lang-btn" onclick="setLang('pt')">PT</button>
-            <button class="lang-btn" onclick="setLang('cn')">CN</button>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- [NEW] Permanent Search Bar -->
-        <div class="search-hero">
-            <div class="back-nav">
-              <button class="btn-back" onclick="goBack()">
-                <span class="back-icon"></span>
-                <span id="txt-back">Home</span>
-              </button>
-            </div>
-            <div class="search-hero-inner">
-                <span class="search-icon"></span>
-                <input
-                  type="search"
-                  id="search-input"
-                  class="search-input"
-                  placeholder="Search..."
-                  enterkeyhint="search"
-                  oninput="handleSearch()"
-                  onkeydown="onSearchKeyDown(event)"
-                >
-                <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
-            </div>
-        </div>
-
-        <!-- 1. 首页 (Home) -->
-        <div id="view-home" class="view-section active">
-            <div class="category-grid" id="category-grid"></div>
-            <div style="height: 60px;"></div>
-        </div>
-
-        <!-- 2. 列表页 (Category / Search Results) -->
-        <div id="view-category" class="view-section">
-            <div id="category-content"></div>
-        </div>
-    </div>
-
-    <!-- 3. 产品详情弹窗 (Product Modal) -->
-    <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
-        <div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
-            <div class="close-btn" onclick="closeModalDirect()">✕</div>
-
-            <div class="modal-scroll">
-                <img src="" id="m-img" class="modal-hero-img">
-                <div class="modal-content-box">
-                    <div class="m-title" id="m-title">Title</div>
-                    <div class="m-desc" id="m-desc">Desc</div>
-                    <div class="variant-section">
-                        <label class="v-label" id="txt-select-size">SELECT SIZE</label>
-                        <div id="variant-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-add-cart" onclick="confirmAddToCart()">
-                    <span id="txt-add-btn">Add 0 €0.00</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. 购物车弹窗 (Cart Modal) -->
-    <div class="cart-overlay" id="cart-modal" onclick="closeCart(event)">
-        <div class="cart-shell" id="cart-shell" onclick="event.stopPropagation()">
-            <div class="cart-header">
-                <span id="txt-your-order">Your Order</span>
-                <div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">✕</div>
-            </div>
-            <div class="cart-list" id="cart-list"></div>
-            <div class="cart-total-row">
-                <span id="txt-total">Total</span>
-                <span id="cart-modal-total">€ 0.00</span>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-add-cart" onclick="closeCartDirect()">
-                    <span style="width:100%; text-align:center;" id="txt-confirm">Confirm</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. 底部悬浮条 (Sticky Cart) -->
-    <div class="sticky-cart" id="sticky-cart" onclick="openCartModal()">
-        <div style="display:flex; align-items:center;">
-            <span class="badge" id="cart-count">0</span>
-            <span id="txt-view-order" style="font-weight:700;">View Order</span>
-        </div>
-        <div style="font-weight:800; font-size:18px;" id="cart-bar-total">€ 0.00</div>
-    </div>
-
-    <div id="toast" class="toast">Update Success!</div>
-
-    <script>
+<!-- Header -->
+<div class="smart-header">
+	<div class="header-left">
+		<img src="https://i.ibb.co/sJtMRwDB/IMG-20251219-091347.png" class="logo-img" alt="Neco's">
+	</div>
+	<div class="lang-switch">
+		<button class="lang-btn" onclick="setLang('en', true)">EN</button>
+		<button class="lang-btn" onclick="setLang('pt', true)">PT</button>
+		<button class="lang-btn" onclick="setLang('cn', true)">CN</button>
+	</div>
+</div>
+<div class="container">
+	<!-- [NEW] Permanent Search Bar -->
+	<div class="search-hero">
+		<div class="back-nav">
+			<button class="btn-back" onclick="goBack()">
+			<span class="back-icon"></span>
+			<span id="txt-back">Home</span>
+			</button>
+		</div>
+		<div class="search-hero-inner">
+			<span class="search-icon"></span>
+			<input type="search" id="search-input" class="search-input" placeholder="Search..." enterkeyhint="search" oninput="handleSearch()" onkeydown="onSearchKeyDown(event)">
+			<span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+		</div>
+	</div>
+	<!-- 1. 首页 (Home) -->
+	<div id="view-home" class="view-section active">
+		<div class="category-grid" id="category-grid">
+		</div>
+		<div style="height: 60px;">
+		</div>
+	</div>
+	<!-- 2. 列表页 (Category / Search Results) -->
+	<div id="view-category" class="view-section">
+		<div id="category-content">
+		</div>
+	</div>
+</div>
+<!-- 3. 产品详情弹窗 (Product Modal) -->
+<div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
+	<div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
+		<div class="close-btn" onclick="closeModalDirect()">
+			✕
+		</div>
+		<div class="modal-scroll">
+			<img src="" id="m-img" class="modal-hero-img">
+			<div class="modal-content-box">
+				<div class="m-title" id="m-title">
+					Title
+				</div>
+				<div class="m-desc" id="m-desc">
+					Desc
+				</div>
+				<div class="variant-section">
+					<label class="v-label" id="txt-select-size">SELECT SIZE</label>
+					<div id="variant-list">
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn-add-cart" onclick="confirmAddToCart()">
+			<span id="txt-add-btn">Add 0 €0.00</span>
+			</button>
+		</div>
+	</div>
+</div>
+<!-- 4. 购物车弹窗 (Cart Modal) -->
+<div class="cart-overlay" id="cart-modal" onclick="closeCart(event)">
+	<div class="cart-shell" id="cart-shell" onclick="event.stopPropagation()">
+		<div class="cart-header">
+			<span id="txt-your-order">Your Order</span>
+			<div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">
+				✕
+			</div>
+		</div>
+		<div class="cart-list" id="cart-list">
+		</div>
+		<div class="cart-total-row">
+			<span id="txt-total">Total</span>
+			<span id="cart-modal-total">€ 0.00</span>
+		</div>
+		<div class="modal-footer">
+			<button class="btn-add-cart" onclick="closeCartDirect()">
+			<span style="width:100%; text-align:center;" id="txt-confirm">Confirm</span>
+			</button>
+		</div>
+	</div>
+</div>
+<!-- 5. 底部悬浮条 (Sticky Cart) -->
+<div class="sticky-cart" id="sticky-cart" onclick="openCartModal()">
+	<div style="display:flex; align-items:center;">
+		<span class="badge" id="cart-count">0</span>
+		<span id="txt-view-order" style="font-weight:700;">View Order</span>
+	</div>
+	<div style="font-weight:800; font-size:18px;" id="cart-bar-total">
+		€ 0.00
+	</div>
+</div>
+<div id="toast" class="toast">
+	Update Success!
+</div>
+<script>
         // ==========================================
         // 0. Love 风格动效：统一初始化（不改业务逻辑）
         // ✅ 改：render 阶段直接写入 is-loaded/is-visible，避免一帧闪烁
@@ -554,7 +508,6 @@
           loadedSrc: new Set(),
           revealIO: null
         };
-
         function __ensureRevealIO(){
           if(__fx.revealIO) return __fx.revealIO;
           __fx.revealIO = new IntersectionObserver((entries) => {
@@ -569,16 +522,13 @@
           }, { threshold: 0.15 });
           return __fx.revealIO;
         }
-
         function __normUrl(u){
           return (u || '').trim();
         }
-
         function __isImgLoadedByUrl(url){
           const u = __normUrl(url);
           return u && __fx.loadedSrc.has(u);
         }
-
         // ✅ 关键：在生成 HTML 时直接给 class（避免插入后 JS 才补 class 的一帧）
         function __imgClass(url, base){
           const loaded = __isImgLoadedByUrl(url);
@@ -592,7 +542,6 @@
           const seen = key && __fx.seenCards.has(key);
           return `${base} reveal-card js-reveal ${seen ? 'is-visible' : ''}`;
         }
-
         function __markImgLoaded(img){
           if(!img || img.dataset.fxLoaded === '1') return;
           img.dataset.fxLoaded = '1';
@@ -601,36 +550,30 @@
           const srcKey = __normUrl(img.currentSrc || img.src);
           if(srcKey) __fx.loadedSrc.add(srcKey);
         }
-
         function __markImgError(img){
           if(!img) return;
           img.classList.remove('is-loading');
           img.classList.add('is-error');
         }
-
         function __initReveal(root){
           const io = __ensureRevealIO();
           const cards = (root || document).querySelectorAll('.js-reveal');
           cards.forEach((card) => {
             const key = card.dataset.revealKey || '';
-
             // ✅ 如果 render 时已 is-visible，也要写入 seenCards，保持一致
             if(key && card.classList.contains('is-visible')){
               __fx.seenCards.add(key);
               return;
             }
-
             if(key && __fx.seenCards.has(key)){
               card.classList.add('is-visible');
               return;
             }
-
             if(!card.classList.contains('is-visible')){
               io.observe(card);
             }
           });
         }
-
         function __initImages(root){
           const imgs = (root || document).querySelectorAll('img.js-skel-img');
           imgs.forEach((img) => {
@@ -641,42 +584,33 @@
               img.dataset.fxInit = '1';
               return;
             }
-
             if(img.dataset.fxInit === '1') return;
             img.dataset.fxInit = '1';
-
             try { img.decoding = 'async'; } catch(e){}
-
             // 再保险：如果 url 已在缓存里，立即 loaded（即便 render 时没命中）
             if(srcKey && __fx.loadedSrc.has(srcKey)){
               __markImgLoaded(img);
               return;
             }
-
             img.classList.add('skel-img');
             img.classList.add('is-loading');
-
             const done = () => {
               const p = (img.decode ? img.decode() : Promise.resolve());
               Promise.resolve(p).catch(() => {}).then(() => __markImgLoaded(img));
             };
             const fail = () => __markImgError(img);
-
             if(img.complete && img.naturalWidth > 0){
               done();
               return;
             }
-
             img.addEventListener('load', done, { once: true });
             img.addEventListener('error', fail, { once: true });
           });
         }
-
         function initCardFX(root){
           __initReveal(root);
           __initImages(root);
         }
-
         // ==========================================
         // 1. 数据中心
         // ==========================================
@@ -754,7 +688,6 @@
                       { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
                     ]
                   },
-
                   { id:"l2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-c168cd8a-0bc8-49bc-928e-0ed3239e0ac2.jpeg",
                     title:{ cn:"草莓千层蛋糕", en:"Strawberry Melaleuca Cake", pt:"Bolo De Melaleuca De Morango" },
                     desc:{ cn:"红丝绒口味的可丽饼皮，夹层为新鲜草莓熬制果酱融合白巧克力奶油，新鲜草莓点缀在蛋糕上面，口味清新独特",
@@ -765,7 +698,6 @@
                       { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
                       { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
                     ] },
-
                   { id:"l3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-3854a4fe-b655-42f2-8521-19638e9e5d9c.jpeg",
                     title:{ cn:"抹茶千层蛋糕", en:"Matcha Melaleuca Cake", pt:"Bolo Matcha Melaleuca" },
                     desc:{ cn:"特级日本宇治抹茶粉，夹层为抹茶口味的巧克力奶油，口感细腻，层次丰富",
@@ -776,7 +708,6 @@
                       { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:40 },
                       { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
                     ] },
-
                   { id:"l4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-2d13e6b9-ce8b-4516-a663-f9c90e1935ee.jpeg",
                     title:{ cn:"芒果千层蛋糕", en:"Mango Melaleuca Cake", pt:"Bolo Melaleuca De Manga" },
                     desc:{ cn:"香草口味的可丽饼，夹层包含芒果布丁和白巧奶油，点缀芒果果肉，清新爽口的夏天的感觉",
@@ -788,7 +719,6 @@
                       { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
                     ] }
               ],
-
               "naked": [
                 { id:"n1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-e378d704-2d39-4765-8f46-14c5ece07b85.jpeg",
                   title:{ cn:"香草奶油水果裸蛋糕", en:"Vanilla Cream Fruit Naked Cake", pt:"Bolo Nu De Fruta Com Creme De Baunilha" },
@@ -799,7 +729,6 @@
                     { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:32 },
                     { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:42 }
                   ] },
-
                 { id:"n2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-414cc726-60e9-4bb5-a145-776fdbb67e13.jpeg",
                   title:{ cn:"抹茶青提裸蛋糕", en:"Matcha Grape Naked Cake", pt:"Bolo nu de chá verde Matcha" },
                   desc:{ cn:"抹茶青提裸蛋糕是一款非常典型的日式蛋糕。结合了清新抹茶奶油风味和爽口青提。简约自然，口感丰富多层次，清新茶香和水果融合后，充满质感和品位。",
@@ -809,7 +738,6 @@
                     { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
                     { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:45 }
                   ] },
-
                 { id:"n3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-175c858c-f49c-4209-bfbc-a3ea7bb6a109.jpeg",
                   title:{ cn:"巧克力水果奶油裸蛋糕", en:"Chocolate Fruit Cream Naked Cake", pt:"Bolo Nu De Creme De Frutas De Chocolate" },
                   desc:{ cn:"巧克力水果奶油裸蛋糕是一款结合了巧克力的浓郁香味、奶油的丝滑口感和新鲜水果清爽风味的美味蛋糕。非常适合用于生日、婚礼、节日聚会等各种庆祝活动。",
@@ -820,7 +748,6 @@
                     { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
                   ] }
               ],
-
               "custom": [
                 { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
                   title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
@@ -832,7 +759,6 @@
               ]
           }
         };
-
         let state = {
           lang: 'en',
           isSearchMode: false,
@@ -841,70 +767,72 @@
           scroll: { home: { en: 0, pt: 0, cn: 0 } },
           currentCategoryId: null
         };
-
 // ==========================================
 // [NEW] Auto language detect + persist
 // en / pt / cn, else en
-// ==========================================
 const LANG_KEY = 'neco_lang_v1';
-
+const LANG_LOCK_KEY = 'neco_lang_lock_v1';
+function isLangLocked(){
+  try{ return localStorage.getItem(LANG_LOCK_KEY) === '1'; }catch(e){ return false; }
+}
+function lockLang(){
+  try{ localStorage.setItem(LANG_LOCK_KEY, '1'); }catch(e){}
+}
+function unlockLang(){
+  // 可选：给“跟随系统”用
+  try{
+    localStorage.removeItem(LANG_LOCK_KEY);
+    localStorage.removeItem(LANG_KEY);
+  }catch(e){}
+}
 function _normLocale(s){
   return String(s || '')
     .trim()
     .toLowerCase()
     .replace('_', '-');
 }
-
 function detectSystemLang(){
   const candidates = [];
-
   // 优先 navigator.languages（更准确）
   if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
   if (navigator.language) candidates.push(navigator.language);
-
   // 再保险：Intl locale
   try{
     const loc = Intl.DateTimeFormat().resolvedOptions().locale;
     if (loc) candidates.push(loc);
   }catch(e){}
-
   for (const raw of candidates) {
     const l = _normLocale(raw);
     if (!l) continue;
-
     // Portuguese
     if (l.startsWith('pt')) return 'pt';
-
     // Chinese (zh-CN / zh-Hans / zh-Hant / zh-TW ...)
     if (l.startsWith('zh')) return 'cn';
-
     // English
     if (l.startsWith('en')) return 'en';
-
     // 极少数情况：直接给 cn
     if (l.startsWith('cn')) return 'cn';
   }
   return 'en';
 }
-
 function loadPreferredLang(){
-  // 如果用户手动选过语言，就优先用用户选择
+  // 只有用户手动选择过（锁定）才用缓存
   try{
-    const saved = localStorage.getItem(LANG_KEY);
-    if (saved && ['en','pt','cn'].includes(saved)) return saved;
+    if (isLangLocked()){
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved && ['en','pt','cn'].includes(saved)) return saved;
+    }
   }catch(e){}
+  // 否则每次都重新按系统语言检测（不缓存）
   return detectSystemLang();
 }
-
 function persistLang(l){
   try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
 }
-
         // ==========================================
         // 2. Cart persistence
         // ==========================================
         const CART_KEY = 'neco_cart_v2';
-
         function _isValidCartItem(it){
           return it && typeof it === 'object'
             && typeof it.uid === 'string'
@@ -912,7 +840,6 @@ function persistLang(l){
             && typeof it.variantId === 'string'
             && typeof it.qty === 'number';
         }
-
         function saveCart(){
           try{
             const data = state.cart.map(it => ({
@@ -930,7 +857,6 @@ function persistLang(l){
             console.warn('saveCart failed', e);
           }
         }
-
         function loadCart(){
           try{
             const raw = localStorage.getItem(CART_KEY);
@@ -938,7 +864,6 @@ function persistLang(l){
             const obj = JSON.parse(raw);
             const arr = (obj && obj.cart) ? obj.cart : obj;
             if(!Array.isArray(arr)) return;
-
             state.cart = arr
               .filter(_isValidCartItem)
               .map(it => ({
@@ -951,7 +876,6 @@ function persistLang(l){
             console.warn('loadCart failed', e);
           }
         }
-
         function findItemById(productId){
           for(const cat in db.items){
             const hit = (db.items[cat] || []).find(p => p.id === productId);
@@ -959,7 +883,6 @@ function persistLang(l){
           }
           return null;
         }
-
         function resolveCartItem(ci){
           const item = findItemById(ci.productId);
           if(!item){
@@ -983,7 +906,6 @@ function persistLang(l){
             _variant: variant
           };
         }
-
         // ==========================================
         // 3. 多语言文案
         // ==========================================
@@ -1022,32 +944,55 @@ function persistLang(l){
             removeHintMissing: "REMOVER"
           }
         };
-
+let __lastSystemLang = detectSystemLang();
+function applySystemLangIfUnlocked(){
+  if (isLangLocked()) return;
+  const sys = detectSystemLang();
+  if (sys !== state.lang){
+    // 自动切换：不写缓存
+    setLang(sys, false);
+  }
+  __lastSystemLang = sys;
+}
+function startAutoLangWatch(){
+  // 有些浏览器支持
+  window.addEventListener('languagechange', applySystemLangIfUnlocked);
+  // 双保险：轮询检测变化（你可以改成 2000/3000ms）
+  setInterval(() => {
+    if (isLangLocked()) return;
+    const now = detectSystemLang();
+    if (now !== __lastSystemLang){
+      applySystemLangIfUnlocked();
+    }
+  }, 2000);
+}
         init();
-
         function init() {
   loadCart();
   const initialLang = loadPreferredLang();
-  setLang(initialLang);
+  setLang(initialLang, false); // 自动：不缓存
+  startAutoLangWatch();
   updateCartBar();
+  // ✅ 只在“首次进入/没有state”时写入 home 状态，避免覆盖其它状态
+  if (!history.state || !history.state.view) {
+    history.replaceState({ view: 'home' }, '');
+  }
 }
-        function setLang(l) {
-    // 合法性：只允许 en/pt/cn
-    if (!['en','pt','cn'].includes(l)) l = 'en';
-
-    state.lang = l;
+        function setLang(l, userChosen = false) {
+  if (!['en','pt','cn'].includes(l)) l = 'en';
+  state.lang = l;
+  // ✅ 只有用户手动切换才持久化 + 锁定
+  if (userChosen){
     persistLang(l);
-
-    // 同步 <html lang="">，有利于输入法/辅助功能/SEO
-    document.documentElement.lang = (l === 'cn') ? 'zh-CN' : l;
-
-    document.querySelectorAll('.lang-btn').forEach(b => {
-        b.classList.toggle('active', b.innerText.toLowerCase() === l);
-    });
-    updateUI();
-    if(state.isSearchMode) handleSearch();
+    lockLang();
+  }
+  document.documentElement.lang = (l === 'cn') ? 'zh-CN' : l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.innerText.toLowerCase() === l);
+  });
+  updateUI();
+  if(state.isSearchMode) handleSearch();
 }
-
         function onSearchKeyDown(e) {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -1056,17 +1001,13 @@ function persistLang(l){
             handleSearch();
           }
         }
-
         function updateTopButtonLabel() {
           const isHome = document.getElementById('view-home').classList.contains('active');
           const t = texts[state.lang];
-
           const txt = document.getElementById('txt-back');
           if (txt) txt.innerText = isHome ? t.homeTitle : t.back;
-
           const nav = document.querySelector('.back-nav');
           if (!nav) return;
-
           if (isHome) {
             nav.style.setProperty('--nav-icon', 'url("https://i.ibb.co/kVS4zpC5/IMG-20251219-152124.png")');
             nav.style.setProperty('--nav-icon-size', '22.5px');
@@ -1075,7 +1016,6 @@ function persistLang(l){
             nav.style.setProperty('--nav-icon-size', '18px');
           }
         }
-
         function updateUI() {
             const t = texts[state.lang];
             const ids = {
@@ -1088,7 +1028,6 @@ function persistLang(l){
                 if(el) el.innerText = ids[id];
             }
             document.getElementById('search-input').placeholder = t.searchPh;
-
             if (document.getElementById('view-home').classList.contains('active') && !state.isSearchMode) {
               state.scroll.home[state.lang] = window.scrollY || 0;
               renderHome(true);
@@ -1098,19 +1037,15 @@ function persistLang(l){
                 renderCategory(state.currentCategoryId, { skipSaveHome: true, keepScrollY: y });
               }
             }
-
             const hint = state.lang === 'cn' ? 'search' : 'search';
             document.getElementById('search-input').setAttribute('enterkeyhint', hint);
-
             updateCartBar();
             if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
             refreshProductModalUI();
             updateTopButtonLabel();
         }
-
         function renderHome(restoreScroll = false) {
           const grid = document.getElementById('category-grid');
-
           grid.innerHTML = db.categories.map(c => {
               const key = `home-cat-${c.id}`;
               return `
@@ -1125,32 +1060,25 @@ function persistLang(l){
                 </div>
               `;
           }).join('');
-
           initCardFX(grid);
-
           const saved = state.scroll.home[state.lang] || 0;
           switchView('view-home', restoreScroll ? { scrollTop: saved } : {});
         }
-
         function renderCategory(id, opts = {}) {
           state.currentCategoryId = id;
           history.pushState({ view: 'category' }, '');
-
           if (!opts.skipSaveHome) {
             state.scroll.home[state.lang] = window.scrollY || window.pageYOffset || 0;
           }
-
           const items = db.items[id] || [];
           const container = document.getElementById('category-content');
           renderProductList(container, items, id);
-
           if (typeof opts.keepScrollY === 'number') {
             switchView('view-category', { scrollTop: opts.keepScrollY });
           } else {
             switchView('view-category');
           }
         }
-
         function renderProductList(container, items, catId) {
             container.innerHTML = `
                 <div class="product-list">
@@ -1173,34 +1101,26 @@ function persistLang(l){
                     }).join('')}
                 </div>
             `;
-
             initCardFX(container);
         }
-
         function switchView(viewId, opts = {}) {
           document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
           document.getElementById(viewId).classList.add('active');
           updateTopButtonLabel();
-
           if (opts.noScroll) return;
-
           const top = typeof opts.scrollTop === 'number' ? opts.scrollTop : 0;
           requestAnimationFrame(() => window.scrollTo(0, top));
         }
-
         function goBack() {
           const isHome = document.getElementById('view-home').classList.contains('active');
           if (isHome) return;
-
           if (state.isSearchMode) clearSearch();
           else renderHome(true);
         }
-
         // --- Search Logic ---
         function handleSearch() {
             const query = document.getElementById('search-input').value.trim().toLowerCase();
             document.getElementById('search-clear').style.display = query.length > 0 ? 'block' : 'none';
-
             if(query.length < 1) {
                 if(state.isSearchMode) {
                     state.isSearchMode = false;
@@ -1212,7 +1132,6 @@ function persistLang(l){
               history.pushState({ view: 'search' }, '');
             }
             state.isSearchMode = true;
-
             let allItems = [];
             for(let cat in db.items) {
                 db.items[cat].forEach((item, idx) => {
@@ -1220,38 +1139,32 @@ function persistLang(l){
                     allItems.push(item);
                 });
             }
-
             const lang = state.lang;
             let results = allItems.filter(item => {
                 const t = (item.title[lang] || '').toLowerCase();
                 const d = (item.desc[lang] || '').toLowerCase();
                 return t.includes(query) || d.includes(query);
             });
-
             if(results.length === 0) {
                 results = allItems.filter(item => {
                     return Object.values(item.title).some(v => v.toLowerCase().includes(query)) ||
                            Object.values(item.desc).some(v => v.toLowerCase().includes(query));
                 });
             }
-
             const container = document.getElementById('category-content');
             if(results.length > 0) {
                 renderProductList(container, results, null);
             } else {
                 container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`;
             }
-
             switchView('view-category');
         }
-
         function clearSearch() {
             document.getElementById('search-input').value = '';
             document.getElementById('search-clear').style.display = 'none';
             state.isSearchMode = false;
             renderHome();
         }
-
         // --- Modal Logic ---
         function getProductQtyMapFromCart(productId){
             const preset = {};
@@ -1262,7 +1175,6 @@ function persistLang(l){
             }
             return preset;
         }
-
         function buildVariantQtyMap(item, preset){
             const m = {};
             (item.variants || []).forEach(v => {
@@ -1271,12 +1183,10 @@ function persistLang(l){
             });
             return m;
         }
-
         function renderVariantQtyList(){
             const item = state.modal.item;
             const vList = document.getElementById('variant-list');
             if(!item || !vList) return;
-
             vList.innerHTML = (item.variants || []).map(v => {
                 const name = v.names[state.lang] || v.names['en'];
                 const priceText = `€ ${Number(v.price).toFixed(2)}`;
@@ -1296,20 +1206,16 @@ function persistLang(l){
                 `;
             }).join('');
         }
-
         function adjustVariantQty(variantId, delta){
             if(!state.modal || !state.modal.variantQty) return;
             const cur = Number(state.modal.variantQty[variantId]) || 0;
             let next = cur + delta;
             if(next < 0) next = 0;
             state.modal.variantQty[variantId] = next;
-
             const el = document.getElementById('v-qty-' + variantId);
             if(el) el.innerText = next;
-
             updateModalPrice();
         }
-
         function _formatCtaText(qty, amount){
           const a = `€${Number(amount).toFixed(2)}`;
           const dot = ' · ';
@@ -1317,7 +1223,6 @@ function persistLang(l){
           if(state.lang === 'pt') return `Adicionar ${qty}${dot}${a}`;
           return `Add ${qty}${dot}${a}`;
         }
-
         function refreshProductModalUI(){
             if(document.getElementById('product-modal').style.display !== 'flex') return;
             const item = state.modal.item;
@@ -1327,11 +1232,9 @@ function persistLang(l){
             renderVariantQtyList();
             updateModalPrice();
         }
-
         function openProductModal(catId, itemIdx, editCartItem = null) {
             let item;
             let preset = {};
-
             if (editCartItem) {
                 item = findItemById(editCartItem.productId);
                 if(!item){
@@ -1344,17 +1247,13 @@ function persistLang(l){
                 item = db.items[catId][itemIdx];
                 state.modal.editProductId = null;
             }
-
             state.modal.item = item;
             state.modal.variantQty = buildVariantQtyMap(item, preset);
-
             document.getElementById('m-img').src = item.img;
             document.getElementById('m-title').innerText = item.title[state.lang] || item.title['en'];
             document.getElementById('m-desc').innerText = item.desc[state.lang] || item.desc['en'];
-
             renderVariantQtyList();
             updateModalPrice();
-
             const modal = document.getElementById('product-modal');
             const shell = document.getElementById('modal-shell');
             modal.style.display = 'flex';
@@ -1362,11 +1261,9 @@ function persistLang(l){
             requestAnimationFrame(() => shell.classList.add('open'));
             history.pushState({ modal: true }, '');
         }
-
         function updateModalPrice() {
             const item = state.modal.item;
             if(!item) return;
-
             let totalQty = 0;
             let total = 0;
             (item.variants || []).forEach(v => {
@@ -1374,36 +1271,33 @@ function persistLang(l){
               totalQty += q;
               total += q * (Number(v.price) || 0);
             });
-
             const label = document.getElementById('txt-add-btn');
             if(label) label.innerText = _formatCtaText(totalQty, total);
-
             const btn = document.querySelector('#product-modal .btn-add-cart');
             if(btn){
               btn.disabled = totalQty <= 0;
               btn.style.opacity = totalQty <= 0 ? 0.6 : 1;
             }
         }
-
-        function closeModalDirect() {
-            const modal = document.getElementById('product-modal');
-            const shell = document.getElementById('modal-shell');
-            shell.classList.remove('open');
-            modal.style.opacity = 0;
-            state.modal.editProductId = null;
-            state.modal.variantQty = {};
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
+        function _hideProductModal() {
+  const modal = document.getElementById('product-modal');
+  const shell = document.getElementById('modal-shell');
+  shell.classList.remove('open');
+  modal.style.opacity = 0;
+  state.modal.editProductId = null;
+  state.modal.variantQty = {};
+  setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+function closeModalDirect() {
+  _hideProductModal();
+}
         function closeModal(e) { if(e.target.id === 'product-modal') closeModalDirect(); }
-
         // --- Cart Logic ---
         function confirmAddToCart() {
             const item = state.modal.item;
             const qtyMap = state.modal.variantQty || {};
             if(!item) return;
-
             const isEdit = !!state.modal.editProductId;
-
             let picked = 0;
             for(const v of (item.variants || [])){
               picked += (Number(qtyMap[v.id]) || 0);
@@ -1412,7 +1306,6 @@ function persistLang(l){
               showToast(state.lang === 'cn' ? '先来点数量呀～' : (state.lang === 'pt' ? 'Escolha uma quantidade 🙂' : 'Pick a qty 🙂'));
               return;
             }
-
             if (isEdit) {
                 for (const v of (item.variants || [])) {
                     const desired = Math.max(0, Number(qtyMap[v.id]) || 0);
@@ -1433,14 +1326,12 @@ function persistLang(l){
                     else state.cart.push({ uid: String(Date.now() + Math.random()), productId: item.id, variantId: v.id, qty: addQty });
                 }
             }
-
             closeModalDirect();
             saveCart();
             updateCartBar();
             showToast(isEdit ? texts[state.lang].updated : texts[state.lang].added);
             if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
         }
-
         function updateCartBar() {
             let totalQty = 0;
             let totalPrice = 0;
@@ -1449,50 +1340,39 @@ function persistLang(l){
               const r = resolveCartItem(ci);
               if(!r.missing) totalPrice += (r.price * r.qty);
             }
-
             const countEl = document.getElementById('cart-count');
             if(countEl) countEl.innerText = totalQty;
-
             const legacyTotalEl = document.getElementById('cart-bar-total');
             if(legacyTotalEl) legacyTotalEl.innerText = `€ ${totalPrice.toFixed(2)}`;
-
             const labelEl = document.getElementById('sticky-cart-label');
             if(labelEl){
               const view = texts[state.lang].view || 'View';
               labelEl.innerText = `${view} ${totalQty} €${totalPrice.toFixed(2)}`;
             }
         }
-
         function openCartModal() {
           const list = document.getElementById('cart-list');
           list.innerHTML = '';
-
           if (state.cart.length === 0) {
             list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
           } else {
             state.cart.forEach((ci) => {
               const r = resolveCartItem(ci);
-
               const div = document.createElement('div');
               div.className = 'cart-item';
-
               div.onclick = (e) => {
                 if (e.target.closest('.mini-btn')) return;
-
                 if (r.missing) {
                   showToast(texts[state.lang].missing);
                   return;
                 }
                 openProductModal(null, null, ci);
               };
-
               const img = r.img || 'https://via.placeholder.com/140x140?text=%20';
               const title = r.title ? (r.title[state.lang] || r.title['en']) : texts[state.lang].missingTitle;
               const sku = r.variantNames ? (r.variantNames[state.lang] || r.variantNames['en']) : texts[state.lang].missingVariant;
-
               const lineTotal = (!r.missing && typeof r.price === 'number') ? (r.price * r.qty) : 0;
               const hintText = r.missing ? texts[state.lang].removeHintMissing : texts[state.lang].editHint;
-
               div.innerHTML = `
                 <img src="${img}" class="cart-img">
                 <div class="cart-info">
@@ -1512,14 +1392,12 @@ function persistLang(l){
               list.appendChild(div);
             });
           }
-
           let total = 0;
           for (const ci of state.cart) {
             const r = resolveCartItem(ci);
             if (!r.missing) total += (r.price * r.qty);
           }
           document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
-
           const modal = document.getElementById('cart-modal');
           const shell = document.getElementById('cart-shell');
           modal.style.display = 'flex';
@@ -1527,7 +1405,6 @@ function persistLang(l){
           requestAnimationFrame(() => shell.classList.add('open'));
           history.pushState({ modal: true }, '');
         }
-
         function updateCartItemQty(uid, delta) {
             const item = state.cart.find(c => c.uid === uid);
             if(item) {
@@ -1538,44 +1415,41 @@ function persistLang(l){
                 openCartModal();
             }
         }
-
-        function closeCartDirect() {
-            const modal = document.getElementById('cart-modal');
-            const shell = document.getElementById('cart-shell');
-            shell.classList.remove('open');
-            modal.style.opacity = 0;
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
+        function _hideCartModal() {
+  const modal = document.getElementById('cart-modal');
+  const shell = document.getElementById('cart-shell');
+  shell.classList.remove('open');
+  modal.style.opacity = 0;
+  setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+function closeCartDirect() {
+  _hideCartModal();
+}
         function closeCart(e) { if(e.target.id === 'cart-modal') closeCartDirect(); }
-
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg; t.style.opacity = 1;
             setTimeout(() => t.style.opacity = 0, 1000);
         }
-
-        // ===== 手机返回键拦截 =====
-        window.addEventListener('popstate', function () {
-          const productModal = document.getElementById('product-modal');
-          if (productModal.style.display === 'flex') {
-            closeModalDirect();
-            history.pushState({ modal: true }, '');
-            return;
-          }
-
-          const cartModal = document.getElementById('cart-modal');
-          if (cartModal.style.display === 'flex') {
-            closeCartDirect();
-            history.pushState({ modal: true }, '');
-            return;
-          }
-
-          const isHome = document.getElementById('view-home').classList.contains('active');
-          if (!isHome) {
-            goBack();
-            return;
-          }
-        });
+        // ===== 手机返回键拦截（修复版）=====
+window.addEventListener('popstate', function (e) {
+  const productModal = document.getElementById('product-modal');
+  if (productModal.style.display === 'flex') {
+    _hideProductModal();   // 只关UI，不要pushState
+    return;
+  }
+  const cartModal = document.getElementById('cart-modal');
+  if (cartModal.style.display === 'flex') {
+    _hideCartModal();      // 只关UI，不要pushState
+    return;
+  }
+  // 没有弹窗，才做页面级返回
+  const isHome = document.getElementById('view-home').classList.contains('active');
+  if (!isHome) {
+    goBack();              // 你现有逻辑
+    return;
+  }
+});
     </script>
 </body>
 </html>
