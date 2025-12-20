@@ -19,23 +19,11 @@
             --shadow: 0 8px 24px rgba(16, 41, 64, 0.08);
             --header-h: 70px;
         }
-        /* ===== 弹窗打开：禁止外层滚动（防穿透） ===== */
-html.no-scroll,
-body.no-scroll {
-  height: 100%;
+        /* 弹窗打开时：锁住背景滚动（含 iOS） */
+body.modal-open{
   overflow: hidden;
-}
-/* iOS/移动端更稳：锁住 body 位置，避免背景跟着滑 */
-body.no-scroll {
   position: fixed;
   width: 100%;
-  left: 0;
-}
-/* 弹窗内部仍可滚动，并阻止滚动链传到外层 */
-.modal-scroll,
-.cart-list {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, button, input, select, textarea {
@@ -186,7 +174,7 @@ body.no-scroll {
             background: var(--accent); color: var(--primary); border: none;
             padding: 10px 24px; border-radius: var(--radius-btn); font-weight: 800; font-size: 14px; cursor: pointer;
         }
-        /* --- 6. 弹窗 (Modal) --- */
+            /* --- 6. 弹窗 (Modal) --- */
         .modal-overlay, .cart-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             backdrop-filter: blur(0.5px); display: none; justify-content: center; align-items: flex-end;
@@ -261,11 +249,12 @@ body.no-scroll {
             padding: 14px 18px; background: white; text-align: center;
             font-weight: 900; font-size: 18px; border-bottom: 1px solid var(--border);
         }
-        .cart-list { flex: 1; overflow-y: auto; padding: 16px; background: var(--bg);}
+        .cart-list { flex: 1; overflow-y: auto; padding: 16px; background: white;}
         .cart-item {
             background: white; border-radius: 16px; padding: 15px;
-            display: flex; gap: 15px; margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer;
+            display: flex; gap: 15px; margin-bottom: 20px; margin-top: 14.5px;
+            box-shadow: 0 0px 15px 2.5px rgba(16, 41, 64, 0.1);
+             cursor: pointer;
         }
         .cart-img { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; }
         .cart-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
@@ -456,16 +445,16 @@ body.no-scroll {
 <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
 	<div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
 		<div class="close-btn" onclick="closeModalDirect()">
-			 ✕
+			✕
 		</div>
 		<div class="modal-scroll">
 			<img src="" id="m-img" class="modal-hero-img">
 			<div class="modal-content-box">
 				<div class="m-title" id="m-title">
-					 Title
+					Title
 				</div>
 				<div class="m-desc" id="m-desc">
-					 Desc
+					Desc
 				</div>
 				<div class="variant-section">
 					<label class="v-label" id="txt-select-size">SELECT SIZE</label>
@@ -487,7 +476,7 @@ body.no-scroll {
 		<div class="cart-header">
 			<span id="txt-your-order">Your Order</span>
 			<div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">
-				 ✕
+				✕
 			</div>
 		</div>
 		<div class="cart-list" id="cart-list">
@@ -510,11 +499,11 @@ body.no-scroll {
 		<span id="txt-view-order" style="font-weight:700;">View Order</span>
 	</div>
 	<div style="font-weight:800; font-size:18px;" id="cart-bar-total">
-		 € 0.00
+		€ 0.00
 	</div>
 </div>
 <div id="toast" class="toast">
-	 Update Success!
+	Update Success!
 </div>
 <script>
         // ==========================================
@@ -632,7 +621,7 @@ body.no-scroll {
         // ==========================================
         // 1. 数据中心
         // ==========================================
-        const db = {
+  const db = {
           categories: [
               { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg",
                 title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
@@ -766,14 +755,160 @@ body.no-scroll {
                     { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
                   ] }
               ],
+              
+            "cheese": [
+{ id:"c1", img:"https://dyj6gt4964deb.cloudfront.net/images/28bd1b3b-6ba5-4dd1-a6ad-9556bc81a810.jpeg",
+title:{ cn:"纽约芝士蛋糕", en:"New York Cheesecake", pt:"Cheesecake de Nova Iorque" },
+desc:{ cn:"芝士蛋糕中的时尚之王就是她了！", en:"She is the fashion king of cheesecake!", pt:"É a rainha da moda dos cheesecakes!" },
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:50 },
+{ id:"v3", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:28 }
+] },
+
+{ id:"ch2",
+img:"https://dyj6gt4964deb.cloudfront.net/images/crop-6054df78-55f3-4d63-8952-6530bbe00258.jpeg",
+title:{
+cn:"柠檬芝士蛋糕",
+en:"Lemon Yogurt Mousse",
+pt:"Mousse de Iogurte com Limão"
+},
+desc:{
+cn:"新鲜柠檬制作的酸奶慕斯蛋糕，拥有非常清新的柠檬香，酸甜口味，低糖",
+en:"Yogurt mousse cake made with fresh lemon has a very fresh lemon scent, sweet and sour taste, and low sugar",
+pt:"Bolo de mousse de iogurte feito com limões frescos, com aroma a limão muito fresco, sabor agridoce e baixo teor de açúcar"
+},
+variants:[
+{ id:"v1", names:{ cn:"6寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
+{ id:"v2", names:{ cn:"8寸", en:"8 inches", pt:"8 polegadas" }, price:45 }
+]
+},
+
+{ id:"ch3",
+img:"https://dyj6gt4964deb.cloudfront.net/images/crop-74f0a75c-3712-41c9-8447-5749b2f1afbd.jpeg",
+title:{
+cn:"焦糖慕斯蛋糕",
+en:"Caramel Mousse Cake",
+pt:"Bolo Mousse de Caramelo"
+},
+desc:{
+cn:"太好吃了！",
+en:"too delicious!",
+pt:"delicioso demais!"
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:50 }
+]
+},
+
+{ id:"ch4",
+img:"https://dyj6gt4964deb.cloudfront.net/images/crop-bcc1aedb-728f-4895-96be-fb89ee828fb9.jpeg",
+title:{
+cn:"抹茶酸奶口味的漫画蛋糕",
+en:"Matcha yogurt flavored cartoon cake",
+pt:"Bolo manga com sabor a iogurte matcha"
+},
+desc:{
+cn:"抹茶芝士，白巧酸奶，蓝柑慕斯三种口味层次丰富的芝士慕斯蛋糕，拥有它就像拥有了蓝天白云草地的快乐",
+en:"Matcha cheese, white chocolate yogurt, blue mandarin mousse three flavors of rich cheese mousse cake, having it is like having the happiness of blue sky, white clouds and grass",
+pt:"Queijo matcha, iogurte branco e mousse de tangerina azul são três sabores de bolo de mousse de queijo com camadas ricas."
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:50 }
+]
+}
+              ],
+                
+              "korean": [
+{ id:"k1", img:"https://dyj6gt4964deb.cloudfront.net/images/73898ee3-72c2-4f27-81f5-2013d579610c.jpeg",
+title:{ cn:"香蕉巧克力奶油水果蛋糕", en:"Banana Chocolate Cream Fruit Cake", pt:"Bolo De Fruta Com Creme De Chocolate De Banana" },
+desc:{
+cn:"巧克力味道的柔软戚风蛋糕，夹层包含巧克力奶油和香蕉果泥，搭配新鲜水果，口味清爽不甜腻，是一款清爽的巧克力蛋糕",
+en:"A soft chiffon cake with chocolate flavor. The interlayer contains chocolate cream and banana puree, paired with fresh fruits. It tastes refreshing and not too sweet. It is a refreshing chocolate cake.",
+pt:"Bolo chiffon macio com sabor a chocolate. A sanduíche contém creme de chocolate e purê de banana."
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"6 polegadas" }, price:48 }
+] },
+
+{ id:"k2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-b5f9460c-fa6b-43c2-ba0b-4c25da3ab000.jpeg",
+title:{ cn:"摩卡曲奇口味奶油蛋糕", en:"Mocha Cookies Cream Cake", pt:"Bolo de creme com sabor a bolacha mocha" },
+desc:{
+cn:"巧克戚风软蛋糕胚，咖啡口味奶油，内加曲奇饼干，柔软又有香脆的口感",
+en:"Chocolate chiffon soft cake base, coffee flavored cream, and cookies inside, soft and crispy taste",
+pt:"Base de bolo macio chiffon de chocolate, creme com sabor a café, recheado com bolachas, textura macia e crocante"
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+] },
+
+{ id:"k3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-657be4a4-aad7-43b8-9418-173e475a5273.jpeg",
+title:{ cn:"宇治抹茶红豆斑斓奶油蛋糕", en:"Uji Matcha Red Bean Cream Cake", pt:"Bolo de creme de feijão vermelho Uji matcha" },
+desc:{
+cn:"正宗宇治抹茶粉手作戚风软胚蛋糕，拥有斑斓红豆融合的白巧奶油，搭配水果装饰，清新的茶香果香红豆的甜，整体蛋糕虽然茶香浓郁，却并不苦涩，我们的抹茶材料均为日本顶级抹茶，值得尝试！",
+en:"The authentic Uji Matcha powder handmade chiffon soft cake has white chocolate cream blended with colorful red beans, decorated with fruits, and has a refreshing tea aroma, fruit aroma and the sweetness of red beans. Although the overall cake has a strong tea aroma, it is not bitter. Our matcha ingredients are all top-grade Japanese matcha, it is worth a try!",
+pt:"Autêntico bolo de embrião macio de chiffon feito à mão em pó Uji matcha, com creme branco fundido com feijão vermelho colorido, com decoração de frutas, aroma de chá fresco e doçura de feijão vermelho frutado. qualidade do Japão, vale a pena experimentar!"
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:50 }
+] },
+
+{ id:"k4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-9b832479-e5d6-4fc4-8c7a-3f5e2983b67f.jpeg",
+title:{ cn:"柠檬香缇莓果奶油蛋糕", en:"Lemon Chantilly Berry Cream Cake", pt:"Bolo de Creme de Limão Chantilly" },
+desc:{
+cn:"柠檬口味戚风蛋糕，夹层包含莓果果膏，白巧奶油，搭配新鲜无花果水果，这是一款风味极为出众的创意蛋糕",
+en:"Lemon-flavored chiffon cake, with berry paste, white chocolate cream, and fresh figs, is a creative cake with outstanding flavor.",
+pt:"Bolo chiffon com sabor a limão, prensado com pasta de frutos vermelhos, creme de chocolate branco e figo fresco."
+},
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:50 }
+] }
+              ],
               "custom": [
-                { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
-                  title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
-                  desc: { cn: "卡通兔子风格。可选巧克力，柠檬，抹茶等口味。", en: "Cartoon style. Available in 4/6 inch.", pt: "Estilo cartoon. Tamanhos 4/6 pol." },
-                  variants: [
-                    { id:"v1", names: { cn: "4英寸", en: "4 inches", pt: "4 polegadas" }, price: 25 },
-                    { id:"v2", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 38 }
-                  ] }
+{ id:"u1", img:"https://dyj6gt4964deb.cloudfront.net/images/38bf480f-d413-4b0f-af13-16ec39957a35.jpeg",
+title:{ cn:"笑脸蛋糕", en:"Smiley Face Cake", pt:"Bolo de Carinha Sorridente" },
+desc:{ cn:"", en:"", pt:"" },
+variants:[
+{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
+{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 },
+{ id:"v3", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:26 }
+] },
+{ id:"u2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-59f36d43-d489-43f6-a753-fa06a9948136.jpeg",
+title:{ cn:"粉色小熊梦幻蛋糕", en:"Pink Teddy Dream Cake", pt:"Bolo dos Sonhos de Ursinho Rosa" },
+desc:{ cn:"", en:"", pt:"" },
+variants:[
+{ id:"v1", names:{ cn:"6寸", en:"6 inches", pt:"6 polegadas" }, price:43 },
+{ id:"v2", names:{ cn:"8寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
+] },
+
+{ id:"u3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-f9a4ec58-a5ae-4382-9e6c-401917fb43fc.jpeg",
+title:{ cn:"情侣兔子蛋糕", en:"Couple Rabbit Cake", pt:"Bolo de Coelho Casal" },
+desc:{
+cn:"可选口味：巧克力，柠檬，抹茶酸奶，鲜奶水果",
+en:"Available flavors: chocolate, lemon, matcha yogurt, fresh milk fruit",
+pt:"Sabores disponíveis: chocolate, limão, iogurte matcha, fruta fresca"
+},
+variants:[
+{ id:"v1", names:{ cn:"4寸加高", en:"4 inches double height", pt:"4 polegadas de altura dupla" }, price:39 },
+{ id:"v2", names:{ cn:"6寸加高", en:"6 inches double height", pt:"6 polegadas de altura dupla" }, price:55 }
+] },
+{ id:"u4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-5a8fbbb9-c8c3-4717-a4fb-8920a1182ec7.jpeg",
+title:{ cn:"情侣熊蛋糕", en:"Couple Bear Cake", pt:"Bolo Casal Urso" },
+desc:{
+cn:"可选口味：巧克力，柠檬，抹茶酸奶，鲜奶水果",
+en:"Cake flavors available: chocolate, lemon, fresh milk fruit, matcha yogurt",
+pt:"Sabores de bolo disponíveis: chocolate, limão, fruta fresca, iogurte matcha"
+},
+variants:[
+{ id:"v1", names:{ cn:"4寸加高", en:"4 inches double height", pt:"4 polegadas de altura dupla" }, price:39 },
+{ id:"v2", names:{ cn:"6寸加高", en:"6 inches double height", pt:"6 polegadas de altura dupla" }, price:55 }
+] }
               ]
           }
         };
@@ -984,16 +1119,6 @@ function startAutoLangWatch(){
     }
   }, 2000);
 }
-function bindOverlayTouchBlock() {
-  ['product-modal', 'cart-modal'].forEach((id) => {
-    const overlay = document.getElementById(id);
-    if (!overlay) return;
-    overlay.addEventListener('touchmove', (e) => {
-      const inModalScroll = e.target.closest('.modal-scroll') || e.target.closest('.cart-list');
-      if (!inModalScroll) e.preventDefault();
-    }, { passive: false });
-  });
-}
         init();
         function init() {
   loadCart();
@@ -1005,7 +1130,6 @@ function bindOverlayTouchBlock() {
   if (!history.state || !history.state.view) {
     history.replaceState({ view: 'home' }, '');
   }
-  bindOverlayTouchBlock();
 }
         function setLang(l, userChosen = false) {
   if (!['en','pt','cn'].includes(l)) l = 'en';
@@ -1194,27 +1318,35 @@ function bindOverlayTouchBlock() {
             state.isSearchMode = false;
             renderHome();
         }
-        // ===== Scroll Lock (防弹窗打开时外层还能滚) =====
-let __scrollLockCount = 0;
+        
+// ===== Lock body scroll when any modal is open =====
 let __lockedScrollY = 0;
-function lockBodyScroll() {
-  __scrollLockCount++;
-  if (__scrollLockCount > 1) return;
+
+function lockBodyScroll(){
+  if(document.body.classList.contains('modal-open')) return;
   __lockedScrollY = window.scrollY || window.pageYOffset || 0;
-  document.documentElement.classList.add('no-scroll');
-  document.body.classList.add('no-scroll');
-  // 关键：固定 body 时用 top 抵消当前滚动位置，避免页面跳回顶部
   document.body.style.top = `-${__lockedScrollY}px`;
+  document.body.classList.add('modal-open');
 }
-function unlockBodyScroll() {
-  if (__scrollLockCount === 0) return;
-  __scrollLockCount--;
-  if (__scrollLockCount > 0) return;
-  document.documentElement.classList.remove('no-scroll');
-  document.body.classList.remove('no-scroll');
+
+function unlockBodyScroll(){
+  if(!document.body.classList.contains('modal-open')) return;
+  document.body.classList.remove('modal-open');
   document.body.style.top = '';
   window.scrollTo(0, __lockedScrollY);
 }
+
+// 如果还有弹窗开着，就别解锁（避免“购物车弹窗里再打开产品弹窗”的情况）
+function unlockBodyScrollIfNoModal(){
+  const pm = document.getElementById('product-modal');
+  const cm = document.getElementById('cart-modal');
+  const anyOpen =
+    (pm && pm.style.display === 'flex') ||
+    (cm && cm.style.display === 'flex');
+  if(anyOpen) return;
+  unlockBodyScroll();
+}
+
         // --- Modal Logic ---
         function getProductQtyMapFromCart(productId){
             const preset = {};
@@ -1306,8 +1438,8 @@ function unlockBodyScroll() {
             updateModalPrice();
             const modal = document.getElementById('product-modal');
             const shell = document.getElementById('modal-shell');
-            modal.style.display = 'flex';
 lockBodyScroll();
+            modal.style.display = 'flex';
             modal.style.opacity = 1;
             requestAnimationFrame(() => shell.classList.add('open'));
             history.pushState({ modal: true }, '');
@@ -1338,9 +1470,9 @@ lockBodyScroll();
   state.modal.editProductId = null;
   state.modal.variantQty = {};
   setTimeout(() => {
-    modal.style.display = 'none';
-    unlockBodyScroll();
-  }, 300);
+  modal.style.display = 'none';
+  unlockBodyScrollIfNoModal();
+}, 300);
 }
 function closeModalDirect() {
   _hideProductModal();
@@ -1454,8 +1586,8 @@ function closeModalDirect() {
           document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
           const modal = document.getElementById('cart-modal');
           const shell = document.getElementById('cart-shell');
+          lockBodyScroll();
           modal.style.display = 'flex';
-lockBodyScroll();
           modal.style.opacity = 1;
           requestAnimationFrame(() => shell.classList.add('open'));
           history.pushState({ modal: true }, '');
@@ -1476,9 +1608,9 @@ lockBodyScroll();
   shell.classList.remove('open');
   modal.style.opacity = 0;
   setTimeout(() => {
-    modal.style.display = 'none';
-    unlockBodyScroll();
-  }, 300);
+  modal.style.display = 'none';
+  unlockBodyScrollIfNoModal();
+}, 300);
 }
 function closeCartDirect() {
   _hideCartModal();
