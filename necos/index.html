@@ -21,7 +21,7 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+
         body, button, input, select, textarea {
             font-family: 'Nunito', sans-serif;
         }
@@ -47,7 +47,7 @@
         }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 54px; width: auto; }
-        
+
         .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; }
         .lang-btn {
             border: none; background: transparent; padding: 6px 10px;
@@ -58,10 +58,10 @@
 
         /* --- 3. 布局 --- */
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        
-        .view-section { display: none; animation: fadeIn 0.3s ease; }
+
+        /* ✅ 改：去掉整页 fadeIn（love 是卡片动，不是整页闪） */
+        .view-section { display: none; }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
         /* [NEW] 常驻搜索框 (Google Style) */
         .search-hero { margin-bottom: 30px; }
@@ -73,7 +73,7 @@
             transition: box-shadow 0.2s;
         }
         .search-hero-inner:focus-within { box-shadow: 0 8px 30px rgba(16, 41, 64, 0.15); }
-        
+
       .search-icon {
         width: 20px;
         height: 20px;
@@ -95,14 +95,14 @@
         opacity:0;
         pointer-events:none;
       }
-         
+
         .search-input {
             flex: 1; border: none; outline: none; background: transparent;
             font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 600;
             color: var(--primary);
         }
         .search-input::placeholder { color: #999; }
-        
+
         .search-clear { cursor: pointer; color:var(--primary); font-size: 18px; display: none; }
         input[type="search"]::-webkit-search-cancel-button {
           -webkit-appearance: none;
@@ -137,7 +137,7 @@
           display: flex;
           align-items: center;
           gap: 12px;
-          margin-bottom: 20px; 
+          margin-bottom: 20px;
         }
 
         .nav-title {
@@ -182,7 +182,7 @@
         .prod-img { width: 100%; height: 220px; object-fit: cover; }
         .prod-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
         .prod-title { font-size: 18px; font-weight: 800; margin: 0 0 8px 0; color: var(--primary); }
-        .prod-desc { 
+        .prod-desc {
             font-size: 13px; color: var(--text-gray); line-height: 1.5;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
             margin-bottom: 15px;
@@ -197,7 +197,7 @@
         .modal-overlay, .cart-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             backdrop-filter: blur(0.5px); display: none; justify-content: center; align-items: flex-end;
-            transition: opacity 0.3s; 
+            transition: opacity 0.3s;
         }
         .cart-overlay { z-index: 2000; }
         .modal-overlay { z-index: 2100; }
@@ -211,11 +211,11 @@
             background: var(--white); width: 100%; height: 91.25%;
             border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
             position: relative; overflow: hidden;
-            transform: translateY(100%); 
+            transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .modal-shell.open, .cart-shell.open { transform: translateY(0); } 
-        
+        .modal-shell.open, .cart-shell.open { transform: translateY(0); }
+
         .cart-shell { background: #F5F7FA; }
 
         .close-btn {
@@ -297,7 +297,7 @@
         .mini-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .edit-hint { font-size: 11px; color: #AAA; font-weight: 600; text-transform: uppercase; }
 
-  .sticky-cart {
+        .sticky-cart {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px; background: var(--primary); color: white;
             padding: 15px 20px; border-radius: 50px;
@@ -356,6 +356,86 @@
         /* Make modal scroll feel roomier */
         .modal-scroll{ padding-bottom: 10px; }
 
+        /* =========================================================
+           [LOVE PORT] Card enter animation + Image skeleton shimmer
+           ========================================================= */
+
+        .reveal-card{
+            opacity: 0;
+            translate: 0 30px;
+            transition: opacity .55s ease, translate .55s ease;
+            will-change: opacity, translate;
+        }
+        .reveal-card.is-visible{
+            opacity: 1;
+            translate: 0 0;
+        }
+        @supports not (translate: 0 0){
+            .reveal-card{
+                transform: translateY(30px);
+                transition: opacity .55s ease, transform .55s ease;
+            }
+            .reveal-card.is-visible{
+                transform: translateY(0);
+            }
+        }
+        @media (prefers-reduced-motion: reduce){
+            .reveal-card{
+                opacity: 1 !important;
+                translate: 0 0 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+        }
+
+        .skel-img{
+            opacity: 0;
+            transform: scale(.95);
+            background: #f2f2f2;
+            transition: opacity .5s ease, transform .5s ease;
+            display: block;
+        }
+        .cat-img.skel-img,
+        .prod-img.skel-img{
+            transition: opacity .5s ease, transform .5s ease;
+        }
+
+        .skel-img.is-loading{
+            background-image: linear-gradient(
+                90deg,
+                rgba(242,242,242,1) 0%,
+                rgba(255,255,255,1) 20%,
+                rgba(242,242,242,1) 40%,
+                rgba(242,242,242,1) 100%
+            );
+            background-size: 400% 100%;
+            animation: sk-shimmer 1.2s linear infinite;
+        }
+        @keyframes sk-shimmer{
+            0%{ background-position: 100% 0; }
+            100%{ background-position: -100% 0; }
+        }
+        .skel-img.is-loaded{
+            opacity: 1;
+            transform: scale(1);
+            background: none;
+            animation: none;
+        }
+        .skel-img.is-error{
+            opacity: 1;
+            transform: scale(1);
+            background: #f2f2f2;
+            animation: none;
+        }
+
+        .skel-img.is-loaded.is-loading{
+            animation: none;
+            background: none;
+        }
+
+        @supports (scale: 1){
+            .cat-card:active { transform: none; scale: 0.98; }
+        }
     </style>
 </head>
 <body>
@@ -398,17 +478,13 @@
 
         <!-- 1. 首页 (Home) -->
         <div id="view-home" class="view-section active">
-            <div class="category-grid" id="category-grid">
-                <!-- JS Inject -->
-            </div>
+            <div class="category-grid" id="category-grid"></div>
             <div style="height: 60px;"></div>
         </div>
 
         <!-- 2. 列表页 (Category / Search Results) -->
         <div id="view-category" class="view-section">
-            <div id="category-content">
-                <!-- JS Inject -->
-            </div>
+            <div id="category-content"></div>
         </div>
     </div>
 
@@ -416,7 +492,7 @@
     <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
         <div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
             <div class="close-btn" onclick="closeModalDirect()">✕</div>
-            
+
             <div class="modal-scroll">
                 <img src="" id="m-img" class="modal-hero-img">
                 <div class="modal-content-box">
@@ -470,159 +546,362 @@
 
     <script>
         // ==========================================
+        // 0. Love 风格动效：统一初始化（不改业务逻辑）
+        // ✅ 改：render 阶段直接写入 is-loaded/is-visible，避免一帧闪烁
+        // ==========================================
+        const __fx = {
+          seenCards: new Set(),
+          loadedSrc: new Set(),
+          revealIO: null
+        };
+
+        function __ensureRevealIO(){
+          if(__fx.revealIO) return __fx.revealIO;
+          __fx.revealIO = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              if(!e.isIntersecting) return;
+              const el = e.target;
+              el.classList.add('is-visible');
+              const key = el.dataset.revealKey || '';
+              if(key) __fx.seenCards.add(key);
+              __fx.revealIO.unobserve(el);
+            });
+          }, { threshold: 0.15 });
+          return __fx.revealIO;
+        }
+
+        function __normUrl(u){
+          return (u || '').trim();
+        }
+
+        function __isImgLoadedByUrl(url){
+          const u = __normUrl(url);
+          return u && __fx.loadedSrc.has(u);
+        }
+
+        // ✅ 关键：在生成 HTML 时直接给 class（避免插入后 JS 才补 class 的一帧）
+        function __imgClass(url, base){
+          const loaded = __isImgLoadedByUrl(url);
+          return `${base} skel-img js-skel-img ${loaded ? 'is-loaded' : 'is-loading'}`;
+        }
+        function __imgDataAttrs(url){
+          const loaded = __isImgLoadedByUrl(url);
+          return loaded ? `data-fx-init="1" data-fx-loaded="1"` : ``;
+        }
+        function __cardClass(key, base){
+          const seen = key && __fx.seenCards.has(key);
+          return `${base} reveal-card js-reveal ${seen ? 'is-visible' : ''}`;
+        }
+
+        function __markImgLoaded(img){
+          if(!img || img.dataset.fxLoaded === '1') return;
+          img.dataset.fxLoaded = '1';
+          img.classList.remove('is-loading');
+          img.classList.add('is-loaded');
+          const srcKey = __normUrl(img.currentSrc || img.src);
+          if(srcKey) __fx.loadedSrc.add(srcKey);
+        }
+
+        function __markImgError(img){
+          if(!img) return;
+          img.classList.remove('is-loading');
+          img.classList.add('is-error');
+        }
+
+        function __initReveal(root){
+          const io = __ensureRevealIO();
+          const cards = (root || document).querySelectorAll('.js-reveal');
+          cards.forEach((card) => {
+            const key = card.dataset.revealKey || '';
+
+            // ✅ 如果 render 时已 is-visible，也要写入 seenCards，保持一致
+            if(key && card.classList.contains('is-visible')){
+              __fx.seenCards.add(key);
+              return;
+            }
+
+            if(key && __fx.seenCards.has(key)){
+              card.classList.add('is-visible');
+              return;
+            }
+
+            if(!card.classList.contains('is-visible')){
+              io.observe(card);
+            }
+          });
+        }
+
+        function __initImages(root){
+          const imgs = (root || document).querySelectorAll('img.js-skel-img');
+          imgs.forEach((img) => {
+            // ✅ 如果 render 时已经是 loaded，就直接写缓存并跳过（完全不闪）
+            const srcKey = __normUrl(img.currentSrc || img.src);
+            if(img.dataset.fxLoaded === '1' || img.classList.contains('is-loaded')){
+              if(srcKey) __fx.loadedSrc.add(srcKey);
+              img.dataset.fxInit = '1';
+              return;
+            }
+
+            if(img.dataset.fxInit === '1') return;
+            img.dataset.fxInit = '1';
+
+            try { img.decoding = 'async'; } catch(e){}
+
+            // 再保险：如果 url 已在缓存里，立即 loaded（即便 render 时没命中）
+            if(srcKey && __fx.loadedSrc.has(srcKey)){
+              __markImgLoaded(img);
+              return;
+            }
+
+            img.classList.add('skel-img');
+            img.classList.add('is-loading');
+
+            const done = () => {
+              const p = (img.decode ? img.decode() : Promise.resolve());
+              Promise.resolve(p).catch(() => {}).then(() => __markImgLoaded(img));
+            };
+            const fail = () => __markImgError(img);
+
+            if(img.complete && img.naturalWidth > 0){
+              done();
+              return;
+            }
+
+            img.addEventListener('load', done, { once: true });
+            img.addEventListener('error', fail, { once: true });
+          });
+        }
+
+        function initCardFX(root){
+          __initReveal(root);
+          __initImages(root);
+        }
+
+        // ==========================================
         // 1. 数据中心
         // ==========================================
         const db = {
-    categories: [
-        { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg", 
-          title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
-          desc: { cn: "黑森林 / 提拉米苏 / 红丝绒", en: "Black Forest / Tiramisu / Red Velvet", pt: "Floresta Negra / Tiramisu" } },
-        { id: "layer", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0038becb-7292-4eea-93f7-9fa986281d21.jpeg", 
-          title: { cn: "招牌千层蛋糕", en: "Signature Layer Cake", pt: "Bolo de Mil Camadas" },
-          desc: { cn: "手工制作，层层美味", en: "Handmade crepe layers", pt: "Camadas de crepe artesanais" } },
-        { id: "naked", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-11f1f013-ffc3-4c14-a39e-af3edc99dab8.jpeg", 
-          title: { cn: "原生态裸蛋糕", en: "Naked Fruit Cake", pt: "Bolo Nu" },
-          desc: { cn: "新鲜水果搭配香草戚风", en: "Fresh fruits with vanilla chiffon", pt: "Frutas frescas com chiffon" } },
-        { id: "cheese", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-e4e9d0e4-c631-4a71-bd6a-52caa7a42fd2.jpeg", 
-          title: { cn: "芝士与慕斯", en: "Cheesecake & Mousse", pt: "Bolo de queijo e mousse" },
-          desc: { cn: "天然食材，浓郁口感", en: "Natural ingredients", pt: "Ingredientes naturais" } },
-        { id: "korean", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-153de66b-9952-45d1-9c9d-09d9b1015029.jpeg", 
-          title: { cn: "韩式奶油调味", en: "Korean Style Cream", pt: "Estilo Coreano" },
-          desc: { cn: "清新风格，独特调味", en: "Fresh style, flavored cream", pt: "Estilo fresco" } },
-        { id: "custom", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0a61f906-d8d7-45b4-b0c2-c240d5b14e80.jpeg", 
-          title: { cn: "造型定制蛋糕", en: "Custom Design Cake", pt: "Bolo Personalizado" },
-          desc: { cn: "有趣外表，好吃好玩", en: "Fun & Delicious", pt: "Divertido e delicioso" } }
-    ],
-    items: {
-        "classic": [
-            { id:"c1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-b267cf6d-fb4d-4d57-9351-8c69c59c54b2.jpeg",
-              title:{ cn:"红丝绒乳酪蛋糕", en:"Red Velvet Cheesecake", pt:"Cheesecake de Veludo Vermelho" },
-              desc:{
-                en:"1. Appearance: The bright red cake layer and the white cheese layer form a sharp contrast, which is very visually attractive and especially suitable for festivals and celebrations.\n2. Taste: Red velvet cake is soft and moist, and paired with the rich cheese layer, it has a delicate taste, sweet but not greasy.\n3. Flavor: Red velvet cake usually has a hint of cocoa aroma, and paired with the slightly sour cheese, the overall taste is richer.",
-                pt:"1. Aparência: As camadas de bolo vermelho vivo contrastam nitidamente com as camadas de cream cheese branco, criando um efeito visual muito atraente, especialmente adequado para feriados e celebrações.\n2. Textura: O bolo de veludo vermelho é macio e úmido, combinado com as camadas ricas de cream cheese, resultando em uma textura delicada que é doce, mas não excessivamente.\n3. Sabor: O bolo de veludo vermelho geralmente tem um leve aroma de cacau, complementado pela leve acidez do cream cheese, tornando o sabor geral mais complexo e agradável.",
-                cn:"1. 外观： 鲜艳的红色蛋糕层和白色乳酪层形成鲜明对比，视觉效果非常吸引人，特别适合节日和庆典场合。\n2. 口感： 红丝绒蛋糕柔软湿润，搭配浓郁的乳酪层，口感细腻，甜而不腻。\n3. 风味： 红丝绒蛋糕通常带有一丝可可的香气，搭配乳酪的微酸，使整体口味更加丰富。"
-              },
-              variants:[
-                { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:42 },
-                { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:58 }
-              ]
-            },
-            { id:"c2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-25ad3750-4ed7-4c4f-a2cc-2d99925374a6.jpeg",
-              title:{ en:"Milk sauce black forest cake", cn:"奶酱黑森林蛋糕", pt:"Bolo floresta negra com molho de leite" },
-              desc:{
-                en:"A very rich chocolate sponge cake, with white chocolate cream, dark chocolate cream, and dark rum-stained black cherries in the middle layer. The improved Chantilly cream has a rich milky aroma. It is a classic handmade cake boutique with a blue ribbon",
-                cn:"非常浓郁的巧克力海绵蛋糕，夹层包含白巧奶油、黑巧奶油，以及黑朗姆酒渍黑樱桃，改良的香缇奶油奶香浓郁，是一款蓝带经典手工蛋糕精品",
-                pt:"Um pão de ló de chocolate muito rico com camadas de creme de chocolate branco, doce de leite de chocolate negro e cerejas pretas embebidas em rum escuro."
-              },
-              variants:[
-                { id:"v1", names:{ en:"6 inches", cn:"6寸", pt:"6 polegadas" }, price:40 },
-                { id:"v2", names:{ en:"8 inches", cn:"8寸", pt:"8 polegadas" }, price:55 }
-              ]
-            },
-            { id:"c3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-6f9816fc-5d8f-436d-a97c-baea35005112.jpeg",
-              title:{ pt:"Tiramisu Clássico", cn:"经典提拉米苏", en:"Classic Tiramisu" },
-              desc:{
-                pt:"Um bolo tiramisu italiano muito clássico, queijo mascarpone, bolachas, café expresso líquido, feito à mão com ingredientes frescos.",
-                cn:"非常经典的意式提拉米苏蛋糕，马斯卡彭芝士、手指饼干、意式浓缩咖啡液，新鲜食材手工制作，蛋糕上的整体装饰经过我们的蛋糕师的创作，更显得唯美精致",
-                en:"Very classic Italian tiramisu cake, mascarpone cheese, ladyfingers, espresso liquid, handmade with fresh ingredients, the overall decoration on the cake is created by our baker, making it more beautiful and exquisite"
-              },
-              variants:[
-                { id:"v1", names:{ pt:"6 polegadas", cn:"6寸", en:"6 inches" }, price:38 },
-                { id:"v2", names:{ pt:"8 polegadas", cn:"8寸", en:"8 inches" }, price:49 }
-              ]
-            }
-        ],
-        "layer": [
-            { id:"l1", img:"https://dyj6gt4964deb.cloudfront.net/images/38db952a-2ebb-4af1-b733-a223cede14f3.jpeg",
-              title:{ cn:"巧克力千层蛋糕", en:"Chocolate Melaleuca Cake", pt:"Bolo De Melaleuca De Chocolate" },
-              desc:{
-                cn:"浓郁的巧克力可丽饼，夹层为巧克力奶油，其中还有一层巧克力慕斯，如果你热爱浓郁的巧克力风味，一定不能错过",
-                en:"Rich chocolate crepe, sandwiched with chocolate cream and a layer of chocolate mousse. If you love rich chocolate flavor, you must not miss it.",
-                pt:"Rico crepe de chocolate, prensado com creme de chocolate e uma camada de mousse de chocolate."
-              },
-              variants:[
-                { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
-                { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
-                { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-              ]
-            },
-            
-            { id:"l2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-c168cd8a-0bc8-49bc-928e-0ed3239e0ac2.jpeg",
-title:{ cn:"草莓千层蛋糕", en:"Strawberry Melaleuca Cake", pt:"Bolo De Melaleuca De Morango" },
-desc:{ cn:"红丝绒口味的可丽饼皮，夹层为新鲜草莓熬制果酱融合白巧克力奶油，新鲜草莓点缀在蛋糕上面，口味清新独特", en:"The red velvet crepe crust is sandwiched with fresh strawberry jam blended with white chocolate cream. Fresh strawberries are dotted on the cake, giving it a fresh and unique taste.", pt:"Crosta de crepe com sabor a veludo vermelho, prensada com geleia de morango fresca e creme de chocolate branco, morangos frescos estão espalhados por cima do bolo e o sabor é fresco e único" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-] },
+          categories: [
+              { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg",
+                title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
+                desc: { cn: "黑森林 / 提拉米苏 / 红丝绒", en: "Black Forest / Tiramisu / Red Velvet", pt: "Floresta Negra / Tiramisu" } },
+              { id: "layer", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0038becb-7292-4eea-93f7-9fa986281d21.jpeg",
+                title: { cn: "招牌千层蛋糕", en: "Signature Layer Cake", pt: "Bolo de Mil Camadas" },
+                desc: { cn: "手工制作，层层美味", en: "Handmade crepe layers", pt: "Camadas de crepe artesanais" } },
+              { id: "naked", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-11f1f013-ffc3-4c14-a39e-af3edc99dab8.jpeg",
+                title: { cn: "原生态裸蛋糕", en: "Naked Fruit Cake", pt: "Bolo Nu" },
+                desc: { cn: "新鲜水果搭配香草戚风", en: "Fresh fruits with vanilla chiffon", pt: "Frutas frescas com chiffon" } },
+              { id: "cheese", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-e4e9d0e4-c631-4a71-bd6a-52caa7a42fd2.jpeg",
+                title: { cn: "芝士与慕斯", en: "Cheesecake & Mousse", pt: "Bolo de queijo e mousse" },
+                desc: { cn: "天然食材，浓郁口感", en: "Natural ingredients", pt: "Ingredientes naturais" } },
+              { id: "korean", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-153de66b-9952-45d1-9c9d-09d9b1015029.jpeg",
+                title: { cn: "韩式奶油调味", en: "Korean Style Cream", pt: "Estilo Coreano" },
+                desc: { cn: "清新风格，独特调味", en: "Fresh style, flavored cream", pt: "Estilo fresco" } },
+              { id: "custom", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0a61f906-d8d7-45b4-b0c2-c240d5b14e80.jpeg",
+                title: { cn: "造型定制蛋糕", en: "Custom Design Cake", pt: "Bolo Personalizado" },
+                desc: { cn: "有趣外表，好吃好玩", en: "Fun & Delicious", pt: "Divertido e delicioso" } }
+          ],
+          items: {
+              "classic": [
+                  { id:"c1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-b267cf6d-fb4d-4d57-9351-8c69c59c54b2.jpeg",
+                    title:{ cn:"红丝绒乳酪蛋糕", en:"Red Velvet Cheesecake", pt:"Cheesecake de Veludo Vermelho" },
+                    desc:{
+                      en:"1. Appearance: The bright red cake layer and the white cheese layer form a sharp contrast, which is very visually attractive and especially suitable for festivals and celebrations.\n2. Taste: Red velvet cake is soft and moist, and paired with the rich cheese layer, it has a delicate taste, sweet but not greasy.\n3. Flavor: Red velvet cake usually has a hint of cocoa aroma, and paired with the slightly sour cheese, the overall taste is richer.",
+                      pt:"1. Aparência: As camadas de bolo vermelho vivo contrastam nitidamente com as camadas de cream cheese branco, criando um efeito visual muito atraente, especialmente adequado para feriados e celebrações.\n2. Textura: O bolo de veludo vermelho é macio e úmido, combinado com as camadas ricas de cream cheese, resultando em uma textura delicada que é doce, mas não excessivamente.\n3. Sabor: O bolo de veludo vermelho geralmente tem um leve aroma de cacau, complementado pela leve acidez do cream cheese, tornando o sabor geral mais complexo e agradável.",
+                      cn:"1. 外观： 鲜艳的红色蛋糕层和白色乳酪层形成鲜明对比，视觉效果非常吸引人，特别适合节日和庆典场合。\n2. 口感： 红丝绒蛋糕柔软湿润，搭配浓郁的乳酪层，口感细腻，甜而不腻。\n3. 风味： 红丝绒蛋糕通常带有一丝可可的香气，搭配乳酪的微酸，使整体口味更加丰富。"
+                    },
+                    variants:[
+                      { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:42 },
+                      { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:58 }
+                    ]
+                  },
+                  { id:"c2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-25ad3750-4ed7-4c4f-a2cc-2d99925374a6.jpeg",
+                    title:{ en:"Milk sauce black forest cake", cn:"奶酱黑森林蛋糕", pt:"Bolo floresta negra com molho de leite" },
+                    desc:{
+                      en:"A very rich chocolate sponge cake, with white chocolate cream, dark chocolate cream, and dark rum-stained black cherries in the middle layer. The improved Chantilly cream has a rich milky aroma. It is a classic handmade cake boutique with a blue ribbon",
+                      cn:"非常浓郁的巧克力海绵蛋糕，夹层包含白巧奶油、黑巧奶油，以及黑朗姆酒渍黑樱桃，改良的香缇奶油奶香浓郁，是一款蓝带经典手工蛋糕精品",
+                      pt:"Um pão de ló de chocolate muito rico com camadas de creme de chocolate branco, doce de leite de chocolate negro e cerejas pretas embebidas em rum escuro."
+                    },
+                    variants:[
+                      { id:"v1", names:{ en:"6 inches", cn:"6寸", pt:"6 polegadas" }, price:40 },
+                      { id:"v2", names:{ en:"8 inches", cn:"8寸", pt:"8 polegadas" }, price:55 }
+                    ]
+                  },
+                  { id:"c3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-6f9816fc-5d8f-436d-a97c-baea35005112.jpeg",
+                    title:{ pt:"Tiramisu Clássico", cn:"经典提拉米苏", en:"Classic Tiramisu" },
+                    desc:{
+                      pt:"Um bolo tiramisu italiano muito clássico, queijo mascarpone, bolachas, café expresso líquido, feito à mão com ingredientes frescos.",
+                      cn:"非常经典的意式提拉米苏蛋糕，马斯卡彭芝士、手指饼干、意式浓缩咖啡液，新鲜食材手工制作，蛋糕上的整体装饰经过我们的蛋糕师的创作，更显得唯美精致",
+                      en:"Very classic Italian tiramisu cake, mascarpone cheese, ladyfingers, espresso liquid, handmade with fresh ingredients, the overall decoration on the cake is created by our baker, making it more beautiful and exquisite"
+                    },
+                    variants:[
+                      { id:"v1", names:{ pt:"6 polegadas", cn:"6寸", en:"6 inches" }, price:38 },
+                      { id:"v2", names:{ pt:"8 polegadas", cn:"8寸", en:"8 inches" }, price:49 }
+                    ]
+                  }
+              ],
+              "layer": [
+                  { id:"l1", img:"https://dyj6gt4964deb.cloudfront.net/images/38db952a-2ebb-4af1-b733-a223cede14f3.jpeg",
+                    title:{ cn:"巧克力千层蛋糕", en:"Chocolate Melaleuca Cake", pt:"Bolo De Melaleuca De Chocolate" },
+                    desc:{
+                      cn:"浓郁的巧克力可丽饼，夹层为巧克力奶油，其中还有一层巧克力慕斯，如果你热爱浓郁的巧克力风味，一定不能错过",
+                      en:"Rich chocolate crepe, sandwiched with chocolate cream and a layer of chocolate mousse. If you love rich chocolate flavor, you must not miss it.",
+                      pt:"Rico crepe de chocolate, prensado com creme de chocolate e uma camada de mousse de chocolate."
+                    },
+                    variants:[
+                      { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+                      { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+                      { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+                    ]
+                  },
 
-{ id:"l3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-3854a4fe-b655-42f2-8521-19638e9e5d9c.jpeg",
-title:{ cn:"抹茶千层蛋糕", en:"Matcha Melaleuca Cake", pt:"Bolo Matcha Melaleuca" },
-desc:{ cn:"特级日本宇治抹茶粉，夹层为抹茶口味的巧克力奶油，口感细腻，层次丰富", en:"Premium Japanese Uji Matcha powder, with a layer of Matcha-flavored chocolate cream, for a delicate taste and rich layers", pt:"Pó Uji matcha japonês de qualidade especial, prensado com creme de chocolate com sabor a matcha, com um sabor delicado e camadas ricas" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:25 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:40 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
-] },
+                  { id:"l2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-c168cd8a-0bc8-49bc-928e-0ed3239e0ac2.jpeg",
+                    title:{ cn:"草莓千层蛋糕", en:"Strawberry Melaleuca Cake", pt:"Bolo De Melaleuca De Morango" },
+                    desc:{ cn:"红丝绒口味的可丽饼皮，夹层为新鲜草莓熬制果酱融合白巧克力奶油，新鲜草莓点缀在蛋糕上面，口味清新独特",
+                          en:"The red velvet crepe crust is sandwiched with fresh strawberry jam blended with white chocolate cream. Fresh strawberries are dotted on the cake, giving it a fresh and unique taste.",
+                          pt:"Crosta de crepe com sabor a veludo vermelho, prensada com geleia de morango fresca e creme de chocolate branco, morangos frescos estão espalhados por cima do bolo e o sabor é fresco e único" },
+                    variants:[
+                      { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+                      { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+                      { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+                    ] },
 
-{ id:"l4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-2d13e6b9-ce8b-4516-a663-f9c90e1935ee.jpeg",
-title:{ cn:"芒果千层蛋糕", en:"Mango Melaleuca Cake", pt:"Bolo Melaleuca De Manga" },
-desc:{ cn:"香草口味的可丽饼，夹层包含芒果布丁和白巧奶油，点缀芒果果肉，清新爽口的夏天的感觉", en:"Vanilla-flavored crepes with mango pudding and white chocolate cream in between, dotted with mango pulp, giving you a refreshing summer feel", pt:"Crepe com sabor a baunilha, prensado com pudim de manga e creme de chocolate branco, embelezado com polpa de manga, refrescante sensação de verão" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-] }
-        ],
-        
-        "naked": [
-{ id:"n1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-e378d704-2d39-4765-8f46-14c5ece07b85.jpeg",
-title:{ cn:"香草奶油水果裸蛋糕", en:"Vanilla Cream Fruit Naked Cake", pt:"Bolo Nu De Fruta Com Creme De Baunilha" },
-desc:{ cn:"香草戚风蛋糕结合白巧克力奶油，融合草莓、蓝莓、芒果等新鲜水果。口感柔软，清爽，层次丰富，非常健康美味。", en:"Vanilla chiffon cake is combined with white chocolate cream and fresh fruits such as strawberries, blueberries, and mangoes. It has a soft, refreshing texture, rich layers, and is very healthy and delicious.", pt:"O bolo chiffon de baunilha combina creme de chocolate branco com morangos, mirtilos, manga e outras frutas frescas. O sabor é suave, refrescante, rico em camadas, muito saudável e delicioso." },
-variants:[
-{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:32 },
-{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:42 }
-] },
+                  { id:"l3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-3854a4fe-b655-42f2-8521-19638e9e5d9c.jpeg",
+                    title:{ cn:"抹茶千层蛋糕", en:"Matcha Melaleuca Cake", pt:"Bolo Matcha Melaleuca" },
+                    desc:{ cn:"特级日本宇治抹茶粉，夹层为抹茶口味的巧克力奶油，口感细腻，层次丰富",
+                          en:"Premium Japanese Uji Matcha powder, with a layer of Matcha-flavored chocolate cream, for a delicate taste and rich layers",
+                          pt:"Pó Uji matcha japonês de qualidade especial, prensado com creme de chocolate com sabor a matcha, com um sabor delicado e camadas ricas" },
+                    variants:[
+                      { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:25 },
+                      { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:40 },
+                      { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
+                    ] },
 
-{ id:"n2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-414cc726-60e9-4bb5-a145-776fdbb67e13.jpeg",
-title:{ cn:"抹茶青提裸蛋糕", en:"Matcha Grape Naked Cake", pt:"Bolo nu de chá verde Matcha" },
-desc:{ cn:"抹茶青提裸蛋糕是一款非常典型的日式蛋糕。结合了清新抹茶奶油风味和爽口青提。简约自然，口感丰富多层次，清新茶香和水果融合后，充满质感和品位。", en:"Matcha Grape Naked Cake is a very typical Japanese cake. It combines the fresh flavor of matcha cream and refreshing grapes. It is simple and natural, with a rich and multi-layered taste. The fusion of fresh tea fragrance and fruit is full of texture and taste.", pt:"O bolo nu de chá verde Matcha é um bolo japonês muito típico. Combinando o sabor refrescante do creme matcha com as refrescantes uvas verdes. Simples e natural, o sabor é rico e multifacetado. O aroma do chá fresco e a fruta combinam-se para o tornar cheio de textura e sabor." },
-variants:[
-{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
-{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:45 }
-] },
-{ id:"n3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-175c858c-f49c-4209-bfbc-a3ea7bb6a109.jpeg",
-title:{ cn:"巧克力水果奶油裸蛋糕", en:"Chocolate Fruit Cream Naked Cake", pt:"Bolo Nu De Creme De Frutas De Chocolate" },
-desc:{ cn:"巧克力水果奶油裸蛋糕是一款结合了巧克力的浓郁香味、奶油的丝滑口感和新鲜水果清爽风味的美味蛋糕。非常适合用于生日、婚礼、节日聚会等各种庆祝活动。", en:"Chocolate Fruit Cream Naked Cake is a delicious cake that combines the rich aroma of chocolate, the smooth taste of cream and the refreshing flavor of fresh fruit. It is very suitable for various celebrations such as birthdays, weddings, holiday parties, etc.", pt:"Chocolate Cream Fruit Naked Cake é um delicioso bolo que combina o rico aroma do chocolate, a textura sedosa do creme e o sabor refrescante da fruta fresca. Perfeito para diversas celebrações, como aniversários, casamentos, festas de fim de ano e muito mais." },
-variants:[
-{ id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
-{ id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-] }
-        ],
-        "custom": [
-            { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
-              title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
-              desc: { cn: "卡通兔子风格。可选巧克力，柠檬，抹茶等口味。", en: "Cartoon style. Available in 4/6 inch.", pt: "Estilo cartoon. Tamanhos 4/6 pol." },
-              variants: [ 
-                  { id:"v1", names: { cn: "4英寸", en: "4 inches", pt: "4 polegadas" }, price: 25 },
-                  { id:"v2", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 38 }
-              ] }
-        ]
-    }
-};
+                  { id:"l4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-2d13e6b9-ce8b-4516-a663-f9c90e1935ee.jpeg",
+                    title:{ cn:"芒果千层蛋糕", en:"Mango Melaleuca Cake", pt:"Bolo Melaleuca De Manga" },
+                    desc:{ cn:"香草口味的可丽饼，夹层包含芒果布丁和白巧奶油，点缀芒果果肉，清新爽口的夏天的感觉",
+                          en:"Vanilla-flavored crepes with mango pudding and white chocolate cream in between, dotted with mango pulp, giving you a refreshing summer feel",
+                          pt:"Crepe com sabor a baunilha, prensado com pudim de manga e creme de chocolate branco, embelezado com polpa de manga, refrescante sensação de verão" },
+                    variants:[
+                      { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+                      { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
+                      { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+                    ] }
+              ],
 
+              "naked": [
+                { id:"n1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-e378d704-2d39-4765-8f46-14c5ece07b85.jpeg",
+                  title:{ cn:"香草奶油水果裸蛋糕", en:"Vanilla Cream Fruit Naked Cake", pt:"Bolo Nu De Fruta Com Creme De Baunilha" },
+                  desc:{ cn:"香草戚风蛋糕结合白巧克力奶油，融合草莓、蓝莓、芒果等新鲜水果。口感柔软，清爽，层次丰富，非常健康美味。",
+                        en:"Vanilla chiffon cake is combined with white chocolate cream and fresh fruits such as strawberries, blueberries, and mangoes. It has a soft, refreshing texture, rich layers, and is very healthy and delicious.",
+                        pt:"O bolo chiffon de baunilha combina creme de chocolate branco com morangos, mirtilos, manga e outras frutas frescas. O sabor é suave, refrescante, rico em camadas, muito saudável e delicioso." },
+                  variants:[
+                    { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:32 },
+                    { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:42 }
+                  ] },
+
+                { id:"n2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-414cc726-60e9-4bb5-a145-776fdbb67e13.jpeg",
+                  title:{ cn:"抹茶青提裸蛋糕", en:"Matcha Grape Naked Cake", pt:"Bolo nu de chá verde Matcha" },
+                  desc:{ cn:"抹茶青提裸蛋糕是一款非常典型的日式蛋糕。结合了清新抹茶奶油风味和爽口青提。简约自然，口感丰富多层次，清新茶香和水果融合后，充满质感和品位。",
+                        en:"Matcha Grape Naked Cake is a very typical Japanese cake. It combines the fresh flavor of matcha cream and refreshing grapes. It is simple and natural, with a rich and multi-layered taste. The fusion of fresh tea fragrance and fruit is full of texture and taste.",
+                        pt:"O bolo nu de chá verde Matcha é um bolo japonês muito típico. Combinando o sabor refrescante do creme matcha com as refrescantes uvas verdes. Simples e natural, o sabor é rico e multifacetado. O aroma do chá fresco e a fruta combinam-se para o tornar cheio de textura e sabor." },
+                  variants:[
+                    { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
+                    { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:45 }
+                  ] },
+
+                { id:"n3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-175c858c-f49c-4209-bfbc-a3ea7bb6a109.jpeg",
+                  title:{ cn:"巧克力水果奶油裸蛋糕", en:"Chocolate Fruit Cream Naked Cake", pt:"Bolo Nu De Creme De Frutas De Chocolate" },
+                  desc:{ cn:"巧克力水果奶油裸蛋糕是一款结合了巧克力的浓郁香味、奶油的丝滑口感和新鲜水果清爽风味的美味蛋糕。非常适合用于生日、婚礼、节日聚会等各种庆祝活动。",
+                        en:"Chocolate Fruit Cream Naked Cake is a delicious cake that combines the rich aroma of chocolate, the smooth taste of cream and the refreshing flavor of fresh fruit. It is very suitable for various celebrations such as birthdays, weddings, holiday parties, etc.",
+                        pt:"Chocolate Cream Fruit Naked Cake é um delicioso bolo que combina o rico aroma do chocolate, a textura sedosa do creme e o sabor refrescante da fruta fresca. Perfeito para diversas celebrações, como aniversários, casamentos, festas de fim de ano e muito mais." },
+                  variants:[
+                    { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:33 },
+                    { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+                  ] }
+              ],
+
+              "custom": [
+                { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
+                  title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
+                  desc: { cn: "卡通兔子风格。可选巧克力，柠檬，抹茶等口味。", en: "Cartoon style. Available in 4/6 inch.", pt: "Estilo cartoon. Tamanhos 4/6 pol." },
+                  variants: [
+                    { id:"v1", names: { cn: "4英寸", en: "4 inches", pt: "4 polegadas" }, price: 25 },
+                    { id:"v2", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 38 }
+                  ] }
+              ]
+          }
+        };
 
         let state = {
           lang: 'en',
           isSearchMode: false,
-          cart: [], // ✅ 只存 { uid, productId, variantId, qty }
+          cart: [],
           modal: { item: null, variant: null, qty: 1, editUid: null, editProductId: null, variantQty: {} },
           scroll: { home: { en: 0, pt: 0, cn: 0 } },
           currentCategoryId: null
         };
 
+// ==========================================
+// [NEW] Auto language detect + persist
+// en / pt / cn, else en
+// ==========================================
+const LANG_KEY = 'neco_lang_v1';
+
+function _normLocale(s){
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace('_', '-');
+}
+
+function detectSystemLang(){
+  const candidates = [];
+
+  // 优先 navigator.languages（更准确）
+  if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+  if (navigator.language) candidates.push(navigator.language);
+
+  // 再保险：Intl locale
+  try{
+    const loc = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (loc) candidates.push(loc);
+  }catch(e){}
+
+  for (const raw of candidates) {
+    const l = _normLocale(raw);
+    if (!l) continue;
+
+    // Portuguese
+    if (l.startsWith('pt')) return 'pt';
+
+    // Chinese (zh-CN / zh-Hans / zh-Hant / zh-TW ...)
+    if (l.startsWith('zh')) return 'cn';
+
+    // English
+    if (l.startsWith('en')) return 'en';
+
+    // 极少数情况：直接给 cn
+    if (l.startsWith('cn')) return 'cn';
+  }
+  return 'en';
+}
+
+function loadPreferredLang(){
+  // 如果用户手动选过语言，就优先用用户选择
+  try{
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved && ['en','pt','cn'].includes(saved)) return saved;
+  }catch(e){}
+  return detectSystemLang();
+}
+
+function persistLang(l){
+  try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
+}
+
         // ==========================================
-        // 2. Cart persistence (ID 对账方案)
+        // 2. Cart persistence
         // ==========================================
         const CART_KEY = 'neco_cart_v2';
 
@@ -673,7 +952,6 @@ variants:[
           }
         }
 
-        // ✅ 从最新 db 里“对账/解析”购物车条目
         function findItemById(productId){
           for(const cat in db.items){
             const hit = (db.items[cat] || []).find(p => p.id === productId);
@@ -685,25 +963,11 @@ variants:[
         function resolveCartItem(ci){
           const item = findItemById(ci.productId);
           if(!item){
-            return {
-              missing: true,
-              uid: ci.uid,
-              qty: ci.qty,
-              productId: ci.productId,
-              variantId: ci.variantId
-            };
+            return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId };
           }
           const variant = (item.variants || []).find(v => v.id === ci.variantId);
           if(!variant){
-            return {
-              missing: true,
-              uid: ci.uid,
-              qty: ci.qty,
-              productId: ci.productId,
-              variantId: ci.variantId,
-              img: item.img,
-              title: item.title
-            };
+            return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId, img: item.img, title: item.title };
           }
           return {
             missing: false,
@@ -723,58 +987,66 @@ variants:[
         // ==========================================
         // 3. 多语言文案
         // ==========================================
-  const texts = {
-  cn: { 
-    back: "返回分类", homeTitle: "主页", select: "选择规格", add: "加入订单", update: "更新订单", 
-    view: "查看订单", more: "查看详情", order: "我的订单", total: "总计", 
-    confirm: "确认下单", remove: "移除此商品", empty: "购物车为空", 
-    added: "已加入订单", updated: "订单已更新", editHint: "点击编辑", 
-    searchPh: "搜索蛋糕...", noResult: "未找到相关商品", fallback: "当前语言无结果，已展示其他语言匹配。",
-    missing: "该商品已下架或规格已变更，请移除后重新选择。",
-    missingTitle: "已下架商品",
-    missingVariant: "规格不可用",
-    removeHintMissing: "请移除"
-  },
-  en: { 
-    back: "Back", homeTitle: "Home", select: "Select Size", add: "Add to Order", update: "Update Order", 
-    view: "View Order", more: "More Info", order: "Your Order", total: "Total", 
-    confirm: "Confirm", remove: "Remove Item", empty: "Empty Cart", 
-    added: "Added to Order", updated: "Order Updated", editHint: "Edit item",
-    searchPh: "Search cakes...", noResult: "No results found", fallback: "No results in English, showing matches from other languages.",
-    missing: "Item unavailable (menu updated). Please remove and re-add.",
-    missingTitle: "Unavailable item",
-    missingVariant: "Variant unavailable",
-    removeHintMissing: "REMOVE"
-  },
-  pt: { 
-    back: "Voltar", homeTitle: "Início", select: "Selecione o Tamanho", add: "Adicionar", update: "Atualizar", 
-    view: "Ver Pedido", more: "Mais Info", order: "Seu Pedido", total: "Total", 
-    confirm: "Confirmar", remove: "Remover Item", empty: "Carrinho Vazio", 
-    added: "Adicionado", updated: "Atualizado", editHint: "Editar item",
-    searchPh: "Pesquisar bolos...", noResult: "Nenhum resultado", fallback: "Sem resultados em Português, a mostrar outras línguas.",
-    missing: "Item indisponível (menu atualizado). Remova e adicione novamente.",
-    missingTitle: "Item indisponível",
-    missingVariant: "Variante indisponível",
-    removeHintMissing: "REMOVER"
-  }
-};
+        const texts = {
+          cn: {
+            back: "返回分类", homeTitle: "主页", select: "选择规格", add: "加入订单", update: "更新订单",
+            view: "查看订单", more: "查看详情", order: "我的订单", total: "总计",
+            confirm: "确认下单", remove: "移除此商品", empty: "购物车为空",
+            added: "已加入订单", updated: "订单已更新", editHint: "点击编辑",
+            searchPh: "搜索蛋糕...", noResult: "未找到相关商品", fallback: "当前语言无结果，已展示其他语言匹配。",
+            missing: "该商品已下架或规格已变更，请移除后重新选择。",
+            missingTitle: "已下架商品",
+            missingVariant: "规格不可用",
+            removeHintMissing: "请移除"
+          },
+          en: {
+            back: "Back", homeTitle: "Home", select: "Select Size", add: "Add to Order", update: "Update Order",
+            view: "View Order", more: "More Info", order: "Your Order", total: "Total",
+            confirm: "Confirm", remove: "Remove Item", empty: "Empty Cart",
+            added: "Added to Order", updated: "Order Updated", editHint: "Edit item",
+            searchPh: "Search cakes...", noResult: "No results found", fallback: "No results in English, showing matches from other languages.",
+            missing: "Item unavailable (menu updated). Please remove and re-add.",
+            missingTitle: "Unavailable item",
+            missingVariant: "Variant unavailable",
+            removeHintMissing: "REMOVE"
+          },
+          pt: {
+            back: "Voltar", homeTitle: "Início", select: "Selecione o Tamanho", add: "Adicionar", update: "Atualizar",
+            view: "Ver Pedido", more: "Mais Info", order: "Seu Pedido", total: "Total",
+            confirm: "Confirmar", remove: "Remover Item", empty: "Carrinho Vazio",
+            added: "Adicionado", updated: "Atualizado", editHint: "Editar item",
+            searchPh: "Pesquisar bolos...", noResult: "Nenhum resultado", fallback: "Sem resultados em Português, a mostrar outras línguas.",
+            missing: "Item indisponível (menu atualizado). Remova e adicione novamente.",
+            missingTitle: "Item indisponível",
+            missingVariant: "Variante indisponível",
+            removeHintMissing: "REMOVER"
+          }
+        };
 
         init();
 
         function init() {
-          loadCart();
-          setLang('en');
-          updateCartBar();
-        }
-
+  loadCart();
+  const initialLang = loadPreferredLang();
+  setLang(initialLang);
+  updateCartBar();
+}
         function setLang(l) {
-            state.lang = l;
-            document.querySelectorAll('.lang-btn').forEach(b => {
-                b.classList.toggle('active', b.innerText.toLowerCase() === l);
-            });
-            updateUI();
-            if(state.isSearchMode) handleSearch();
-        }
+    // 合法性：只允许 en/pt/cn
+    if (!['en','pt','cn'].includes(l)) l = 'en';
+
+    state.lang = l;
+    persistLang(l);
+
+    // 同步 <html lang="">，有利于输入法/辅助功能/SEO
+    document.documentElement.lang = (l === 'cn') ? 'zh-CN' : l;
+
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.innerText.toLowerCase() === l);
+    });
+    updateUI();
+    if(state.isSearchMode) handleSearch();
+}
 
         function onSearchKeyDown(e) {
           if (e.key === 'Enter') {
@@ -838,15 +1110,23 @@ variants:[
 
         function renderHome(restoreScroll = false) {
           const grid = document.getElementById('category-grid');
-          grid.innerHTML = db.categories.map(c => `
-              <div class="cat-card" onclick="renderCategory('${c.id}')">
-                  <div class="cat-img-box"><img src="${c.img}" class="cat-img" loading="lazy"></div>
-                  <div class="cat-info">
-                      <div class="cat-title">${c.title[state.lang]}</div>
-                      <div class="cat-desc">${c.desc[state.lang]}</div>
-                  </div>
-              </div>
-          `).join('');
+
+          grid.innerHTML = db.categories.map(c => {
+              const key = `home-cat-${c.id}`;
+              return `
+                <div class="${__cardClass(key,'cat-card')}" data-reveal-key="${key}" onclick="renderCategory('${c.id}')">
+                    <div class="cat-img-box">
+                      <img src="${c.img}" class="${__imgClass(c.img,'cat-img')}" ${__imgDataAttrs(c.img)} loading="lazy" alt="">
+                    </div>
+                    <div class="cat-info">
+                        <div class="cat-title">${c.title[state.lang]}</div>
+                        <div class="cat-desc">${c.desc[state.lang]}</div>
+                    </div>
+                </div>
+              `;
+          }).join('');
+
+          initCardFX(grid);
 
           const saved = state.scroll.home[state.lang] || 0;
           switchView('view-home', restoreScroll ? { scrollTop: saved } : {});
@@ -874,9 +1154,11 @@ variants:[
         function renderProductList(container, items, catId) {
             container.innerHTML = `
                 <div class="product-list">
-                    ${items.map((item, idx) => `
-                        <div class="prod-card">
-                            <img src="${item.img}" class="prod-img" loading="lazy">
+                    ${items.map((item, idx) => {
+                      const key = `prod-${item.id}`;
+                      return `
+                        <div class="${__cardClass(key,'prod-card')}" data-reveal-key="${key}">
+                            <img src="${item.img}" class="${__imgClass(item.img,'prod-img')}" ${__imgDataAttrs(item.img)} loading="lazy" alt="">
                             <div class="prod-body">
                                 <div class="prod-title">${item.title[state.lang] || item.title['en']}</div>
                                 <div class="prod-desc">${item.desc[state.lang] || item.desc['en']}</div>
@@ -887,9 +1169,12 @@ variants:[
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                      `;
+                    }).join('')}
                 </div>
             `;
+
+            initCardFX(container);
         }
 
         function switchView(viewId, opts = {}) {
@@ -927,7 +1212,7 @@ variants:[
               history.pushState({ view: 'search' }, '');
             }
             state.isSearchMode = true;
-            
+
             let allItems = [];
             for(let cat in db.items) {
                 db.items[cat].forEach((item, idx) => {
@@ -956,7 +1241,7 @@ variants:[
             } else {
                 container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`;
             }
-            
+
             switchView('view-category');
         }
 
@@ -966,9 +1251,8 @@ variants:[
             state.isSearchMode = false;
             renderHome();
         }
-        
-        // --- Modal Logic ---
 
+        // --- Modal Logic ---
         function getProductQtyMapFromCart(productId){
             const preset = {};
             for(const ci of state.cart){
@@ -1026,30 +1310,13 @@ variants:[
             updateModalPrice();
         }
 
-        function _getCtaVerb(){
-            if(state.lang === 'cn') return '添加';
-            if(state.lang === 'pt') return 'Adicionar';
-            return 'Add';
-        }
-
         function _formatCtaText(qty, amount){
-  const a = `€${Number(amount).toFixed(2)}`;
-  const dot = ' · ';
-  if(state.lang === 'cn') return `添加${qty}${dot}${a}`;
-  if(state.lang === 'pt') return `Adicionar ${qty}${dot}${a}`;
-  return `Add ${qty}${dot}${a}`;
-}
-
-function _formatConfirmText(qty, amount){
-  const a = `€${Number(amount).toFixed(2)}`;
-  const dot = ' · ';
-  let base = 'Confirm';
-  if(state.lang === 'cn') base = '下单';
-  else if(state.lang === 'pt') base = 'Confirmar';
-
-  if(state.lang === 'cn') return `${base}${qty}${dot}${a}`;
-  return `${base} ${qty}${dot}${a}`;
-}       
+          const a = `€${Number(amount).toFixed(2)}`;
+          const dot = ' · ';
+          if(state.lang === 'cn') return `添加${qty}${dot}${a}`;
+          if(state.lang === 'pt') return `Adicionar ${qty}${dot}${a}`;
+          return `Add ${qty}${dot}${a}`;
+        }
 
         function refreshProductModalUI(){
             if(document.getElementById('product-modal').style.display !== 'flex') return;
@@ -1061,12 +1328,11 @@ function _formatConfirmText(qty, amount){
             updateModalPrice();
         }
 
-function openProductModal(catId, itemIdx, editCartItem = null) {
+        function openProductModal(catId, itemIdx, editCartItem = null) {
             let item;
             let preset = {};
 
             if (editCartItem) {
-                // ✅ 按 productId / variantId 对账
                 item = findItemById(editCartItem.productId);
                 if(!item){
                   showToast(texts[state.lang].missing);
@@ -1088,25 +1354,13 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
 
             renderVariantQtyList();
             updateModalPrice();
-            
+
             const modal = document.getElementById('product-modal');
             const shell = document.getElementById('modal-shell');
             modal.style.display = 'flex';
             modal.style.opacity = 1;
             requestAnimationFrame(() => shell.classList.add('open'));
             history.pushState({ modal: true }, '');
-        }
-
-        function selectVariant(idx) { /* legacy (no-op) */ }
-
-
-        function adjustQty(delta) {
-            let newQty = state.modal.qty + delta;
-            if (newQty < 1) newQty = 1;
-            state.modal.qty = newQty;
-            const el = document.getElementById('m-qty');
-            if(el) el.innerText = newQty;
-            updateModalPrice();
         }
 
         function updateModalPrice() {
@@ -1142,7 +1396,7 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
         }
         function closeModal(e) { if(e.target.id === 'product-modal') closeModalDirect(); }
 
-        // --- Cart Logic (ID 对账) ---
+        // --- Cart Logic ---
         function confirmAddToCart() {
             const item = state.modal.item;
             const qtyMap = state.modal.variantQty || {};
@@ -1150,19 +1404,16 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
 
             const isEdit = !!state.modal.editProductId;
 
-            // 计算一下本次选择的总数/总价（用于 0 的情况）
             let picked = 0;
             for(const v of (item.variants || [])){
               picked += (Number(qtyMap[v.id]) || 0);
             }
             if(picked <= 0){
-              // 轻轻提醒一下就好
               showToast(state.lang === 'cn' ? '先来点数量呀～' : (state.lang === 'pt' ? 'Escolha uma quantidade 🙂' : 'Pick a qty 🙂'));
               return;
             }
 
             if (isEdit) {
-                // ✅ 编辑：按产品维度“覆盖”该商品所有规格的数量
                 for (const v of (item.variants || [])) {
                     const desired = Math.max(0, Number(qtyMap[v.id]) || 0);
                     const existing = state.cart.find(c => c.productId === item.id && c.variantId === v.id);
@@ -1174,7 +1425,6 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
                     }
                 }
             } else {
-                // ✅ 新增：在购物车里累加
                 for (const v of (item.variants || [])) {
                     const addQty = Math.max(0, Number(qtyMap[v.id]) || 0);
                     if (addQty <= 0) continue;
@@ -1188,16 +1438,6 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
             saveCart();
             updateCartBar();
             showToast(isEdit ? texts[state.lang].updated : texts[state.lang].added);
-            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
-        }
-
-        function removeCurrentItem() {
-            const pid = state.modal && state.modal.item ? state.modal.item.id : null;
-            if(!pid) return;
-            state.cart = state.cart.filter(c => c.productId !== pid);
-            saveCart();
-            closeModalDirect();
-            updateCartBar();
             if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
         }
 
@@ -1224,85 +1464,70 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
         }
 
         function openCartModal() {
-  const list = document.getElementById('cart-list');
-  list.innerHTML = '';
+          const list = document.getElementById('cart-list');
+          list.innerHTML = '';
 
-  if (state.cart.length === 0) {
-    list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
-  } else {
-    state.cart.forEach((ci) => {
-      const r = resolveCartItem(ci);
+          if (state.cart.length === 0) {
+            list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
+          } else {
+            state.cart.forEach((ci) => {
+              const r = resolveCartItem(ci);
 
-      const div = document.createElement('div');
-      div.className = 'cart-item';
+              const div = document.createElement('div');
+              div.className = 'cart-item';
 
-      // 点击卡片：正常条目 -> 编辑；missing 条目 -> 提示
-      div.onclick = (e) => {
-        if (e.target.closest('.mini-btn')) return;
+              div.onclick = (e) => {
+                if (e.target.closest('.mini-btn')) return;
 
-        if (r.missing) {
-          showToast(texts[state.lang].missing);
-          return;
+                if (r.missing) {
+                  showToast(texts[state.lang].missing);
+                  return;
+                }
+                openProductModal(null, null, ci);
+              };
+
+              const img = r.img || 'https://via.placeholder.com/140x140?text=%20';
+              const title = r.title ? (r.title[state.lang] || r.title['en']) : texts[state.lang].missingTitle;
+              const sku = r.variantNames ? (r.variantNames[state.lang] || r.variantNames['en']) : texts[state.lang].missingVariant;
+
+              const lineTotal = (!r.missing && typeof r.price === 'number') ? (r.price * r.qty) : 0;
+              const hintText = r.missing ? texts[state.lang].removeHintMissing : texts[state.lang].editHint;
+
+              div.innerHTML = `
+                <img src="${img}" class="cart-img">
+                <div class="cart-info">
+                  <div class="c-title">${title}</div>
+                  <div class="c-sku">${sku}</div>
+                  <div class="c-price">€ ${lineTotal.toFixed(2)}</div>
+                </div>
+                <div class="cart-actions">
+                  <div class="mini-qty">
+                    <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', -1)">-</div>
+                    <span style="margin:0 5px;">${ci.qty}</span>
+                    <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', 1)">+</div>
+                  </div>
+                  <div class="edit-hint">${hintText}</div>
+                </div>
+              `;
+              list.appendChild(div);
+            });
+          }
+
+          let total = 0;
+          for (const ci of state.cart) {
+            const r = resolveCartItem(ci);
+            if (!r.missing) total += (r.price * r.qty);
+          }
+          document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
+
+          const modal = document.getElementById('cart-modal');
+          const shell = document.getElementById('cart-shell');
+          modal.style.display = 'flex';
+          modal.style.opacity = 1;
+          requestAnimationFrame(() => shell.classList.add('open'));
+          history.pushState({ modal: true }, '');
         }
-        openProductModal(null, null, ci);
-      };
 
-      // 多语言兜底展示（不再 hardcode）
-      const img = r.img || 'https://via.placeholder.com/140x140?text=%20';
-      const title = r.title
-        ? (r.title[state.lang] || r.title['en'])
-        : texts[state.lang].missingTitle;
-
-      const sku = r.variantNames
-        ? (r.variantNames[state.lang] || r.variantNames['en'])
-        : texts[state.lang].missingVariant;
-
-      const lineTotal = (!r.missing && typeof r.price === 'number')
-        ? (r.price * r.qty)
-        : 0;
-
-      const hintText = r.missing
-        ? texts[state.lang].removeHintMissing
-        : texts[state.lang].editHint;
-
-      div.innerHTML = `
-        <img src="${img}" class="cart-img">
-        <div class="cart-info">
-          <div class="c-title">${title}</div>
-          <div class="c-sku">${sku}</div>
-          <div class="c-price">€ ${lineTotal.toFixed(2)}</div>
-        </div>
-        <div class="cart-actions">
-          <div class="mini-qty">
-            <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', -1)">-</div>
-            <span style="margin:0 5px;">${ci.qty}</span>
-            <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', 1)">+</div>
-          </div>
-          <div class="edit-hint">${hintText}</div>
-        </div>
-      `;
-      list.appendChild(div);
-    });
-  }
-
-  // 总价：只统计未 missing 的
-  let total = 0;
-  for (const ci of state.cart) {
-    const r = resolveCartItem(ci);
-    if (!r.missing) total += (r.price * r.qty);
-  }
-  document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
-
-  let totalQty = 0;
-  for (const ci of state.cart) totalQty += (Number(ci.qty) || 0);
-
-  const modal = document.getElementById('cart-modal');
-  const shell = document.getElementById('cart-shell');
-  modal.style.display = 'flex';
-  modal.style.opacity = 1;
-  requestAnimationFrame(() => shell.classList.add('open'));
-  history.pushState({ modal: true }, '');
-}
         function updateCartItemQty(uid, delta) {
             const item = state.cart.find(c => c.uid === uid);
             if(item) {
@@ -1310,7 +1535,7 @@ function openProductModal(catId, itemIdx, editCartItem = null) {
                 if(item.qty <= 0) state.cart.splice(state.cart.indexOf(item), 1);
                 saveCart();
                 updateCartBar();
-                openCartModal(); 
+                openCartModal();
             }
         }
 
