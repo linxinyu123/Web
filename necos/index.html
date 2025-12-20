@@ -231,12 +231,34 @@
             font-weight: 900; font-size: 18px; border-bottom: 1px solid var(--border);
         }
         .cart-list { flex: 1; overflow-y: auto; padding: 16px; background: white;}
+        #cart-list{
+  position: relative;
+  min-height: 300px; /* 没高度就没法“垂直居中” */
+}
+
         .cart-item {
             background: white; border-radius: 16px; padding: 15px;
             display: flex; gap: 15px; margin-bottom: 20px; margin-top: 14.5px;
             box-shadow: 0 0px 15px 2.5px rgba(16, 41, 64, 0.1);
              cursor: pointer;
         }
+        /* Empty cart image state */
+/* Empty cart - always center */
+.empty-state{
+  position: absolute;
+  inset: 0;                 /* top/right/bottom/left = 0 */
+  display: flex;
+  justify-content: center;  /* horizontal center */
+  align-items: center;      /* vertical center */
+}
+
+.empty-state img{
+  max-width: 50%;
+  height: auto;
+  display: block;
+}
+
+
         .cart-img { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; }
         .cart-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .c-title { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
@@ -1555,14 +1577,31 @@ variants:[
               const view = texts[state.lang].view || 'View';
               labelEl.innerText = `${view}`;
             }
-            const stickyCart = document.getElementById('sticky-cart');
-            if (stickyCart) stickyCart.style.display = totalQty > 0 ? 'flex' : 'none';
         }
+
+        // Empty Cart Images (multi-language)
+const EMPTY_CART_IMG = {
+  en: "https://lestoy.com/necos/e_en.png",
+  pt: "https://lestoy.com/necos/e_pt.png",
+  cn: "https://lestoy.com/necos/e_cn.png"
+};
+
+function getEmptyCartHTML(){
+  const lang = (state && state.lang) ? state.lang : 'en';
+  const src = EMPTY_CART_IMG[lang] || EMPTY_CART_IMG.en;
+  const alt = (texts && texts[lang] && texts[lang].empty) ? texts[lang].empty : 'Empty Cart';
+  return `
+    <div class="empty-state">
+      <img src="${src}" alt="${alt}" loading="lazy">
+    </div>
+  `;
+}
+
         function openCartModal() {
           const list = document.getElementById('cart-list');
           list.innerHTML = '';
           if (state.cart.length === 0) {
-            list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
+            list.innerHTML = getEmptyCartHTML();
           } else {
             state.cart.forEach((ci) => {
               const r = resolveCartItem(ci);
