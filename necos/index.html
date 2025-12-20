@@ -19,6 +19,24 @@
             --shadow: 0 8px 24px rgba(16, 41, 64, 0.08);
             --header-h: 70px;
         }
+        /* ===== 弹窗打开：禁止外层滚动（防穿透） ===== */
+html.no-scroll,
+body.no-scroll {
+  height: 100%;
+  overflow: hidden;
+}
+/* iOS/移动端更稳：锁住 body 位置，避免背景跟着滑 */
+body.no-scroll {
+  position: fixed;
+  width: 100%;
+  left: 0;
+}
+/* 弹窗内部仍可滚动，并阻止滚动链传到外层 */
+.modal-scroll,
+.cart-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, button, input, select, textarea {
             font-family: 'Nunito', sans-serif;
@@ -438,16 +456,16 @@
 <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
 	<div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
 		<div class="close-btn" onclick="closeModalDirect()">
-			✕
+			 ✕
 		</div>
 		<div class="modal-scroll">
 			<img src="" id="m-img" class="modal-hero-img">
 			<div class="modal-content-box">
 				<div class="m-title" id="m-title">
-					Title
+					 Title
 				</div>
 				<div class="m-desc" id="m-desc">
-					Desc
+					 Desc
 				</div>
 				<div class="variant-section">
 					<label class="v-label" id="txt-select-size">SELECT SIZE</label>
@@ -469,7 +487,7 @@
 		<div class="cart-header">
 			<span id="txt-your-order">Your Order</span>
 			<div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">
-				✕
+				 ✕
 			</div>
 		</div>
 		<div class="cart-list" id="cart-list">
@@ -492,11 +510,11 @@
 		<span id="txt-view-order" style="font-weight:700;">View Order</span>
 	</div>
 	<div style="font-weight:800; font-size:18px;" id="cart-bar-total">
-		€ 0.00
+		 € 0.00
 	</div>
 </div>
 <div id="toast" class="toast">
-	Update Success!
+	 Update Success!
 </div>
 <script>
         // ==========================================
@@ -966,6 +984,16 @@ function startAutoLangWatch(){
     }
   }, 2000);
 }
+function bindOverlayTouchBlock() {
+  ['product-modal', 'cart-modal'].forEach((id) => {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.addEventListener('touchmove', (e) => {
+      const inModalScroll = e.target.closest('.modal-scroll') || e.target.closest('.cart-list');
+      if (!inModalScroll) e.preventDefault();
+    }, { passive: false });
+  });
+}
         init();
         function init() {
   loadCart();
@@ -977,6 +1005,7 @@ function startAutoLangWatch(){
   if (!history.state || !history.state.view) {
     history.replaceState({ view: 'home' }, '');
   }
+  bindOverlayTouchBlock();
 }
         function setLang(l, userChosen = false) {
   if (!['en','pt','cn'].includes(l)) l = 'en';
@@ -1165,6 +1194,27 @@ function startAutoLangWatch(){
             state.isSearchMode = false;
             renderHome();
         }
+        // ===== Scroll Lock (防弹窗打开时外层还能滚) =====
+let __scrollLockCount = 0;
+let __lockedScrollY = 0;
+function lockBodyScroll() {
+  __scrollLockCount++;
+  if (__scrollLockCount > 1) return;
+  __lockedScrollY = window.scrollY || window.pageYOffset || 0;
+  document.documentElement.classList.add('no-scroll');
+  document.body.classList.add('no-scroll');
+  // 关键：固定 body 时用 top 抵消当前滚动位置，避免页面跳回顶部
+  document.body.style.top = `-${__lockedScrollY}px`;
+}
+function unlockBodyScroll() {
+  if (__scrollLockCount === 0) return;
+  __scrollLockCount--;
+  if (__scrollLockCount > 0) return;
+  document.documentElement.classList.remove('no-scroll');
+  document.body.classList.remove('no-scroll');
+  document.body.style.top = '';
+  window.scrollTo(0, __lockedScrollY);
+}
         // --- Modal Logic ---
         function getProductQtyMapFromCart(productId){
             const preset = {};
@@ -1257,6 +1307,7 @@ function startAutoLangWatch(){
             const modal = document.getElementById('product-modal');
             const shell = document.getElementById('modal-shell');
             modal.style.display = 'flex';
+lockBodyScroll();
             modal.style.opacity = 1;
             requestAnimationFrame(() => shell.classList.add('open'));
             history.pushState({ modal: true }, '');
@@ -1286,7 +1337,10 @@ function startAutoLangWatch(){
   modal.style.opacity = 0;
   state.modal.editProductId = null;
   state.modal.variantQty = {};
-  setTimeout(() => { modal.style.display = 'none'; }, 300);
+  setTimeout(() => {
+    modal.style.display = 'none';
+    unlockBodyScroll();
+  }, 300);
 }
 function closeModalDirect() {
   _hideProductModal();
@@ -1401,6 +1455,7 @@ function closeModalDirect() {
           const modal = document.getElementById('cart-modal');
           const shell = document.getElementById('cart-shell');
           modal.style.display = 'flex';
+lockBodyScroll();
           modal.style.opacity = 1;
           requestAnimationFrame(() => shell.classList.add('open'));
           history.pushState({ modal: true }, '');
@@ -1420,7 +1475,10 @@ function closeModalDirect() {
   const shell = document.getElementById('cart-shell');
   shell.classList.remove('open');
   modal.style.opacity = 0;
-  setTimeout(() => { modal.style.display = 'none'; }, 300);
+  setTimeout(() => {
+    modal.style.display = 'none';
+    unlockBodyScroll();
+  }, 300);
 }
 function closeCartDirect() {
   _hideCartModal();
