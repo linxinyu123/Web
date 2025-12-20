@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Neco's Custom Cake</title>
+<link rel="icon" type="image/png" href="https://lestoy.com/necos/f.png" />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
         /* --- 1. 设计系统 --- */
@@ -20,11 +21,11 @@
             --header-h: 70px;
         }
         /* 弹窗打开时：锁住背景滚动（含 iOS） */
-body.modal-open{
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
+        body.modal-open{
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, button, input, select, textarea {
             font-family: 'Nunito', sans-serif;
@@ -59,9 +60,9 @@ body.modal-open{
         .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         /* --- 3. 布局 --- */
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        /* ✅ 改：去掉整页 fadeIn（love 是卡片动，不是整页闪） */
         .view-section { display: none; }
         .view-section.active { display: block; }
+        
         /* [NEW] 常驻搜索框 (Google Style) */
         .search-hero { margin-bottom: 30px; }
         .search-hero-inner {
@@ -140,7 +141,6 @@ body.modal-open{
             padding: 12px 24px 12px 18.5px; border-radius: var(--radius-btn);
             display: inline-flex; align-items: center; gap: 8px;
             font-weight: 800; font-size: 16px; color: var(--primary); cursor: pointer;
-              color: var(--primary);
         }
         .back-nav {
           --nav-icon: url("https://i.ibb.co/Q3hkmW9x/IMG-20251219-145724.png");
@@ -174,28 +174,32 @@ body.modal-open{
             background: var(--accent); color: var(--primary); border: none;
             padding: 10px 24px; border-radius: var(--radius-btn); font-weight: 800; font-size: 14px; cursor: pointer;
         }
-            /* --- 6. 弹窗 (Modal) --- */
-        .modal-overlay, .cart-overlay {
+        /* --- 6. 弹窗 (Modal) --- */
+        .modal-overlay, .cart-overlay, .legal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             backdrop-filter: blur(0.5px); display: none; justify-content: center; align-items: flex-end;
             transition: opacity 0.3s;
         }
         .cart-overlay { z-index: 2000; }
         .modal-overlay { z-index: 2100; }
+        .legal-overlay { z-index: 2200; }
+        
         @media(min-width: 768px) {
-            .modal-overlay, .cart-overlay { align-items: center; }
-            .modal-shell, .cart-shell { max-width: 480px !important; border-radius: 24px !important; height: 85vh !important; }
+            .modal-overlay, .cart-overlay, .legal-overlay { align-items: center; }
+            .modal-shell, .cart-shell, .legal-shell { max-width: 480px !important; border-radius: 24px !important; height: 85vh !important; }
+            /* Legal shell can be wider */
+            .legal-shell { max-width: 720px !important; }
         }
-        .modal-shell, .cart-shell {
+        .modal-shell, .cart-shell, .legal-shell {
             background: var(--white); width: 100%; height: 91.25%;
             border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
             position: relative; overflow: hidden;
             transform: translateY(100%);
             transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .modal-shell.open, .cart-shell.open { transform: translateY(0); }
+        .modal-shell.open, .cart-shell.open, .legal-shell.open { transform: translateY(0); }
         .cart-shell { background: #F5F7FA; }
-        .close-btn {
+        .close-btn, .legal-close {
             position: absolute; top: 15px; right: 15px;
             background: rgba(255,255,255,0.9); width: 36px; height: 36px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -209,42 +213,19 @@ body.modal-open{
         .m-desc { font-size: 15px; color: var(--text-gray); line-height: 1.6; margin-bottom: 30px; }
         .variant-section { border-top: 1px solid var(--border); padding-top: 20px; }
         .v-label { font-size: 13px; font-weight: 800; color: #999; margin-bottom: 15px; display: block; text-transform: uppercase; letter-spacing: 1px; }
-        .v-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer;
-        }
-        .v-radio {
-            width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%;
-            margin-right: 12px; position: relative; flex-shrink: 0;
-        }
-        .v-item.selected .v-radio { border-color: var(--accent); background: var(--accent); }
-        .v-item.selected .v-radio::after {
-            content:''; position:absolute; width: 8px; height: 8px;
-            background: var(--primary); border-radius: 50%;
-            top:50%; left:50%; transform:translate(-50%, -50%);
-        }
-        .v-info { display: flex; align-items: center; }
-        .v-text { font-weight: 700; font-size: 16px; color: var(--primary); }
-        .v-price { font-weight: 800; font-size: 16px; color: var(--primary); }
+        
         .modal-footer {
             padding: 25px 20px 25px 20px; background: var(--white);
             border-top: 0px solid var(--border); z-index: 20;
             display: flex; flex-direction: column; gap: 10px;
         }
-        .qty-control {
-            display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;
-        }
-        .qty-btn {
-            width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd;
-            background: white; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;
-        }
-        .qty-val { font-size: 20px; font-weight: 800; width: 30px; text-align: center; }
         .btn-add-cart {
             width: 100%; background: var(--accent); color: var(--primary); border: none;
             padding: 17px 17px; border-radius: var(--radius-btn); font-size: 17px; font-weight: 900;
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 5px 15px rgba(244, 192, 75, 0.3);
         }
+        /* Cart Modal Styles */
         .cart-header {
             padding: 14px 18px; background: white; text-align: center;
             font-weight: 900; font-size: 18px; border-bottom: 1px solid var(--border);
@@ -270,6 +251,8 @@ body.modal-open{
         }
         .mini-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .edit-hint { font-size: 11px; color: #AAA; font-weight: 600; text-transform: uppercase; }
+        
+        /* Sticky Cart */
         .sticky-cart {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px; background: var(--primary); color: white;
@@ -286,18 +269,15 @@ body.modal-open{
             border-radius: 30px; z-index: 3000; opacity: 0; pointer-events: none;
             transition: opacity 0.3s; font-weight: 700;
         }
-        .btn-remove {
-            width: 100%; border: 1px solid #FF6B6B; background: white; color: #FF6B6B;
-            padding: 12px; border-radius: var(--radius-btn); font-weight: 800;
-            margin-top: 10px; cursor: pointer;
-        }
-        /* [NEW] Variant rows with per-variant quantity */
-        .v-item{
-            cursor: default;
+        
+        /* Variant Rows */
+        .v-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 0; border-bottom: 1px solid var(--border); cursor: default;
         }
         .v-left{ display:flex; flex-direction:column; gap:4px; }
-        .v-name{ font-weight: 800; font-size: 16px; color: var(--primary); }
-        .v-subprice{ font-weight: 800; font-size: 14px; color: var(--primary); opacity: 0.85; }
+        .v-name{ font-weight: 800; font-size: 16.5px; color: var(--primary); }
+        .v-subprice{ font-weight: 800; font-size: 15.5px; color: var(--primary); opacity: 0.85; }
         .v-qty{
             display:flex; align-items:center; gap:10px;
             background:#F3F4F6; border-radius: 14px; padding: 6px 10px;
@@ -311,7 +291,8 @@ body.modal-open{
         .v-qty-val{
             min-width: 18px; text-align:center; font-weight: 900;
         }
-        /* [NEW] Cart total row (below items, footer still single button) */
+        
+        /* Cart Total Row */
         .cart-total-row{
             padding: 18px 18px 0px 18px;
             background: white;
@@ -322,83 +303,155 @@ body.modal-open{
             font-weight: 900;
             font-size: 17px;
         }
-        /* Make modal scroll feel roomier */
         .modal-scroll{ padding-bottom: 10px; }
-        /* =========================================================
-           [LOVE PORT] Card enter animation + Image skeleton shimmer
-           ========================================================= */
+
+        /* ========= [NEW] Footer & Legal Styles ========= */
+        .site-footer{
+          max-width: 1000px;
+          margin: 28px auto 0;
+          padding: 30px 20px 24px;
+          color: #7b7b7b;
+        }
+        .footer-links{
+          display:flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
+        .footer-link{
+          border: 1px solid #E5E7EB;
+          background: #fff;
+          color: var(--primary);
+          padding: 10px 14px;
+          border-radius: 999px;
+          font-weight: 900;
+          font-size: 12px;
+          cursor:pointer;
+        }
+        .footer-note{
+          text-align:center;
+          font-size: 12px;
+          line-height: 1.5;
+          margin-top: 25px;
+        }
+        /* Legal Modal Internals */
+       .legal-header{
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  /* 👇 核心改动 */
+  display: flex;
+  flex-direction: column;   /* 纵向排列 */
+  align-items: center;      /* 整体居中 */
+  gap: 12px;                /* 标题和按钮间距 */
+}
+
+       .legal-title{
+  font-size: 18px;
+  font-weight: 900;
+  margin: 0;
+  color: var(--primary);
+  text-align: center;   /* 👈 标题文字居中 */
+}
+
+       .legal-tabs{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;          /* 小屏自动换行 */
+  justify-content: center;  /* 👈 水平居中 */
+}
+
+        .legal-tab{
+          border: 1px solid #E5E7EB;
+          background: #fff;
+          padding: 8px 10px;
+          border-radius: 999px;
+          font-weight: 900;
+          font-size: 12px;
+          cursor:pointer;
+          color: var(--primary);
+          opacity: 0.75;
+        }
+        .legal-tab.active{
+          background: var(--accent);
+          opacity: 1;
+        }
+        .legal-body{
+          flex:1;
+          overflow-y:auto;
+          padding: 18px 20px 24px;
+        }
+        .legal-section{
+          display:none;
+          animation: fadeIn 0.15s ease-in;
+        }
+        .legal-section.active{ display:block; }
+        .legal-h2{
+          font-size: 16px;
+          font-weight: 900;
+          margin: 16px 0 8px;
+          color: var(--primary);
+        }
+        .legal-p{
+          margin: 0 0 10px;
+          color: #4b5563;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        .legal-list{
+          margin: 0 0 14px 18px;
+          color: #4b5563;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        .legal-kv{
+          background: #F5F7FA;
+          border: 1px solid #EAEAEA;
+          border-radius: 16px;
+          padding: 12px 14px;
+          margin: 10px 0 14px;
+          font-size: 13px;
+          color: #374151;
+          line-height: 1.6;
+        }
+        .legal-kv b{ color: var(--primary); }
+        .legal-muted{
+          color:#9ca3af;
+          font-size: 12px;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Animation & Skeleton */
         .reveal-card{
-            opacity: 0;
-            translate: 0 30px;
-            transition: opacity .55s ease, translate .55s ease;
+            opacity: 0; translate: 0 30px; transition: opacity .55s ease, translate .55s ease;
             will-change: opacity, translate;
         }
-        .reveal-card.is-visible{
-            opacity: 1;
-            translate: 0 0;
-        }
+        .reveal-card.is-visible{ opacity: 1; translate: 0 0; }
         @supports not (translate: 0 0){
-            .reveal-card{
-                transform: translateY(30px);
-                transition: opacity .55s ease, transform .55s ease;
-            }
-            .reveal-card.is-visible{
-                transform: translateY(0);
-            }
+            .reveal-card{ transform: translateY(30px); transition: opacity .55s ease, transform .55s ease; }
+            .reveal-card.is-visible{ transform: translateY(0); }
         }
         @media (prefers-reduced-motion: reduce){
-            .reveal-card{
-                opacity: 1 !important;
-                translate: 0 0 !important;
-                transform: none !important;
-                transition: none !important;
-            }
+            .reveal-card{ opacity: 1 !important; translate: 0 0 !important; transform: none !important; transition: none !important; }
         }
-        ..skel-img{
-  opacity: 0;
-  transform: none;                 /* ✅ 去掉缩放 */
-  background: #f2f2f2;
-  transition: opacity .5s ease;    /* ✅ 只保留透明度过渡 */
-  display: block;
-}
-        .cat-img.skel-img,
-        .prod-img.skel-img{
-            transition: opacity .5s ease, transform .5s ease;
-        }
+        .skel-img{ opacity: 0; transform: none; background: #f2f2f2; transition: opacity .5s ease; display: block; }
+        .cat-img.skel-img, .prod-img.skel-img{ transition: opacity .5s ease, transform .5s ease; }
         .skel-img.is-loading{
-            background-image: linear-gradient(
-                90deg,
-                rgba(242,242,242,1) 0%,
-                rgba(255,255,255,1) 20%,
-                rgba(242,242,242,1) 40%,
-                rgba(242,242,242,1) 100%
-            );
+            background-image: linear-gradient(90deg, rgba(242,242,242,1) 0%, rgba(255,255,255,1) 20%, rgba(242,242,242,1) 40%, rgba(242,242,242,1) 100%);
             background-size: 400% 100%;
             animation: sk-shimmer 1.2s linear infinite;
         }
-        @keyframes sk-shimmer{
-            0%{ background-position: 100% 0; }
-            100%{ background-position: -100% 0; }
-        }
-    .skel-img.is-loaded{
-  opacity: 1;
-  transform: none;                 /* ✅ 保持不缩放 */
-  background: none;
-  animation: none;
-}
-        .skel-img.is-error{
-            opacity: 1;
-            transform: scale(1);
-            background: #f2f2f2;
-            animation: none;
-        }
-        .skel-img.is-loaded.is-loading{
-            animation: none;
-            background: none;
-        }
-        @supports (scale: 1){
-            .cat-card:active { transform: none; scale: 0.98; }
-        }
+        @keyframes sk-shimmer{ 0%{ background-position: 100% 0; } 100%{ background-position: -100% 0; } }
+        .skel-img.is-loaded{ opacity: 1; transform: none; background: none; animation: none; }
+        .skel-img.is-error{ opacity: 1; transform: scale(1); background: #f2f2f2; animation: none; }
+        .skel-img.is-loaded.is-loading{ animation: none; background: none; }
+        @supports (scale: 1){ .cat-card:active { transform: none; scale: 0.98; } }
 </style>
 </head>
 <body>
@@ -413,8 +466,9 @@ body.modal-open{
 		<button class="lang-btn" onclick="setLang('cn', true)">CN</button>
 	</div>
 </div>
+
 <div class="container">
-	<!-- [NEW] Permanent Search Bar -->
+	<!-- Permanent Search Bar -->
 	<div class="search-hero">
 		<div class="back-nav">
 			<button class="btn-back" onclick="goBack()">
@@ -428,38 +482,46 @@ body.modal-open{
 			<span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
 		</div>
 	</div>
+    
 	<!-- 1. 首页 (Home) -->
 	<div id="view-home" class="view-section active">
 		<div class="category-grid" id="category-grid">
 		</div>
-		<div style="height: 60px;">
-		</div>
 	</div>
+    
 	<!-- 2. 列表页 (Category / Search Results) -->
 	<div id="view-category" class="view-section">
 		<div id="category-content">
 		</div>
 	</div>
+
+    <!-- [NEW] Footer (Legal) -->
+    <footer class="site-footer">
+        <div class="footer-links">
+          <button id="footer-btn-legal" class="footer-link" onclick="openLegalModal('legal')">Legal</button>
+          <button id="footer-btn-terms" class="footer-link" onclick="openLegalModal('terms')">Terms</button>
+          <button id="footer-btn-returns" class="footer-link" onclick="openLegalModal('returns')">Returns</button>
+          <button id="footer-btn-privacy" class="footer-link" onclick="openLegalModal('privacy')">Privacy</button>
+          <button id="footer-btn-disputes" class="footer-link" onclick="openLegalModal('disputes')">Disputes</button>
+        </div>
+        <div class="footer-note">
+          <span id="footer-note-text">© <span id="footer-year"></span> Neco's Custom Cake · All rights reserved.</span>
+        </div>
+    </footer>
 </div>
+
 <!-- 3. 产品详情弹窗 (Product Modal) -->
 <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
 	<div class="modal-shell" id="modal-shell" onclick="event.stopPropagation()">
-		<div class="close-btn" onclick="closeModalDirect()">
-			✕
-		</div>
+		<div class="close-btn" onclick="closeModalDirect()">✕</div>
 		<div class="modal-scroll">
 			<img src="" id="m-img" class="modal-hero-img">
 			<div class="modal-content-box">
-				<div class="m-title" id="m-title">
-					Title
-				</div>
-				<div class="m-desc" id="m-desc">
-					Desc
-				</div>
+				<div class="m-title" id="m-title">Title</div>
+				<div class="m-desc" id="m-desc">Desc</div>
 				<div class="variant-section">
 					<label class="v-label" id="txt-select-size">SELECT SIZE</label>
-					<div id="variant-list">
-					</div>
+					<div id="variant-list"></div>
 				</div>
 			</div>
 		</div>
@@ -470,17 +532,15 @@ body.modal-open{
 		</div>
 	</div>
 </div>
+
 <!-- 4. 购物车弹窗 (Cart Modal) -->
 <div class="cart-overlay" id="cart-modal" onclick="closeCart(event)">
 	<div class="cart-shell" id="cart-shell" onclick="event.stopPropagation()">
 		<div class="cart-header">
 			<span id="txt-your-order">Your Order</span>
-			<div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">
-				✕
-			</div>
+			<div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">✕</div>
 		</div>
-		<div class="cart-list" id="cart-list">
-		</div>
+		<div class="cart-list" id="cart-list"></div>
 		<div class="cart-total-row">
 			<span id="txt-total">Total</span>
 			<span id="cart-modal-total">€ 0.00</span>
@@ -492,11 +552,92 @@ body.modal-open{
 		</div>
 	</div>
 </div>
-<!-- 5. 底部悬浮条 (Sticky Cart) -->
+
+<!-- [NEW] 5. Legal Modal -->
+<div id="legal-modal" class="legal-overlay" onclick="closeLegalByOverlay(event)">
+  <div id="legal-shell" class="legal-shell">
+    <div class="legal-close" onclick="closeLegalDirect()">×</div>
+
+    <div class="legal-header">
+      <h3 id="legal-title" class="legal-title">Legal</h3>
+      <div class="legal-tabs">
+        <button class="legal-tab" data-tab="legal" onclick="switchLegalTab('legal')">Legal</button>
+        <button class="legal-tab" data-tab="terms" onclick="switchLegalTab('terms')">Terms</button>
+        <button class="legal-tab" data-tab="returns" onclick="switchLegalTab('returns')">Returns</button>
+        <button class="legal-tab" data-tab="privacy" onclick="switchLegalTab('privacy')">Privacy</button>
+        <button class="legal-tab" data-tab="disputes" onclick="switchLegalTab('disputes')">Disputes</button>
+      </div>
+    </div>
+
+    <div class="legal-body">
+      <!-- Legal / Identificação -->
+      <section id="legal-section-legal" class="legal-section">
+        <div class="legal-kv" id="legal-kv-ident"></div>
+
+        <h4 class="legal-h2" id="legal-h2-scope">Scope</h4>
+        <p class="legal-p" id="legal-p-scope"></p>
+
+        <h4 class="legal-h2" id="legal-h2-contacts">Contacts</h4>
+        <p class="legal-p" id="legal-p-contacts"></p>
+      </section>
+
+      <!-- Terms -->
+      <section id="legal-section-terms" class="legal-section">
+        <h4 class="legal-h2" id="terms-h2-1">Terms & Conditions of Purchase</h4>
+        <p class="legal-p" id="terms-p-1"></p>
+
+        <h4 class="legal-h2" id="terms-h2-2">Orders & Payment</h4>
+        <ul class="legal-list" id="terms-list-2"></ul>
+
+        <h4 class="legal-h2" id="terms-h2-3">Prices</h4>
+        <p class="legal-p" id="terms-p-3"></p>
+      </section>
+
+      <!-- Returns -->
+      <section id="legal-section-returns" class="legal-section">
+        <h4 class="legal-h2" id="returns-h2-1">Delivery / Pickup</h4>
+        <ul class="legal-list" id="returns-list-1"></ul>
+
+        <h4 class="legal-h2" id="returns-h2-2">Exchanges & Returns</h4>
+        <ul class="legal-list" id="returns-list-2"></ul>
+
+        <p class="legal-p legal-muted" id="returns-muted"></p>
+      </section>
+
+      <!-- Privacy -->
+      <section id="legal-section-privacy" class="legal-section">
+        <h4 class="legal-h2" id="privacy-h2-1">Data Protection (RGPD/GDPR)</h4>
+        <p class="legal-p" id="privacy-p-1"></p>
+
+        <h4 class="legal-h2" id="privacy-h2-2">What data we collect</h4>
+        <ul class="legal-list" id="privacy-list-2"></ul>
+
+        <h4 class="legal-h2" id="privacy-h2-3">Your rights</h4>
+        <ul class="legal-list" id="privacy-list-3"></ul>
+
+        <h4 class="legal-h2" id="privacy-h2-4">Cookies</h4>
+        <p class="legal-p" id="privacy-p-4"></p>
+      </section>
+
+      <!-- Disputes -->
+      <section id="legal-section-disputes" class="legal-section">
+        <h4 class="legal-h2" id="disputes-h2-1">Alternative Dispute Resolution</h4>
+        <p class="legal-p" id="disputes-p-1"></p>
+
+        <div class="legal-kv" id="legal-kv-adr"></div>
+
+        <h4 class="legal-h2" id="disputes-h2-2">Online Dispute Resolution (ODR)</h4>
+        <p class="legal-p" id="disputes-p-2"></p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- 6. 底部悬浮条 (Sticky Cart) -->
 <div class="sticky-cart" id="sticky-cart" onclick="openCartModal()">
 	<div style="display:flex; align-items:center;">
 		<span class="badge" id="cart-count">0</span>
-		<span id="txt-view-order" style="font-weight:700;">View Order</span>
+		<span id="sticky-cart-label" style="font-weight:700;">View Order</span>
 	</div>
 	<div style="font-weight:800; font-size:18px;" id="cart-bar-total">
 		€ 0.00
@@ -505,16 +646,12 @@ body.modal-open{
 <div id="toast" class="toast">
 	Update Success!
 </div>
+
 <script>
         // ==========================================
-        // 0. Love 风格动效：统一初始化（不改业务逻辑）
-        // ✅ 改：render 阶段直接写入 is-loaded/is-visible，避免一帧闪烁
+        // 0. Love 风格动效
         // ==========================================
-        const __fx = {
-          seenCards: new Set(),
-          loadedSrc: new Set(),
-          revealIO: null
-        };
+        const __fx = { seenCards: new Set(), loadedSrc: new Set(), revealIO: null };
         function __ensureRevealIO(){
           if(__fx.revealIO) return __fx.revealIO;
           __fx.revealIO = new IntersectionObserver((entries) => {
@@ -529,99 +666,74 @@ body.modal-open{
           }, { threshold: 0.15 });
           return __fx.revealIO;
         }
-        function __normUrl(u){
-          return (u || '').trim();
-        }
-        function __isImgLoadedByUrl(url){
-          const u = __normUrl(url);
-          return u && __fx.loadedSrc.has(u);
-        }
-        // ✅ 关键：在生成 HTML 时直接给 class（避免插入后 JS 才补 class 的一帧）
+        function __normUrl(u){ return (u || '').trim(); }
+        function __isImgLoadedByUrl(url){ const u = __normUrl(url); return u && __fx.loadedSrc.has(u); }
         function __imgClass(url, base){
           const loaded = __isImgLoadedByUrl(url);
           return `${base} skel-img js-skel-img ${loaded ? 'is-loaded' : 'is-loading'}`;
         }
-        function __imgDataAttrs(url){
-          const loaded = __isImgLoadedByUrl(url);
-          return loaded ? `data-fx-init="1" data-fx-loaded="1"` : ``;
-        }
+        function __imgDataAttrs(url){ const loaded = __isImgLoadedByUrl(url); return loaded ? `data-fx-init="1" data-fx-loaded="1"` : ``; }
         function __cardClass(key, base){
           const seen = key && __fx.seenCards.has(key);
           return `${base} reveal-card js-reveal ${seen ? 'is-visible' : ''}`;
         }
         function __markImgLoaded(img){
           if(!img || img.dataset.fxLoaded === '1') return;
-          img.dataset.fxLoaded = '1';
-          img.classList.remove('is-loading');
-          img.classList.add('is-loaded');
+          img.dataset.fxLoaded = '1'; img.classList.remove('is-loading'); img.classList.add('is-loaded');
           const srcKey = __normUrl(img.currentSrc || img.src);
           if(srcKey) __fx.loadedSrc.add(srcKey);
         }
-        function __markImgError(img){
-          if(!img) return;
-          img.classList.remove('is-loading');
-          img.classList.add('is-error');
-        }
+        function __markImgError(img){ if(!img) return; img.classList.remove('is-loading'); img.classList.add('is-error'); }
         function __initReveal(root){
           const io = __ensureRevealIO();
           const cards = (root || document).querySelectorAll('.js-reveal');
           cards.forEach((card) => {
             const key = card.dataset.revealKey || '';
-            // ✅ 如果 render 时已 is-visible，也要写入 seenCards，保持一致
-            if(key && card.classList.contains('is-visible')){
-              __fx.seenCards.add(key);
-              return;
-            }
-            if(key && __fx.seenCards.has(key)){
-              card.classList.add('is-visible');
-              return;
-            }
-            if(!card.classList.contains('is-visible')){
-              io.observe(card);
-            }
+            if(key && card.classList.contains('is-visible')){ __fx.seenCards.add(key); return; }
+            if(key && __fx.seenCards.has(key)){ card.classList.add('is-visible'); return; }
+            if(!card.classList.contains('is-visible')){ io.observe(card); }
           });
         }
         function __initImages(root){
           const imgs = (root || document).querySelectorAll('img.js-skel-img');
           imgs.forEach((img) => {
-            // ✅ 如果 render 时已经是 loaded，就直接写缓存并跳过（完全不闪）
             const srcKey = __normUrl(img.currentSrc || img.src);
             if(img.dataset.fxLoaded === '1' || img.classList.contains('is-loaded')){
-              if(srcKey) __fx.loadedSrc.add(srcKey);
-              img.dataset.fxInit = '1';
-              return;
+              if(srcKey) __fx.loadedSrc.add(srcKey); img.dataset.fxInit = '1'; return;
             }
             if(img.dataset.fxInit === '1') return;
             img.dataset.fxInit = '1';
             try { img.decoding = 'async'; } catch(e){}
-            // 再保险：如果 url 已在缓存里，立即 loaded（即便 render 时没命中）
-            if(srcKey && __fx.loadedSrc.has(srcKey)){
-              __markImgLoaded(img);
-              return;
-            }
-            img.classList.add('skel-img');
-            img.classList.add('is-loading');
-            const done = () => {
-              const p = (img.decode ? img.decode() : Promise.resolve());
-              Promise.resolve(p).catch(() => {}).then(() => __markImgLoaded(img));
-            };
+            if(srcKey && __fx.loadedSrc.has(srcKey)){ __markImgLoaded(img); return; }
+            img.classList.add('skel-img'); img.classList.add('is-loading');
+            const done = () => { const p = (img.decode ? img.decode() : Promise.resolve()); Promise.resolve(p).catch(() => {}).then(() => __markImgLoaded(img)); };
             const fail = () => __markImgError(img);
-            if(img.complete && img.naturalWidth > 0){
-              done();
-              return;
-            }
+            if(img.complete && img.naturalWidth > 0){ done(); return; }
             img.addEventListener('load', done, { once: true });
             img.addEventListener('error', fail, { once: true });
           });
         }
-        function initCardFX(root){
-          __initReveal(root);
-          __initImages(root);
-        }
+        function initCardFX(root){ __initReveal(root); __initImages(root); }
+
         // ==========================================
-        // 1. 数据中心
+        // 1. 数据中心 & 法律信息
         // ==========================================
-  const db = {
+        const LEGAL_INFO = {
+          ownerName: "Neco's Custom Cake",
+          address: "Rua Silva Carvalho 233, Lisboa, Portugal",
+          taxId: "288328361",
+          email: "Lin968668171@email.com",
+          phone: "+351 930523010",
+          businessHours: "Mon–Sat 11:00–19:00",
+          deliveryArea: "Lisbon area",
+          deliveryTime: "24–48h",
+          deliveryFee: "From 2€",
+          arbitrationEntity: "Centro de Arbitragem de Conflitos de Consumo de Lisboa (CACCL)",
+          arbitrationWebsite: "https://www.centroarbitragemlisboa.pt",
+          odrWebsite: "https://ec.europa.eu/consumers/odr",
+        };
+
+          const db = {
           categories: [
               { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg",
                 title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
@@ -912,6 +1024,7 @@ variants:[
               ]
           }
         };
+
         let state = {
           lang: 'en',
           isSearchMode: false,
@@ -920,147 +1033,71 @@ variants:[
           scroll: { home: { en: 0, pt: 0, cn: 0 } },
           currentCategoryId: null
         };
-// ==========================================
-// [NEW] Auto language detect + persist
-// en / pt / cn, else en
-const LANG_KEY = 'neco_lang_v1';
-const LANG_LOCK_KEY = 'neco_lang_lock_v1';
-function isLangLocked(){
-  try{ return localStorage.getItem(LANG_LOCK_KEY) === '1'; }catch(e){ return false; }
-}
-function lockLang(){
-  try{ localStorage.setItem(LANG_LOCK_KEY, '1'); }catch(e){}
-}
-function unlockLang(){
-  // 可选：给“跟随系统”用
-  try{
-    localStorage.removeItem(LANG_LOCK_KEY);
-    localStorage.removeItem(LANG_KEY);
-  }catch(e){}
-}
-function _normLocale(s){
-  return String(s || '')
-    .trim()
-    .toLowerCase()
-    .replace('_', '-');
-}
-function detectSystemLang(){
-  const candidates = [];
-  // 优先 navigator.languages（更准确）
-  if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
-  if (navigator.language) candidates.push(navigator.language);
-  // 再保险：Intl locale
-  try{
-    const loc = Intl.DateTimeFormat().resolvedOptions().locale;
-    if (loc) candidates.push(loc);
-  }catch(e){}
-  for (const raw of candidates) {
-    const l = _normLocale(raw);
-    if (!l) continue;
-    // Portuguese
-    if (l.startsWith('pt')) return 'pt';
-    // Chinese (zh-CN / zh-Hans / zh-Hant / zh-TW ...)
-    if (l.startsWith('zh')) return 'cn';
-    // English
-    if (l.startsWith('en')) return 'en';
-    // 极少数情况：直接给 cn
-    if (l.startsWith('cn')) return 'cn';
-  }
-  return 'en';
-}
-function loadPreferredLang(){
-  // 只有用户手动选择过（锁定）才用缓存
-  try{
-    if (isLangLocked()){
-      const saved = localStorage.getItem(LANG_KEY);
-      if (saved && ['en','pt','cn'].includes(saved)) return saved;
-    }
-  }catch(e){}
-  // 否则每次都重新按系统语言检测（不缓存）
-  return detectSystemLang();
-}
-function persistLang(l){
-  try{ localStorage.setItem(LANG_KEY, l); }catch(e){}
-}
+        
+        let __legalTab = 'legal'; // current legal tab
+
         // ==========================================
-        // 2. Cart persistence
+        // 2. Language Logic
+        // ==========================================
+        const LANG_KEY = 'neco_lang_v1';
+        const LANG_LOCK_KEY = 'neco_lang_lock_v1';
+        function isLangLocked(){ try{ return localStorage.getItem(LANG_LOCK_KEY) === '1'; }catch(e){ return false; } }
+        function lockLang(){ try{ localStorage.setItem(LANG_LOCK_KEY, '1'); }catch(e){} }
+        function _normLocale(s){ return String(s || '').trim().toLowerCase().replace('_', '-'); }
+        function detectSystemLang(){
+          const candidates = [];
+          if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+          if (navigator.language) candidates.push(navigator.language);
+          try{ const loc = Intl.DateTimeFormat().resolvedOptions().locale; if (loc) candidates.push(loc); }catch(e){}
+          for (const raw of candidates) {
+            const l = _normLocale(raw);
+            if (!l) continue;
+            if (l.startsWith('pt')) return 'pt';
+            if (l.startsWith('zh')) return 'cn';
+            if (l.startsWith('en')) return 'en';
+            if (l.startsWith('cn')) return 'cn';
+          }
+          return 'en';
+        }
+        function loadPreferredLang(){
+          try{ if (isLangLocked()){ const saved = localStorage.getItem(LANG_KEY); if (saved && ['en','pt','cn'].includes(saved)) return saved; } }catch(e){}
+          return detectSystemLang();
+        }
+        function persistLang(l){ try{ localStorage.setItem(LANG_KEY, l); }catch(e){} }
+        
+        // ==========================================
+        // 3. Cart persistence
         // ==========================================
         const CART_KEY = 'neco_cart_v2';
-        function _isValidCartItem(it){
-          return it && typeof it === 'object'
-            && typeof it.uid === 'string'
-            && typeof it.productId === 'string'
-            && typeof it.variantId === 'string'
-            && typeof it.qty === 'number';
-        }
+        function _isValidCartItem(it){ return it && typeof it === 'object' && typeof it.uid === 'string' && typeof it.productId === 'string' && typeof it.variantId === 'string' && typeof it.qty === 'number'; }
         function saveCart(){
           try{
-            const data = state.cart.map(it => ({
-              uid: it.uid,
-              productId: it.productId,
-              variantId: it.variantId,
-              qty: it.qty
-            }));
-            localStorage.setItem(CART_KEY, JSON.stringify({
-              v: 2,
-              updatedAt: Date.now(),
-              cart: data
-            }));
-          }catch(e){
-            console.warn('saveCart failed', e);
-          }
+            const data = state.cart.map(it => ({ uid: it.uid, productId: it.productId, variantId: it.variantId, qty: it.qty }));
+            localStorage.setItem(CART_KEY, JSON.stringify({ v: 2, updatedAt: Date.now(), cart: data }));
+          }catch(e){ console.warn('saveCart failed', e); }
         }
         function loadCart(){
           try{
-            const raw = localStorage.getItem(CART_KEY);
-            if(!raw) return;
-            const obj = JSON.parse(raw);
-            const arr = (obj && obj.cart) ? obj.cart : obj;
+            const raw = localStorage.getItem(CART_KEY); if(!raw) return;
+            const obj = JSON.parse(raw); const arr = (obj && obj.cart) ? obj.cart : obj;
             if(!Array.isArray(arr)) return;
-            state.cart = arr
-              .filter(_isValidCartItem)
-              .map(it => ({
-                uid: it.uid,
-                productId: it.productId,
-                variantId: it.variantId,
-                qty: Math.max(1, Number(it.qty) || 1)
-              }));
-          }catch(e){
-            console.warn('loadCart failed', e);
-          }
+            state.cart = arr.filter(_isValidCartItem).map(it => ({ uid: it.uid, productId: it.productId, variantId: it.variantId, qty: Math.max(1, Number(it.qty) || 1) }));
+          }catch(e){ console.warn('loadCart failed', e); }
         }
         function findItemById(productId){
-          for(const cat in db.items){
-            const hit = (db.items[cat] || []).find(p => p.id === productId);
-            if(hit) return hit;
-          }
+          for(const cat in db.items){ const hit = (db.items[cat] || []).find(p => p.id === productId); if(hit) return hit; }
           return null;
         }
         function resolveCartItem(ci){
           const item = findItemById(ci.productId);
-          if(!item){
-            return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId };
-          }
+          if(!item){ return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId }; }
           const variant = (item.variants || []).find(v => v.id === ci.variantId);
-          if(!variant){
-            return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId, img: item.img, title: item.title };
-          }
-          return {
-            missing: false,
-            uid: ci.uid,
-            qty: ci.qty,
-            productId: ci.productId,
-            variantId: ci.variantId,
-            img: item.img,
-            title: item.title,
-            variantNames: variant.names,
-            price: variant.price,
-            _item: item,
-            _variant: variant
-          };
+          if(!variant){ return { missing: true, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId, img: item.img, title: item.title }; }
+          return { missing: false, uid: ci.uid, qty: ci.qty, productId: ci.productId, variantId: ci.variantId, img: item.img, title: item.title, variantNames: variant.names, price: variant.price, _item: item, _variant: variant };
         }
+
         // ==========================================
-        // 3. 多语言文案
+        // 4. Texts & Merged Data
         // ==========================================
         const texts = {
           cn: {
@@ -1070,9 +1107,25 @@ function persistLang(l){
             added: "已加入订单", updated: "订单已更新", editHint: "点击编辑",
             searchPh: "搜索蛋糕...", noResult: "未找到相关商品", fallback: "当前语言无结果，已展示其他语言匹配。",
             missing: "该商品已下架或规格已变更，请移除后重新选择。",
-            missingTitle: "已下架商品",
-            missingVariant: "规格不可用",
-            removeHintMissing: "请移除"
+            missingTitle: "已下架商品", missingVariant: "规格不可用", removeHintMissing: "请移除",
+            // Legal & Footer
+            footerBtnLegal: "主体信息", footerBtnTerms: "购买条款", footerBtnReturns: "配送/退换", footerBtnPrivacy: "隐私与数据", footerBtnDisputes: "争议/仲裁",
+            footerNote: "© {year} Neco's Custom Cake · 保留所有权利。",
+            legalTitle: "法律信息与政策", tabLegal: "主体信息", tabTerms: "购买条款", tabReturns: "配送/退换", tabPrivacy: "隐私与数据", tabDisputes: "争议/仲裁",
+            scopeH2: "范围说明", scopeP: "本网站用于展示产品并接受客户下单。使用本网站即表示你同意以下条款。",
+            contactsH2: "联系方式", contactsP: "如需咨询下单、配送、退换货或隐私问题，请使用上方信息与我们联系。",
+            termsH2_1: "购买条款与条件", termsP1: "本条款适用于通过本网站进行的所有购买。建议下单前仔细阅读。",
+            termsH2_2: "下单与付款", termsList2: ["（如适用）付款完成且我们确认可制作后，订单才算确认。", "定制/个性化产品通常需要提前预约，我们会通过消息确认交付/自取日期。", "如需取消或修改，请尽快联系；开始制作后可能无法更改。"],
+            termsH2_3: "价格", termsP3: "所有价格以欧元（€）显示，可能会调整。税费将按法律要求适用。",
+            returnsH2_1: "配送 / 自取", returnsList1: ["配送范围：{deliveryArea}", "预计配送时间：{deliveryTime}", "配送费用：{deliveryFee}", "可按消息约定自取。"],
+            returnsH2_2: "退换货规则", returnsList2: ["由于为食品（易腐）与/或定制产品，开始制作后通常不支持无理由退货。", "若收到损坏或有误，请在 24 小时内提供照片联系我们，我们会给出解决方案（补发或退款）。", "如批准退款，将在合理时间内按原支付方式退回。"],
+            returnsMuted: "提示：定制蛋糕请在确认前核对文字、日期与设计要求。",
+            privacyH2_1: "数据保护（RGPD/GDPR）", privacyP1: "我们遵守 RGPD/GDPR 处理个人数据，仅用于订单管理、配送/自取、开票与售后支持。",
+            privacyH2_2: "我们收集哪些数据", privacyList2: ["身份与联系方式（姓名、电话、邮箱）。", "需要配送时的地址信息。", "为完成订单所需的订单内容与沟通记录。", "基础功能所需的技术数据（如语言/购物车 cookies）。"],
+            privacyH2_3: "你的权利", privacyList3: ["查询、更正或删除你的数据（适用时）。", "当处理基于同意时，可撤回同意。", "请求了解你的数据如何被使用。"],
+            privacyH2_4: "Cookies", privacyP4: "我们可能使用 cookies 用于基础功能（例如语言与购物车）。你可在浏览器设置中管理 cookies。",
+            disputesH2_1: "替代性争议解决（仲裁）", disputesP1: "如发生消费争议，消费者可使用下方所列的替代性争议解决机构（仲裁中心/ Centro de Arbitragem）。",
+            disputesH2_2: "在线争议解决（ODR）", disputesP2: "欧盟消费者也可使用欧洲在线争议解决平台（ODR）。"
           },
           en: {
             back: "Back", homeTitle: "Home", select: "Select Size", add: "Add to Order", update: "Update Order",
@@ -1081,9 +1134,25 @@ function persistLang(l){
             added: "Added to Order", updated: "Order Updated", editHint: "Edit item",
             searchPh: "Search cakes...", noResult: "No results found", fallback: "No results in English, showing matches from other languages.",
             missing: "Item unavailable (menu updated). Please remove and re-add.",
-            missingTitle: "Unavailable item",
-            missingVariant: "Variant unavailable",
-            removeHintMissing: "REMOVE"
+            missingTitle: "Unavailable item", missingVariant: "Variant unavailable", removeHintMissing: "REMOVE",
+            // Legal & Footer
+            footerBtnLegal: "Legal info", footerBtnTerms: "Terms", footerBtnReturns: "Exchanges & Returns", footerBtnPrivacy: "Privacy", footerBtnDisputes: "Dispute Resolution",
+            footerNote: "© {year} Neco's Custom Cake · All rights reserved.",
+            legalTitle: "Legal & Policies", tabLegal: "Legal", tabTerms: "Terms", tabReturns: "Returns", tabPrivacy: "Privacy", tabDisputes: "Disputes",
+            scopeH2: "Scope", scopeP: "This website is used to present products and allow customers to place orders. By using this website, you agree to the terms below.",
+            contactsH2: "Contacts", contactsP: "For any questions about orders, delivery, returns or privacy, please contact us using the details above.",
+            termsH2_1: "Terms & Conditions of Purchase", termsP1: "These terms apply to all purchases made through this website. We recommend you read them carefully before placing your order.",
+            termsH2_2: "Orders & Payment", termsList2: ["Orders are confirmed after payment is completed (when applicable) and after we confirm availability.", "Custom/Personalized products may require advance notice. We will confirm the delivery/pickup date by message.", "If you need to cancel or change an order, contact us as soon as possible. Changes may not be possible once preparation starts."],
+            termsH2_3: "Prices", termsP3: "All prices are shown in euros (€) and may change without prior notice. Taxes will be applied as legally required.",
+            returnsH2_1: "Delivery / Pickup", returnsList1: ["Delivery area: {deliveryArea}", "Estimated delivery time: {deliveryTime}", "Delivery fee: {deliveryFee}", "Pickup is available when agreed by message."],
+            returnsH2_2: "Exchanges & Returns", returnsList2: ["Because we sell perishable food and personalized items, returns for change-of-mind may not apply once production starts.", "If you receive a damaged product or there is a mistake, contact us within 24 hours with photos, and we will propose a solution (replacement or refund).", "Refunds, when approved, are processed using the original payment method within a reasonable timeframe."],
+            returnsMuted: "Note: For customized cakes, please double-check the text, dates, and design requests before confirmation.",
+            privacyH2_1: "Data Protection (RGPD/GDPR)", privacyP1: "We process personal data in accordance with the RGPD/GDPR. Data is used only to manage orders, delivery/pickup, invoicing and customer support.",
+            privacyH2_2: "What data we collect", privacyList2: ["Identification and contact details (name, phone, email).", "Delivery information (address) when delivery is requested.", "Order details and messages needed to fulfil the order.", "Technical data such as cookies (if enabled) for basic site functionality."],
+            privacyH2_3: "Your rights", privacyList3: ["Access, rectify or delete your data (when applicable).", "Withdraw consent where processing is based on consent.", "Request information about how your data is used."],
+            privacyH2_4: "Cookies", privacyP4: "Cookies may be used to improve basic functionality (e.g., language and cart). You can manage cookies in your browser settings.",
+            disputesH2_1: "Alternative Dispute Resolution", disputesP1: "In case of dispute, the consumer may resort to an Alternative Dispute Resolution entity (Centro de Arbitragem) as indicated below.",
+            disputesH2_2: "Online Dispute Resolution (ODR)", disputesP2: "Consumers in the EU may also use the European Online Dispute Resolution platform (ODR)."
           },
           pt: {
             back: "Voltar", homeTitle: "Início", select: "Selecione o Tamanho", add: "Adicionar", update: "Atualizar",
@@ -1092,68 +1161,69 @@ function persistLang(l){
             added: "Adicionado", updated: "Atualizado", editHint: "Editar item",
             searchPh: "Pesquisar bolos...", noResult: "Nenhum resultado", fallback: "Sem resultados em Português, a mostrar outras línguas.",
             missing: "Item indisponível (menu atualizado). Remova e adicione novamente.",
-            missingTitle: "Item indisponível",
-            missingVariant: "Variante indisponível",
-            removeHintMissing: "REMOVER"
+            missingTitle: "Item indisponível", missingVariant: "Variante indisponível", removeHintMissing: "REMOVER",
+            // Legal & Footer
+            footerBtnLegal: "Informação Legal", footerBtnTerms: "Termos", footerBtnReturns: "Trocas/Devoluções", footerBtnPrivacy: "Privacidade", footerBtnDisputes: "Resolução de Litígios",
+            footerNote: "© {year} Neco's Custom Cake · Todos os direitos reservados.",
+            legalTitle: "Informação Legal & Políticas", tabLegal: "Legal", tabTerms: "Termos", tabReturns: "Trocas/Devoluções", tabPrivacy: "Privacidade", tabDisputes: "Litígios",
+            scopeH2: "Âmbito", scopeP: "Este website apresenta produtos e permite efetuar encomendas. Ao utilizar este website, concorda com os termos abaixo.",
+            contactsH2: "Contactos", contactsP: "Para questões sobre encomendas, entrega, devoluções ou privacidade, contacte-nos através dos dados acima.",
+            termsH2_1: "Termos e Condições de Compra", termsP1: "Estes termos aplicam-se a todas as compras efetuadas através deste website. Recomendamos a leitura antes de efetuar a encomenda.",
+            termsH2_2: "Encomendas & Pagamento", termsList2: ["As encomendas são confirmadas após pagamento (quando aplicável) e confirmação de disponibilidade.", "Produtos personalizados podem exigir aviso prévio. Confirmaremos a data de entrega/recolha por mensagem.", "Para cancelar ou alterar uma encomenda, contacte-nos o mais cedo possível. Alterações podem não ser possíveis após início de preparação."],
+            termsH2_3: "Preços", termsP3: "Todos os preços são apresentados em euros (€) e podem ser alterados sem aviso prévio. Impostos serão aplicados conforme exigido por lei.",
+            returnsH2_1: "Entrega / Recolha", returnsList1: ["Zona de entrega: {deliveryArea}", "Prazo estimado: {deliveryTime}", "Custo de entrega: {deliveryFee}", "Recolha disponível mediante acordo por mensagem."],
+            returnsH2_2: "Trocas & Devoluções", returnsList2: ["Sendo produtos alimentares perecíveis e/ou personalizados, a devolução por arrependimento pode não ser aplicável após início de produção.", "Se receber um produto danificado ou com erro, contacte-nos no prazo de 24 horas com fotografias, e apresentaremos uma solução (substituição ou reembolso).", "Reembolsos aprovados são processados pelo mesmo método de pagamento num prazo razoável."],
+            returnsMuted: "Nota: Para bolos personalizados, confirme cuidadosamente texto, datas e pedidos de design antes da confirmação.",
+            privacyH2_1: "Proteção de Dados (RGPD)", privacyP1: "Tratamos dados pessoais de acordo com o RGPD. Os dados são utilizados apenas para gerir encomendas, entrega/recolha, faturação e apoio ao cliente.",
+            privacyH2_2: "Que dados recolhemos", privacyList2: ["Dados de identificação e contacto (nome, telefone, email).", "Dados de entrega (morada) quando solicitado.", "Detalhes da encomenda e mensagens necessárias para execução.", "Dados técnicos como cookies (se ativos) para funcionalidades básicas do site."],
+            privacyH2_3: "Os seus direitos", privacyList3: ["Aceder, retificar ou apagar dados (quando aplicável).", "Retirar consentimento quando o tratamento se baseia em consentimento.", "Solicitar informação sobre como os dados são utilizados."],
+            privacyH2_4: "Cookies", privacyP4: "Podem ser usados cookies para funcionalidades básicas (ex.: idioma e carrinho). Pode gerir cookies nas definições do seu navegador.",
+            disputesH2_1: "Resolução Alternativa de Litígios", disputesP1: "Em caso de litígio, o consumidor pode recorrer a uma entidade de Resolução Alternativa de Litígios (Centro de Arbitragem) indicada abaixo.",
+            disputesH2_2: "Resolução de Litígios em Linha (ODR)", disputesP2: "Consumidores na UE também podem utilizar a plataforma europeia de Resolução de Litígios em Linha (ODR)."
           }
         };
-let __lastSystemLang = detectSystemLang();
-function applySystemLangIfUnlocked(){
-  if (isLangLocked()) return;
-  const sys = detectSystemLang();
-  if (sys !== state.lang){
-    // 自动切换：不写缓存
-    setLang(sys, false);
-  }
-  __lastSystemLang = sys;
-}
-function startAutoLangWatch(){
-  // 有些浏览器支持
-  window.addEventListener('languagechange', applySystemLangIfUnlocked);
-  // 双保险：轮询检测变化（你可以改成 2000/3000ms）
-  setInterval(() => {
-    if (isLangLocked()) return;
-    const now = detectSystemLang();
-    if (now !== __lastSystemLang){
-      applySystemLangIfUnlocked();
-    }
-  }, 2000);
-}
-        init();
-        function init() {
-  loadCart();
-  const initialLang = loadPreferredLang();
-  setLang(initialLang, false); // 自动：不缓存
-  startAutoLangWatch();
-  updateCartBar();
-  // ✅ 只在“首次进入/没有state”时写入 home 状态，避免覆盖其它状态
-  if (!history.state || !history.state.view) {
-    history.replaceState({ view: 'home' }, '');
-  }
-}
-        function setLang(l, userChosen = false) {
-  if (!['en','pt','cn'].includes(l)) l = 'en';
-  state.lang = l;
-  // ✅ 只有用户手动切换才持久化 + 锁定
-  if (userChosen){
-    persistLang(l);
-    lockLang();
-  }
-  document.documentElement.lang = (l === 'cn') ? 'zh-CN' : l;
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active', b.innerText.toLowerCase() === l);
-  });
-  updateUI();
-  if(state.isSearchMode) handleSearch();
-}
-        function onSearchKeyDown(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            const input = e.target;
-            input.blur();
-            handleSearch();
-          }
+
+        let __lastSystemLang = detectSystemLang();
+        function applySystemLangIfUnlocked(){
+          if (isLangLocked()) return;
+          const sys = detectSystemLang();
+          if (sys !== state.lang){ setLang(sys, false); }
+          __lastSystemLang = sys;
         }
+        function startAutoLangWatch(){
+          window.addEventListener('languagechange', applySystemLangIfUnlocked);
+          setInterval(() => { if (isLangLocked()) return; const now = detectSystemLang(); if (now !== __lastSystemLang){ applySystemLangIfUnlocked(); } }, 2000);
+        }
+
+        function init() {
+            loadCart();
+            const initialLang = loadPreferredLang();
+            setLang(initialLang, false);
+            startAutoLangWatch();
+            updateCartBar();
+            if (!history.state || !history.state.view) { history.replaceState({ view: 'home' }, ''); }
+            fillLegalTexts(); // Fill footer texts on init
+        }
+
+        function safeText(v){ return (v===undefined || v===null) ? "" : String(v); }
+
+        function setLang(l, userChosen = false) {
+          if (!['en','pt','cn'].includes(l)) l = 'en';
+          state.lang = l;
+          if (userChosen){ persistLang(l); lockLang(); }
+          document.documentElement.lang = (l === 'cn') ? 'zh-CN' : l;
+          document.querySelectorAll('.lang-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText.toLowerCase() === l);
+          });
+          updateUI();
+          fillLegalTexts(); // Update legal modal and footer
+          if(state.isSearchMode) handleSearch();
+        }
+
+        function onSearchKeyDown(e) {
+          if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); handleSearch(); }
+        }
+
         function updateTopButtonLabel() {
           const isHome = document.getElementById('view-home').classList.contains('active');
           const t = texts[state.lang];
@@ -1169,17 +1239,16 @@ function startAutoLangWatch(){
             nav.style.setProperty('--nav-icon-size', '18px');
           }
         }
+
         function updateUI() {
             const t = texts[state.lang];
             const ids = {
                 'txt-view-order': t.view, 'txt-your-order': t.order,
                 'txt-select-size': t.select,
-                'txt-total': t.total, 'txt-remove': t.remove
+                'txt-total': t.total, 'txt-remove': t.remove,
+                'txt-confirm': t.confirm
             };
-            for(let id in ids) {
-                const el = document.getElementById(id);
-                if(el) el.innerText = ids[id];
-            }
+            for(let id in ids) { const el = document.getElementById(id); if(el) el.innerText = ids[id]; }
             document.getElementById('search-input').placeholder = t.searchPh;
             if (document.getElementById('view-home').classList.contains('active') && !state.isSearchMode) {
               state.scroll.home[state.lang] = window.scrollY || 0;
@@ -1197,15 +1266,14 @@ function startAutoLangWatch(){
             refreshProductModalUI();
             updateTopButtonLabel();
         }
+
         function renderHome(restoreScroll = false) {
           const grid = document.getElementById('category-grid');
           grid.innerHTML = db.categories.map(c => {
               const key = `home-cat-${c.id}`;
               return `
                 <div class="${__cardClass(key,'cat-card')}" data-reveal-key="${key}" onclick="renderCategory('${c.id}')">
-                    <div class="cat-img-box">
-                      <img src="${c.img}" class="${__imgClass(c.img,'cat-img')}" ${__imgDataAttrs(c.img)} loading="lazy" alt="">
-                    </div>
+                    <div class="cat-img-box"><img src="${c.img}" class="${__imgClass(c.img,'cat-img')}" ${__imgDataAttrs(c.img)} loading="lazy" alt=""></div>
                     <div class="cat-info">
                         <div class="cat-title">${c.title[state.lang]}</div>
                         <div class="cat-desc">${c.desc[state.lang]}</div>
@@ -1217,21 +1285,17 @@ function startAutoLangWatch(){
           const saved = state.scroll.home[state.lang] || 0;
           switchView('view-home', restoreScroll ? { scrollTop: saved } : {});
         }
+
         function renderCategory(id, opts = {}) {
           state.currentCategoryId = id;
           history.pushState({ view: 'category' }, '');
-          if (!opts.skipSaveHome) {
-            state.scroll.home[state.lang] = window.scrollY || window.pageYOffset || 0;
-          }
+          if (!opts.skipSaveHome) { state.scroll.home[state.lang] = window.scrollY || window.pageYOffset || 0; }
           const items = db.items[id] || [];
           const container = document.getElementById('category-content');
           renderProductList(container, items, id);
-          if (typeof opts.keepScrollY === 'number') {
-            switchView('view-category', { scrollTop: opts.keepScrollY });
-          } else {
-            switchView('view-category');
-          }
+          if (typeof opts.keepScrollY === 'number') { switchView('view-category', { scrollTop: opts.keepScrollY }); } else { switchView('view-category'); }
         }
+
         function renderProductList(container, items, catId) {
             container.innerHTML = `
                 <div class="product-list">
@@ -1256,6 +1320,7 @@ function startAutoLangWatch(){
             `;
             initCardFX(container);
         }
+
         function switchView(viewId, opts = {}) {
           document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
           document.getElementById(viewId).classList.add('active');
@@ -1264,34 +1329,22 @@ function startAutoLangWatch(){
           const top = typeof opts.scrollTop === 'number' ? opts.scrollTop : 0;
           requestAnimationFrame(() => window.scrollTo(0, top));
         }
+
         function goBack() {
           const isHome = document.getElementById('view-home').classList.contains('active');
           if (isHome) return;
           if (state.isSearchMode) clearSearch();
           else renderHome(true);
         }
-        // --- Search Logic ---
+
         function handleSearch() {
             const query = document.getElementById('search-input').value.trim().toLowerCase();
             document.getElementById('search-clear').style.display = query.length > 0 ? 'block' : 'none';
-            if(query.length < 1) {
-                if(state.isSearchMode) {
-                    state.isSearchMode = false;
-                    renderHome();
-                }
-                return;
-            }
-            if (!state.isSearchMode) {
-              history.pushState({ view: 'search' }, '');
-            }
+            if(query.length < 1) { if(state.isSearchMode) { state.isSearchMode = false; renderHome(); } return; }
+            if (!state.isSearchMode) { history.pushState({ view: 'search' }, ''); }
             state.isSearchMode = true;
             let allItems = [];
-            for(let cat in db.items) {
-                db.items[cat].forEach((item, idx) => {
-                    item._catId = cat; item._idx = idx;
-                    allItems.push(item);
-                });
-            }
+            for(let cat in db.items) { db.items[cat].forEach((item, idx) => { item._catId = cat; item._idx = idx; allItems.push(item); }); }
             const lang = state.lang;
             let results = allItems.filter(item => {
                 const t = (item.title[lang] || '').toLowerCase();
@@ -1300,16 +1353,11 @@ function startAutoLangWatch(){
             });
             if(results.length === 0) {
                 results = allItems.filter(item => {
-                    return Object.values(item.title).some(v => v.toLowerCase().includes(query)) ||
-                           Object.values(item.desc).some(v => v.toLowerCase().includes(query));
+                    return Object.values(item.title).some(v => v.toLowerCase().includes(query)) || Object.values(item.desc).some(v => v.toLowerCase().includes(query));
                 });
             }
             const container = document.getElementById('category-content');
-            if(results.length > 0) {
-                renderProductList(container, results, null);
-            } else {
-                container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`;
-            }
+            if(results.length > 0) { renderProductList(container, results, null); } else { container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`; }
             switchView('view-category');
         }
         function clearSearch() {
@@ -1318,51 +1366,39 @@ function startAutoLangWatch(){
             state.isSearchMode = false;
             renderHome();
         }
-        
-// ===== Lock body scroll when any modal is open =====
-let __lockedScrollY = 0;
 
-function lockBodyScroll(){
-  if(document.body.classList.contains('modal-open')) return;
-  __lockedScrollY = window.scrollY || window.pageYOffset || 0;
-  document.body.style.top = `-${__lockedScrollY}px`;
-  document.body.classList.add('modal-open');
-}
+        // ===== Lock body scroll =====
+        let __lockedScrollY = 0;
+        function lockBodyScroll(){
+          if(document.body.classList.contains('modal-open')) return;
+          __lockedScrollY = window.scrollY || window.pageYOffset || 0;
+          document.body.style.top = `-${__lockedScrollY}px`;
+          document.body.classList.add('modal-open');
+        }
+        function unlockBodyScroll(){
+          if(!document.body.classList.contains('modal-open')) return;
+          document.body.classList.remove('modal-open');
+          document.body.style.top = '';
+          window.scrollTo(0, __lockedScrollY);
+        }
+        function unlockBodyScrollIfNoModal(){
+          const pm = document.getElementById('product-modal');
+          const cm = document.getElementById('cart-modal');
+          const lm = document.getElementById('legal-modal');
+          const anyOpen = (pm && pm.style.display === 'flex') || (cm && cm.style.display === 'flex') || (lm && lm.style.display === 'flex');
+          if(anyOpen) return;
+          unlockBodyScroll();
+        }
 
-function unlockBodyScroll(){
-  if(!document.body.classList.contains('modal-open')) return;
-  document.body.classList.remove('modal-open');
-  document.body.style.top = '';
-  window.scrollTo(0, __lockedScrollY);
-}
-
-// 如果还有弹窗开着，就别解锁（避免“购物车弹窗里再打开产品弹窗”的情况）
-function unlockBodyScrollIfNoModal(){
-  const pm = document.getElementById('product-modal');
-  const cm = document.getElementById('cart-modal');
-  const anyOpen =
-    (pm && pm.style.display === 'flex') ||
-    (cm && cm.style.display === 'flex');
-  if(anyOpen) return;
-  unlockBodyScroll();
-}
-
-        // --- Modal Logic ---
+        // --- Product Modal Logic ---
         function getProductQtyMapFromCart(productId){
             const preset = {};
-            for(const ci of state.cart){
-              if(ci.productId === productId){
-                preset[ci.variantId] = (preset[ci.variantId] || 0) + (Number(ci.qty) || 0);
-              }
-            }
+            for(const ci of state.cart){ if(ci.productId === productId){ preset[ci.variantId] = (preset[ci.variantId] || 0) + (Number(ci.qty) || 0); } }
             return preset;
         }
         function buildVariantQtyMap(item, preset){
             const m = {};
-            (item.variants || []).forEach(v => {
-              const q = preset && preset[v.id] !== undefined ? Number(preset[v.id]) : 0;
-              m[v.id] = Math.max(0, isFinite(q) ? q : 0);
-            });
+            (item.variants || []).forEach(v => { const q = preset && preset[v.id] !== undefined ? Number(preset[v.id]) : 0; m[v.id] = Math.max(0, isFinite(q) ? q : 0); });
             return m;
         }
         function renderVariantQtyList(){
@@ -1399,8 +1435,7 @@ function unlockBodyScrollIfNoModal(){
             updateModalPrice();
         }
         function _formatCtaText(qty, amount){
-          const a = `€${Number(amount).toFixed(2)}`;
-          const dot = ' · ';
+          const a = `€${Number(amount).toFixed(2)}`; const dot = ' · ';
           if(state.lang === 'cn') return `添加${qty}${dot}${a}`;
           if(state.lang === 'pt') return `Adicionar ${qty}${dot}${a}`;
           return `Add ${qty}${dot}${a}`;
@@ -1419,10 +1454,7 @@ function unlockBodyScrollIfNoModal(){
             let preset = {};
             if (editCartItem) {
                 item = findItemById(editCartItem.productId);
-                if(!item){
-                  showToast(texts[state.lang].missing);
-                  return;
-                }
+                if(!item){ showToast(texts[state.lang].missing); return; }
                 preset = getProductQtyMapFromCart(item.id);
                 state.modal.editProductId = item.id;
             } else {
@@ -1438,7 +1470,7 @@ function unlockBodyScrollIfNoModal(){
             updateModalPrice();
             const modal = document.getElementById('product-modal');
             const shell = document.getElementById('modal-shell');
-lockBodyScroll();
+            lockBodyScroll();
             modal.style.display = 'flex';
             modal.style.opacity = 1;
             requestAnimationFrame(() => shell.classList.add('open'));
@@ -1457,27 +1489,20 @@ lockBodyScroll();
             const label = document.getElementById('txt-add-btn');
             if(label) label.innerText = _formatCtaText(totalQty, total);
             const btn = document.querySelector('#product-modal .btn-add-cart');
-            if(btn){
-              btn.disabled = totalQty <= 0;
-              btn.style.opacity = totalQty <= 0 ? 0.6 : 1;
-            }
+            if(btn){ btn.disabled = totalQty <= 0; btn.style.opacity = totalQty <= 0 ? 0.6 : 1; }
         }
         function _hideProductModal() {
-  const modal = document.getElementById('product-modal');
-  const shell = document.getElementById('modal-shell');
-  shell.classList.remove('open');
-  modal.style.opacity = 0;
-  state.modal.editProductId = null;
-  state.modal.variantQty = {};
-  setTimeout(() => {
-  modal.style.display = 'none';
-  unlockBodyScrollIfNoModal();
-}, 300);
-}
-function closeModalDirect() {
-  _hideProductModal();
-}
+          const modal = document.getElementById('product-modal');
+          const shell = document.getElementById('modal-shell');
+          shell.classList.remove('open');
+          modal.style.opacity = 0;
+          state.modal.editProductId = null;
+          state.modal.variantQty = {};
+          setTimeout(() => { modal.style.display = 'none'; unlockBodyScrollIfNoModal(); }, 300);
+        }
+        function closeModalDirect() { _hideProductModal(); }
         function closeModal(e) { if(e.target.id === 'product-modal') closeModalDirect(); }
+
         // --- Cart Logic ---
         function confirmAddToCart() {
             const item = state.modal.item;
@@ -1485,13 +1510,8 @@ function closeModalDirect() {
             if(!item) return;
             const isEdit = !!state.modal.editProductId;
             let picked = 0;
-            for(const v of (item.variants || [])){
-              picked += (Number(qtyMap[v.id]) || 0);
-            }
-            if(picked <= 0){
-              showToast(state.lang === 'cn' ? '先来点数量呀～' : (state.lang === 'pt' ? 'Escolha uma quantidade 🙂' : 'Pick a qty 🙂'));
-              return;
-            }
+            for(const v of (item.variants || [])){ picked += (Number(qtyMap[v.id]) || 0); }
+            if(picked <= 0){ showToast(state.lang === 'cn' ? '先来点数量呀～' : (state.lang === 'pt' ? 'Escolha uma quantidade 🙂' : 'Pick a qty 🙂')); return; }
             if (isEdit) {
                 for (const v of (item.variants || [])) {
                     const desired = Math.max(0, Number(qtyMap[v.id]) || 0);
@@ -1533,8 +1553,10 @@ function closeModalDirect() {
             const labelEl = document.getElementById('sticky-cart-label');
             if(labelEl){
               const view = texts[state.lang].view || 'View';
-              labelEl.innerText = `${view} ${totalQty} €${totalPrice.toFixed(2)}`;
+              labelEl.innerText = `${view}`;
             }
+            const stickyCart = document.getElementById('sticky-cart');
+            if (stickyCart) stickyCart.style.display = totalQty > 0 ? 'flex' : 'none';
         }
         function openCartModal() {
           const list = document.getElementById('cart-list');
@@ -1548,10 +1570,7 @@ function closeModalDirect() {
               div.className = 'cart-item';
               div.onclick = (e) => {
                 if (e.target.closest('.mini-btn')) return;
-                if (r.missing) {
-                  showToast(texts[state.lang].missing);
-                  return;
-                }
+                if (r.missing) { showToast(texts[state.lang].missing); return; }
                 openProductModal(null, null, ci);
               };
               const img = r.img || 'https://via.placeholder.com/140x140?text=%20';
@@ -1579,10 +1598,7 @@ function closeModalDirect() {
             });
           }
           let total = 0;
-          for (const ci of state.cart) {
-            const r = resolveCartItem(ci);
-            if (!r.missing) total += (r.price * r.qty);
-          }
+          for (const ci of state.cart) { const r = resolveCartItem(ci); if (!r.missing) total += (r.price * r.qty); }
           document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
           const modal = document.getElementById('cart-modal');
           const shell = document.getElementById('cart-shell');
@@ -1603,43 +1619,156 @@ function closeModalDirect() {
             }
         }
         function _hideCartModal() {
-  const modal = document.getElementById('cart-modal');
-  const shell = document.getElementById('cart-shell');
-  shell.classList.remove('open');
-  modal.style.opacity = 0;
-  setTimeout(() => {
-  modal.style.display = 'none';
-  unlockBodyScrollIfNoModal();
-}, 300);
-}
-function closeCartDirect() {
-  _hideCartModal();
-}
+          const modal = document.getElementById('cart-modal');
+          const shell = document.getElementById('cart-shell');
+          shell.classList.remove('open');
+          modal.style.opacity = 0;
+          setTimeout(() => { modal.style.display = 'none'; unlockBodyScrollIfNoModal(); }, 300);
+        }
+        function closeCartDirect() { _hideCartModal(); }
         function closeCart(e) { if(e.target.id === 'cart-modal') closeCartDirect(); }
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg; t.style.opacity = 1;
             setTimeout(() => t.style.opacity = 0, 1000);
         }
-        // ===== 手机返回键拦截（修复版）=====
-window.addEventListener('popstate', function (e) {
-  const productModal = document.getElementById('product-modal');
-  if (productModal.style.display === 'flex') {
-    _hideProductModal();   // 只关UI，不要pushState
-    return;
-  }
-  const cartModal = document.getElementById('cart-modal');
-  if (cartModal.style.display === 'flex') {
-    _hideCartModal();      // 只关UI，不要pushState
-    return;
-  }
-  // 没有弹窗，才做页面级返回
-  const isHome = document.getElementById('view-home').classList.contains('active');
-  if (!isHome) {
-    goBack();              // 你现有逻辑
-    return;
-  }
-});
+
+        // ==========================================
+        // 5. Legal Modal Logic (Merged from necos.html)
+        // ==========================================
+        function fillLegalTexts(){
+          const L = texts[state.lang];
+          
+          // Footer buttons
+          const b1 = document.getElementById('footer-btn-legal');
+          const b2 = document.getElementById('footer-btn-terms');
+          const b3 = document.getElementById('footer-btn-returns');
+          const b4 = document.getElementById('footer-btn-privacy');
+          const b5 = document.getElementById('footer-btn-disputes');
+          if (b1) b1.innerText = L.footerBtnLegal;
+          if (b2) b2.innerText = L.footerBtnTerms;
+          if (b3) b3.innerText = L.footerBtnReturns;
+          if (b4) b4.innerText = L.footerBtnPrivacy;
+          if (b5) b5.innerText = L.footerBtnDisputes;
+
+          // Headings
+          const ids = {
+             'terms-h2-1': L.termsH2_1, 'terms-h2-2': L.termsH2_2, 'terms-h2-3': L.termsH2_3,
+             'returns-h2-1': L.returnsH2_1, 'returns-h2-2': L.returnsH2_2,
+             'privacy-h2-1': L.privacyH2_1, 'privacy-h2-2': L.privacyH2_2, 'privacy-h2-3': L.privacyH2_3, 'privacy-h2-4': L.privacyH2_4,
+             'disputes-h2-1': L.disputesH2_1, 'disputes-h2-2': L.disputesH2_2,
+             'legal-h2-scope': L.scopeH2, 'legal-h2-contacts': L.contactsH2,
+             'legal-title': L.legalTitle
+          };
+          for(let k in ids) { const el = document.getElementById(k); if(el) el.innerText = ids[k]; }
+
+          // Tabs
+          document.querySelectorAll('.legal-tab').forEach(btn=>{
+            const tab = btn.getAttribute('data-tab');
+            btn.innerText = tab==='legal' ? L.tabLegal : tab==='terms' ? L.tabTerms : tab==='returns' ? L.tabReturns : tab==='privacy' ? L.tabPrivacy : tab==='disputes' ? L.tabDisputes : tab;
+          });
+
+          // Footer Note
+          const y = new Date().getFullYear();
+          const fy = document.getElementById('footer-year');
+          if(fy) fy.innerText = y;
+          const fn = document.getElementById('footer-note-text');
+          if(fn) fn.innerText = (L.footerNote || '').replace('{year}', y);
+
+          // Paragraphs & Ident
+          const ident = document.getElementById('legal-kv-ident');
+          if(ident){
+            ident.innerHTML = `
+              <div><b>${state.lang==='pt'?'Titular':'Owner'}:</b> ${safeText(LEGAL_INFO.ownerName)}</div>
+              <div><b>${state.lang==='pt'?'Morada':'Address'}:</b> ${safeText(LEGAL_INFO.address)}</div>
+              <div><b>${state.lang==='pt'?'Identificação Fiscal':'Tax ID'}:</b> ${safeText(LEGAL_INFO.taxId)}</div>
+              <div><b>Email:</b> ${safeText(LEGAL_INFO.email)}</div>
+              <div><b>${state.lang==='pt'?'Telefone':'Phone'}:</b> ${safeText(LEGAL_INFO.phone)}</div>
+              <div><b>${state.lang==='pt'?'Horário':'Hours'}:</b> ${safeText(LEGAL_INFO.businessHours)}</div>
+            `;
+          }
+          const pIds = {
+            'legal-p-scope': L.scopeP, 'legal-p-contacts': L.contactsP,
+            'terms-p-1': L.termsP1, 'terms-p-3': L.termsP3,
+            'returns-muted': L.returnsMuted,
+            'privacy-p-1': L.privacyP1, 'privacy-p-4': L.privacyP4,
+            'disputes-p-1': L.disputesP1, 'disputes-p-2': L.disputesP2
+          };
+          for(let k in pIds) { const el = document.getElementById(k); if(el) el.innerText = pIds[k]; }
+
+          // Lists
+          const fillList = (id, arr) => {
+             const ul = document.getElementById(id); if(!ul) return;
+             ul.innerHTML = '';
+             (arr||[]).forEach(x => {
+                const li = document.createElement('li');
+                li.innerText = x.replace('{deliveryArea}', safeText(LEGAL_INFO.deliveryArea))
+                                .replace('{deliveryTime}', safeText(LEGAL_INFO.deliveryTime))
+                                .replace('{deliveryFee}', safeText(LEGAL_INFO.deliveryFee));
+                ul.appendChild(li);
+             });
+          };
+          fillList('terms-list-2', L.termsList2);
+          fillList('returns-list-1', L.returnsList1);
+          fillList('returns-list-2', L.returnsList2);
+          fillList('privacy-list-2', L.privacyList2);
+          fillList('privacy-list-3', L.privacyList3);
+
+          // ADR
+          const adr = document.getElementById('legal-kv-adr');
+          if(adr){
+            adr.innerHTML = `
+              <div><b>${state.lang==='pt'?'Entidade RAL':'ADR entity'}:</b> ${safeText(LEGAL_INFO.arbitrationEntity)}</div>
+              <div><b>${state.lang==='pt'?'Website':'Website'}:</b> ${safeText(LEGAL_INFO.arbitrationWebsite)}</div>
+              <div><b>ODR:</b> ${safeText(LEGAL_INFO.odrWebsite)}</div>
+            `;
+          }
+        }
+
+        function switchLegalTab(tab){
+          __legalTab = tab;
+          document.querySelectorAll('.legal-tab').forEach(b=>{ b.classList.toggle('active', b.getAttribute('data-tab')===tab); });
+          document.querySelectorAll('.legal-section').forEach(sec=>{ sec.classList.remove('active'); });
+          const sec = document.getElementById(`legal-section-${tab}`);
+          if(sec) sec.classList.add('active');
+        }
+
+        function openLegalModal(tab='legal'){
+          fillLegalTexts();
+          switchLegalTab(tab);
+          const modal = document.getElementById('legal-modal');
+          const shell = document.getElementById('legal-shell');
+          lockBodyScroll();
+          modal.style.display = 'flex';
+          modal.style.opacity = 1;
+          requestAnimationFrame(()=> shell.classList.add('open'));
+          history.pushState({ modal:true }, '');
+        }
+
+        function _hideLegalModal(){
+          const modal = document.getElementById('legal-modal');
+          const shell = document.getElementById('legal-shell');
+          shell.classList.remove('open');
+          modal.style.opacity = 0;
+          setTimeout(()=>{ modal.style.display = 'none'; unlockBodyScrollIfNoModal(); }, 300);
+        }
+        function closeLegalDirect(){ _hideLegalModal(); }
+        function closeLegalByOverlay(e){ if(e.target.id==='legal-modal') closeLegalDirect(); }
+
+        // ===== 手机返回键拦截 =====
+        window.addEventListener('popstate', function (e) {
+          const productModal = document.getElementById('product-modal');
+          if (productModal.style.display === 'flex') { _hideProductModal(); return; }
+          const cartModal = document.getElementById('cart-modal');
+          if (cartModal.style.display === 'flex') { _hideCartModal(); return; }
+          const legalModal = document.getElementById('legal-modal');
+          if (legalModal && legalModal.style.display === 'flex') { _hideLegalModal(); return; }
+          // 没有弹窗，才做页面级返回
+          const isHome = document.getElementById('view-home').classList.contains('active');
+          if (!isHome) { goBack(); return; }
+        });
+        
+        init();
     </script>
 </body>
 </html>
