@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -545,37 +546,760 @@
                 { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
                 { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
               ]
-            },
-            
-            { id:"l2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-c168cd8a-0bc8-49bc-928e-0ed3239e0ac2.jpeg",
-title:{ cn:"草莓千层蛋糕", en:"Strawberry Melaleuca Cake", pt:"Bolo De Melaleuca De Morango" },
-desc:{ cn:"红丝绒口味的可丽饼皮，夹层为新鲜草莓熬制果酱融合白巧克力奶油，新鲜草莓点缀在蛋糕上面，口味清新独特", en:"The red velvet crepe crust is sandwiched with fresh strawberry jam blended with white chocolate cream. Fresh strawberries are dotted on the cake, giving it a fresh and unique taste.", pt:"Crosta de crepe com sabor a veludo vermelho, prensada com geleia de morango fresca e creme de chocolate branco, morangos frescos estão espalhados por cima do bolo e o sabor é fresco e único" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-] },
-
-{ id:"l3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-3854a4fe-b655-42f2-8521-19638e9e5d9c.jpeg",
-title:{ cn:"抹茶千层蛋糕", en:"Matcha Melaleuca Cake", pt:"Bolo Matcha Melaleuca" },
-desc:{ cn:"特级日本宇治抹茶粉，夹层为抹茶口味的巧克力奶油，口感细腻，层次丰富", en:"Premium Japanese Uji Matcha powder, with a layer of Matcha-flavored chocolate cream, for a delicate taste and rich layers", pt:"Pó Uji matcha japonês de qualidade especial, prensado com creme de chocolate com sabor a matcha, com um sabor delicado e camadas ricas" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:25 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:40 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
-] },
-
-{ id:"l4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-2d13e6b9-ce8b-4516-a663-f9c90e1935ee.jpeg",
-title:{ cn:"芒果千层蛋糕", en:"Mango Melaleuca Cake", pt:"Bolo Melaleuca De Manga" },
-desc:{ cn:"香草口味的可丽饼，夹层包含芒果布丁和白巧奶油，点缀芒果果肉，清新爽口的夏天的感觉", en:"Vanilla-flavored crepes with mango pudding and white chocolate cream in between, dotted with mango pulp, giving you a refreshing summer feel", pt:"Crepe com sabor a baunilha, prensado com pudim de manga e creme de chocolate branco, embelezado com polpa de manga, refrescante sensação de verão" },
-variants:[
-{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
-{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
-{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
-] }
+            }
         ],
+        "custom": [
+            { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
+              title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
+              desc: { cn: "卡通兔子风格。可选巧克力，柠檬，抹茶等口味。", en: "Cartoon style. Available in 4/6 inch.", pt: "Estilo cartoon. Tamanhos 4/6 pol." },
+              variants: [ 
+                  { id:"v1", names: { cn: "4英寸", en: "4 inches", pt: "4 polegadas" }, price: 25 },
+                  { id:"v2", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 38 }
+              ] }
+        ]
+    }
+};
+
+
+        let state = {
+          lang: 'en',
+          isSearchMode: false,
+          cart: [], // ✅ 只存 { uid, productId, variantId, qty }
+          modal: { item: null, variant: null, qty: 1, editUid: null, editProductId: null, variantQty: {} },
+          scroll: { home: { en: 0, pt: 0, cn: 0 } },
+          currentCategoryId: null
+        };
+
+        // ==========================================
+        // 2. Cart persistence (ID 对账方案)
+        // ==========================================
+        const CART_KEY = 'neco_cart_v2';
+
+        function _isValidCartItem(it){
+          return it && typeof it === 'object'
+            && typeof it.uid === 'string'
+            && typeof it.productId === 'string'
+            && typeof it.variantId === 'string'
+            && typeof it.qty === 'number';
+        }
+
+        function saveCart(){
+          try{
+            const data = state.cart.map(it => ({
+              uid: it.uid,
+              productId: it.productId,
+              variantId: it.variantId,
+              qty: it.qty
+            }));
+            localStorage.setItem(CART_KEY, JSON.stringify({
+              v: 2,
+              updatedAt: Date.now(),
+              cart: data
+            }));
+          }catch(e){
+            console.warn('saveCart failed', e);
+          }
+        }
+
+        function loadCart(){
+          try{
+            const raw = localStorage.getItem(CART_KEY);
+            if(!raw) return;
+            const obj = JSON.parse(raw);
+            const arr = (obj && obj.cart) ? obj.cart : obj;
+            if(!Array.isArray(arr)) return;
+
+            state.cart = arr
+              .filter(_isValidCartItem)
+              .map(it => ({
+                uid: it.uid,
+                productId: it.productId,
+                variantId: it.variantId,
+                qty: Math.max(1, Number(it.qty) || 1)
+              }));
+          }catch(e){
+            console.warn('loadCart failed', e);
+          }
+        }
+
+        // ✅ 从最新 db 里“对账/解析”购物车条目
+        function findItemById(productId){
+          for(const cat in db.items){
+            const hit = (db.items[cat] || []).find(p => p.id === productId);
+            if(hit) return hit;
+          }
+          return null;
+        }
+
+        function resolveCartItem(ci){
+          const item = findItemById(ci.productId);
+          if(!item){
+            return {
+              missing: true,
+              uid: ci.uid,
+              qty: ci.qty,
+              productId: ci.productId,
+              variantId: ci.variantId
+            };
+          }
+          const variant = (item.variants || []).find(v => v.id === ci.variantId);
+          if(!variant){
+            return {
+              missing: true,
+              uid: ci.uid,
+              qty: ci.qty,
+              productId: ci.productId,
+              variantId: ci.variantId,
+              img: item.img,
+              title: item.title
+            };
+          }
+          return {
+            missing: false,
+            uid: ci.uid,
+            qty: ci.qty,
+            productId: ci.productId,
+            variantId: ci.variantId,
+            img: item.img,
+            title: item.title,
+            variantNames: variant.names,
+            price: variant.price,
+            _item: item,
+            _variant: variant
+          };
+        }
+
+        // ==========================================
+        // 3. 多语言文案
+        // ==========================================
+  const texts = {
+  cn: { 
+    back: "返回分类", homeTitle: "主页", select: "选择规格", add: "加入订单", update: "更新订单", 
+    view: "查看订单", more: "查看详情", order: "我的订单", total: "总计", 
+    confirm: "确认下单", remove: "移除此商品", empty: "购物车为空", 
+    added: "已加入订单", updated: "订单已更新", editHint: "点击编辑", 
+    searchPh: "搜索蛋糕...", noResult: "未找到相关商品", fallback: "当前语言无结果，已展示其他语言匹配。",
+    missing: "该商品已下架或规格已变更，请移除后重新选择。",
+    missingTitle: "已下架商品",
+    missingVariant: "规格不可用",
+    removeHintMissing: "请移除"
+  },
+  en: { 
+    back: "Back", homeTitle: "Home", select: "Select Size", add: "Add to Order", update: "Update Order", 
+    view: "View Order", more: "More Info", order: "Your Order", total: "Total", 
+    confirm: "Confirm", remove: "Remove Item", empty: "Empty Cart", 
+    added: "Added to Order", updated: "Order Updated", editHint: "Edit item",
+    searchPh: "Search cakes...", noResult: "No results found", fallback: "No results in English, showing matches from other languages.",
+    missing: "Item unavailable (menu updated). Please remove and re-add.",
+    missingTitle: "Unavailable item",
+    missingVariant: "Variant unavailable",
+    removeHintMissing: "REMOVE"
+  },
+  pt: { 
+    back: "Voltar", homeTitle: "Início", select: "Selecione o Tamanho", add: "Adicionar", update: "Atualizar", 
+    view: "Ver Pedido", more: "Mais Info", order: "Seu Pedido", total: "Total", 
+    confirm: "Confirmar", remove: "Remover Item", empty: "Carrinho Vazio", 
+    added: "Adicionado", updated: "Atualizado", editHint: "Editar item",
+    searchPh: "Pesquisar bolos...", noResult: "Nenhum resultado", fallback: "Sem resultados em Português, a mostrar outras línguas.",
+    missing: "Item indisponível (menu atualizado). Remova e adicione novamente.",
+    missingTitle: "Item indisponível",
+    missingVariant: "Variante indisponível",
+    removeHintMissing: "REMOVER"
+  }
+};
+
+        init();
+
+        function init() {
+          loadCart();
+          setLang('en');
+          updateCartBar();
+        }
+
+        function setLang(l) {
+            state.lang = l;
+            document.querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.toggle('active', b.innerText.toLowerCase() === l);
+            });
+            updateUI();
+            if(state.isSearchMode) handleSearch();
+        }
+
+        function onSearchKeyDown(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const input = e.target;
+            input.blur();
+            handleSearch();
+          }
+        }
+
+        function updateTopButtonLabel() {
+          const isHome = document.getElementById('view-home').classList.contains('active');
+          const t = texts[state.lang];
+
+          const txt = document.getElementById('txt-back');
+          if (txt) txt.innerText = isHome ? t.homeTitle : t.back;
+
+          const nav = document.querySelector('.back-nav');
+          if (!nav) return;
+
+          if (isHome) {
+            nav.style.setProperty('--nav-icon', 'url("https://i.ibb.co/kVS4zpC5/IMG-20251219-152124.png")');
+            nav.style.setProperty('--nav-icon-size', '22.5px');
+          } else {
+            nav.style.setProperty('--nav-icon', 'url("https://lestoy.com/love/icones/back.svg")');
+            nav.style.setProperty('--nav-icon-size', '18px');
+          }
+        }
+
+        function updateUI() {
+            const t = texts[state.lang];
+            const ids = {
+                'txt-view-order': t.view, 'txt-your-order': t.order,
+                'txt-select-size': t.select,
+                'txt-total': t.total, 'txt-remove': t.remove
+            };
+            for(let id in ids) {
+                const el = document.getElementById(id);
+                if(el) el.innerText = ids[id];
+            }
+            document.getElementById('search-input').placeholder = t.searchPh;
+
+            if (document.getElementById('view-home').classList.contains('active') && !state.isSearchMode) {
+              state.scroll.home[state.lang] = window.scrollY || 0;
+              renderHome(true);
+            } else if (!state.isSearchMode) {
+              if (document.getElementById('view-category').classList.contains('active') && state.currentCategoryId) {
+                const y = window.scrollY || 0;
+                renderCategory(state.currentCategoryId, { skipSaveHome: true, keepScrollY: y });
+              }
+            }
+
+            const hint = state.lang === 'cn' ? 'search' : 'search';
+            document.getElementById('search-input').setAttribute('enterkeyhint', hint);
+
+            updateCartBar();
+            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
+            refreshProductModalUI();
+            updateTopButtonLabel();
+        }
+
+        function renderHome(restoreScroll = false) {
+          const grid = document.getElementById('category-grid');
+          grid.innerHTML = db.categories.map(c => `
+              <div class="cat-card" onclick="renderCategory('${c.id}')">
+                  <div class="cat-img-box"><img src="${c.img}" class="cat-img" loading="lazy"></div>
+                  <div class="cat-info">
+                      <div class="cat-title">${c.title[state.lang]}</div>
+                      <div class="cat-desc">${c.desc[state.lang]}</div>
+                  </div>
+              </div>
+          `).join('');
+
+          const saved = state.scroll.home[state.lang] || 0;
+          switchView('view-home', restoreScroll ? { scrollTop: saved } : {});
+        }
+
+        function renderCategory(id, opts = {}) {
+          state.currentCategoryId = id;
+          history.pushState({ view: 'category' }, '');
+
+          if (!opts.skipSaveHome) {
+            state.scroll.home[state.lang] = window.scrollY || window.pageYOffset || 0;
+          }
+
+          const items = db.items[id] || [];
+          const container = document.getElementById('category-content');
+          renderProductList(container, items, id);
+
+          if (typeof opts.keepScrollY === 'number') {
+            switchView('view-category', { scrollTop: opts.keepScrollY });
+          } else {
+            switchView('view-category');
+          }
+        }
+
+        function renderProductList(container, items, catId) {
+            container.innerHTML = `
+                <div class="product-list">
+                    ${items.map((item, idx) => `
+                        <div class="prod-card">
+                            <img src="${item.img}" class="prod-img" loading="lazy">
+                            <div class="prod-body">
+                                <div class="prod-title">${item.title[state.lang] || item.title['en']}</div>
+                                <div class="prod-desc">${item.desc[state.lang] || item.desc['en']}</div>
+                                <div class="prod-footer">
+                                    <button class="btn-action" onclick="openProductModal('${item._catId || catId}', ${item._idx !== undefined ? item._idx : idx})">
+                                        ${texts[state.lang].more}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function switchView(viewId, opts = {}) {
+          document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+          document.getElementById(viewId).classList.add('active');
+          updateTopButtonLabel();
+
+          if (opts.noScroll) return;
+
+          const top = typeof opts.scrollTop === 'number' ? opts.scrollTop : 0;
+          requestAnimationFrame(() => window.scrollTo(0, top));
+        }
+
+        function goBack() {
+          const isHome = document.getElementById('view-home').classList.contains('active');
+          if (isHome) return;
+
+          if (state.isSearchMode) clearSearch();
+          else renderHome(true);
+        }
+
+        // --- Search Logic ---
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            document.getElementById('search-clear').style.display = query.length > 0 ? 'block' : 'none';
+
+            if(query.length < 1) {
+                if(state.isSearchMode) {
+                    state.isSearchMode = false;
+                    renderHome();
+                }
+                return;
+            }
+            if (!state.isSearchMode) {
+              history.pushState({ view: 'search' }, '');
+            }
+            state.isSearchMode = true;
+            
+            let allItems = [];
+            for(let cat in db.items) {
+                db.items[cat].forEach((item, idx) => {
+                    item._catId = cat; item._idx = idx;
+                    allItems.push(item);
+                });
+            }
+
+            const lang = state.lang;
+            let results = allItems.filter(item => {
+                const t = (item.title[lang] || '').toLowerCase();
+                const d = (item.desc[lang] || '').toLowerCase();
+                return t.includes(query) || d.includes(query);
+            });
+
+            if(results.length === 0) {
+                results = allItems.filter(item => {
+                    return Object.values(item.title).some(v => v.toLowerCase().includes(query)) ||
+                           Object.values(item.desc).some(v => v.toLowerCase().includes(query));
+                });
+            }
+
+            const container = document.getElementById('category-content');
+            if(results.length > 0) {
+                renderProductList(container, results, null);
+            } else {
+                container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`;
+            }
+            
+            switchView('view-category');
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-clear').style.display = 'none';
+            state.isSearchMode = false;
+            renderHome();
+        }
         
-        "naked": [
-{ id:"n1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-e378d704-2d39-4765-8f46-14c5ece07b85.jpeg",
-title:{ cn:"香草奶油水果裸蛋糕", en:"Vanilla Cream Fruit Naked Cake", pt:"Bolo Nu De Fruta Com Creme De Baunilha" },
-desc:{ cn:"香草戚风蛋糕结合白巧克力奶油，融合草莓、蓝莓、芒果等新鲜水果。口感柔软，清爽，层次丰富，非常健康美味。", en:"Vanilla chiffon cake is combined with white chocolate cream and fresh fruits such as strawberries, blueberries, and mangoes. It has a soft, refreshing texture, rich layers, and is very healthy and delicious.", pt:"O bolo chiffon de baunilha combina creme de chocol
+        // --- Modal Logic ---
+
+        function getProductQtyMapFromCart(productId){
+            const preset = {};
+            for(const ci of state.cart){
+              if(ci.productId === productId){
+                preset[ci.variantId] = (preset[ci.variantId] || 0) + (Number(ci.qty) || 0);
+              }
+            }
+            return preset;
+        }
+
+        function buildVariantQtyMap(item, preset){
+            const m = {};
+            (item.variants || []).forEach(v => {
+              const q = preset && preset[v.id] !== undefined ? Number(preset[v.id]) : 0;
+              m[v.id] = Math.max(0, isFinite(q) ? q : 0);
+            });
+            return m;
+        }
+
+        function renderVariantQtyList(){
+            const item = state.modal.item;
+            const vList = document.getElementById('variant-list');
+            if(!item || !vList) return;
+
+            vList.innerHTML = (item.variants || []).map(v => {
+                const name = v.names[state.lang] || v.names['en'];
+                const priceText = `€ ${Number(v.price).toFixed(2)}`;
+                const q = state.modal.variantQty[v.id] || 0;
+                return `
+                <div class="v-item" data-vid="${v.id}">
+                    <div class="v-left">
+                        <span class="v-name">${name}</span>
+                        <span class="v-subprice">${priceText}</span>
+                    </div>
+                    <div class="v-qty">
+                        <div class="v-qty-btn" onclick="event.stopPropagation(); adjustVariantQty('${v.id}', -1)">-</div>
+                        <span class="v-qty-val" id="v-qty-${v.id}">${q}</span>
+                        <div class="v-qty-btn" onclick="event.stopPropagation(); adjustVariantQty('${v.id}', 1)">+</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function adjustVariantQty(variantId, delta){
+            if(!state.modal || !state.modal.variantQty) return;
+            const cur = Number(state.modal.variantQty[variantId]) || 0;
+            let next = cur + delta;
+            if(next < 0) next = 0;
+            state.modal.variantQty[variantId] = next;
+
+            const el = document.getElementById('v-qty-' + variantId);
+            if(el) el.innerText = next;
+
+            updateModalPrice();
+        }
+
+        function _getCtaVerb(){
+            if(state.lang === 'cn') return '添加';
+            if(state.lang === 'pt') return 'Adicionar';
+            return 'Add';
+        }
+
+        function _formatCtaText(qty, amount){
+  const a = `€${Number(amount).toFixed(2)}`;
+  const dot = ' · ';
+  if(state.lang === 'cn') return `添加${qty}${dot}${a}`;
+  if(state.lang === 'pt') return `Adicionar ${qty}${dot}${a}`;
+  return `Add ${qty}${dot}${a}`;
+}
+
+function _formatConfirmText(qty, amount){
+  const a = `€${Number(amount).toFixed(2)}`;
+  const dot = ' · ';
+  let base = 'Confirm';
+  if(state.lang === 'cn') base = '下单';
+  else if(state.lang === 'pt') base = 'Confirmar';
+
+  if(state.lang === 'cn') return `${base}${qty}${dot}${a}`;
+  return `${base} ${qty}${dot}${a}`;
+}       
+
+        function refreshProductModalUI(){
+            if(document.getElementById('product-modal').style.display !== 'flex') return;
+            const item = state.modal.item;
+            if(!item) return;
+            document.getElementById('m-title').innerText = item.title[state.lang] || item.title['en'];
+            document.getElementById('m-desc').innerText = item.desc[state.lang] || item.desc['en'];
+            renderVariantQtyList();
+            updateModalPrice();
+        }
+
+function openProductModal(catId, itemIdx, editCartItem = null) {
+            let item;
+            let preset = {};
+
+            if (editCartItem) {
+                // ✅ 按 productId / variantId 对账
+                item = findItemById(editCartItem.productId);
+                if(!item){
+                  showToast(texts[state.lang].missing);
+                  return;
+                }
+                preset = getProductQtyMapFromCart(item.id);
+                state.modal.editProductId = item.id;
+            } else {
+                item = db.items[catId][itemIdx];
+                state.modal.editProductId = null;
+            }
+
+            state.modal.item = item;
+            state.modal.variantQty = buildVariantQtyMap(item, preset);
+
+            document.getElementById('m-img').src = item.img;
+            document.getElementById('m-title').innerText = item.title[state.lang] || item.title['en'];
+            document.getElementById('m-desc').innerText = item.desc[state.lang] || item.desc['en'];
+
+            renderVariantQtyList();
+            updateModalPrice();
+            
+            const modal = document.getElementById('product-modal');
+            const shell = document.getElementById('modal-shell');
+            modal.style.display = 'flex';
+            modal.style.opacity = 1;
+            requestAnimationFrame(() => shell.classList.add('open'));
+            history.pushState({ modal: true }, '');
+        }
+
+        function selectVariant(idx) { /* legacy (no-op) */ }
+
+
+        function adjustQty(delta) {
+            let newQty = state.modal.qty + delta;
+            if (newQty < 1) newQty = 1;
+            state.modal.qty = newQty;
+            const el = document.getElementById('m-qty');
+            if(el) el.innerText = newQty;
+            updateModalPrice();
+        }
+
+        function updateModalPrice() {
+            const item = state.modal.item;
+            if(!item) return;
+
+            let totalQty = 0;
+            let total = 0;
+            (item.variants || []).forEach(v => {
+              const q = Number(state.modal.variantQty && state.modal.variantQty[v.id]) || 0;
+              totalQty += q;
+              total += q * (Number(v.price) || 0);
+            });
+
+            const label = document.getElementById('txt-add-btn');
+            if(label) label.innerText = _formatCtaText(totalQty, total);
+
+            const btn = document.querySelector('#product-modal .btn-add-cart');
+            if(btn){
+              btn.disabled = totalQty <= 0;
+              btn.style.opacity = totalQty <= 0 ? 0.6 : 1;
+            }
+        }
+
+        function closeModalDirect() {
+            const modal = document.getElementById('product-modal');
+            const shell = document.getElementById('modal-shell');
+            shell.classList.remove('open');
+            modal.style.opacity = 0;
+            state.modal.editProductId = null;
+            state.modal.variantQty = {};
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+        function closeModal(e) { if(e.target.id === 'product-modal') closeModalDirect(); }
+
+        // --- Cart Logic (ID 对账) ---
+        function confirmAddToCart() {
+            const item = state.modal.item;
+            const qtyMap = state.modal.variantQty || {};
+            if(!item) return;
+
+            const isEdit = !!state.modal.editProductId;
+
+            // 计算一下本次选择的总数/总价（用于 0 的情况）
+            let picked = 0;
+            for(const v of (item.variants || [])){
+              picked += (Number(qtyMap[v.id]) || 0);
+            }
+            if(picked <= 0){
+              // 轻轻提醒一下就好
+              showToast(state.lang === 'cn' ? '先来点数量呀～' : (state.lang === 'pt' ? 'Escolha uma quantidade 🙂' : 'Pick a qty 🙂'));
+              return;
+            }
+
+            if (isEdit) {
+                // ✅ 编辑：按产品维度“覆盖”该商品所有规格的数量
+                for (const v of (item.variants || [])) {
+                    const desired = Math.max(0, Number(qtyMap[v.id]) || 0);
+                    const existing = state.cart.find(c => c.productId === item.id && c.variantId === v.id);
+                    if (desired > 0) {
+                        if (existing) existing.qty = desired;
+                        else state.cart.push({ uid: String(Date.now() + Math.random()), productId: item.id, variantId: v.id, qty: desired });
+                    } else {
+                        if (existing) state.cart.splice(state.cart.indexOf(existing), 1);
+                    }
+                }
+            } else {
+                // ✅ 新增：在购物车里累加
+                for (const v of (item.variants || [])) {
+                    const addQty = Math.max(0, Number(qtyMap[v.id]) || 0);
+                    if (addQty <= 0) continue;
+                    const existing = state.cart.find(c => c.productId === item.id && c.variantId === v.id);
+                    if (existing) existing.qty += addQty;
+                    else state.cart.push({ uid: String(Date.now() + Math.random()), productId: item.id, variantId: v.id, qty: addQty });
+                }
+            }
+
+            closeModalDirect();
+            saveCart();
+            updateCartBar();
+            showToast(isEdit ? texts[state.lang].updated : texts[state.lang].added);
+            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
+        }
+
+        function removeCurrentItem() {
+            const pid = state.modal && state.modal.item ? state.modal.item.id : null;
+            if(!pid) return;
+            state.cart = state.cart.filter(c => c.productId !== pid);
+            saveCart();
+            closeModalDirect();
+            updateCartBar();
+            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
+        }
+
+        function updateCartBar() {
+            let totalQty = 0;
+            let totalPrice = 0;
+            for(const ci of state.cart){
+              totalQty += ci.qty;
+              const r = resolveCartItem(ci);
+              if(!r.missing) totalPrice += (r.price * r.qty);
+            }
+
+            const countEl = document.getElementById('cart-count');
+            if(countEl) countEl.innerText = totalQty;
+
+            const legacyTotalEl = document.getElementById('cart-bar-total');
+            if(legacyTotalEl) legacyTotalEl.innerText = `€ ${totalPrice.toFixed(2)}`;
+
+            const labelEl = document.getElementById('sticky-cart-label');
+            if(labelEl){
+              const view = texts[state.lang].view || 'View';
+              labelEl.innerText = `${view} ${totalQty} €${totalPrice.toFixed(2)}`;
+            }
+        }
+
+        function openCartModal() {
+  const list = document.getElementById('cart-list');
+  list.innerHTML = '';
+
+  if (state.cart.length === 0) {
+    list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
+  } else {
+    state.cart.forEach((ci) => {
+      const r = resolveCartItem(ci);
+
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+
+      // 点击卡片：正常条目 -> 编辑；missing 条目 -> 提示
+      div.onclick = (e) => {
+        if (e.target.closest('.mini-btn')) return;
+
+        if (r.missing) {
+          showToast(texts[state.lang].missing);
+          return;
+        }
+        openProductModal(null, null, ci);
+      };
+
+      // 多语言兜底展示（不再 hardcode）
+      const img = r.img || 'https://via.placeholder.com/140x140?text=%20';
+      const title = r.title
+        ? (r.title[state.lang] || r.title['en'])
+        : texts[state.lang].missingTitle;
+
+      const sku = r.variantNames
+        ? (r.variantNames[state.lang] || r.variantNames['en'])
+        : texts[state.lang].missingVariant;
+
+      const lineTotal = (!r.missing && typeof r.price === 'number')
+        ? (r.price * r.qty)
+        : 0;
+
+      const hintText = r.missing
+        ? texts[state.lang].removeHintMissing
+        : texts[state.lang].editHint;
+
+      div.innerHTML = `
+        <img src="${img}" class="cart-img">
+        <div class="cart-info">
+          <div class="c-title">${title}</div>
+          <div class="c-sku">${sku}</div>
+          <div class="c-price">€ ${lineTotal.toFixed(2)}</div>
+        </div>
+        <div class="cart-actions">
+          <div class="mini-qty">
+            <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', -1)">-</div>
+            <span style="margin:0 5px;">${ci.qty}</span>
+            <div class="mini-btn" onclick="updateCartItemQty('${ci.uid}', 1)">+</div>
+          </div>
+          <div class="edit-hint">${hintText}</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  // 总价：只统计未 missing 的
+  let total = 0;
+  for (const ci of state.cart) {
+    const r = resolveCartItem(ci);
+    if (!r.missing) total += (r.price * r.qty);
+  }
+  document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
+
+  let totalQty = 0;
+  for (const ci of state.cart) totalQty += (Number(ci.qty) || 0);
+
+  const modal = document.getElementById('cart-modal');
+  const shell = document.getElementById('cart-shell');
+  modal.style.display = 'flex';
+  modal.style.opacity = 1;
+  requestAnimationFrame(() => shell.classList.add('open'));
+  history.pushState({ modal: true }, '');
+}
+        function updateCartItemQty(uid, delta) {
+            const item = state.cart.find(c => c.uid === uid);
+            if(item) {
+                item.qty += delta;
+                if(item.qty <= 0) state.cart.splice(state.cart.indexOf(item), 1);
+                saveCart();
+                updateCartBar();
+                openCartModal(); 
+            }
+        }
+
+        function closeCartDirect() {
+            const modal = document.getElementById('cart-modal');
+            const shell = document.getElementById('cart-shell');
+            shell.classList.remove('open');
+            modal.style.opacity = 0;
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+        function closeCart(e) { if(e.target.id === 'cart-modal') closeCartDirect(); }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 1000);
+        }
+
+        // ===== 手机返回键拦截 =====
+        window.addEventListener('popstate', function () {
+          const productModal = document.getElementById('product-modal');
+          if (productModal.style.display === 'flex') {
+            closeModalDirect();
+            history.pushState({ modal: true }, '');
+            return;
+          }
+
+          const cartModal = document.getElementById('cart-modal');
+          if (cartModal.style.display === 'flex') {
+            closeCartDirect();
+            history.pushState({ modal: true }, '');
+            return;
+          }
+
+          const isHome = document.getElementById('view-home').classList.contains('active');
+          if (!isHome) {
+            goBack();
+            return;
+          }
+        });
+    </script>
+</body>
+</html>
