@@ -26,14 +26,14 @@
             font-family: 'Nunito', sans-serif;
         }
         html {
-  overflow-y: scroll;  /* 不管内容够不够，都保留滚动条槽位 */
-}
+          overflow-y: scroll;
+        }
         body {
             background-color: var(--bg);
             color: var(--primary);
             margin: 0;
             padding-top: var(--header-h);
-            padding-bottom: 100px;
+            padding-bottom: 82px;
             overflow-x: hidden;
         }
 
@@ -75,27 +75,26 @@
         .search-hero-inner:focus-within { box-shadow: 0 8px 30px rgba(16, 41, 64, 0.15); }
         
       .search-icon {
-  width: 20px;
-  height: 20px;
-  background-color: #999; /* 默认灰 */
+        width: 20px;
+        height: 20px;
+        background-color: #999;
 
-  -webkit-mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
-  -webkit-mask-size: contain;
-  mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
-  mask-size: contain;
+        -webkit-mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
+        -webkit-mask-size: contain;
+        mask: url("https://lestoy.com/love/icones/search.svg") no-repeat center;
+        mask-size: contain;
 
-  display: inline-block;
-}
-.search-hero-inner:has(#search-input:not(:placeholder-shown)) .search-icon{
-  background-color: var(--primary);
-  color: var(--primary);
-}
+        display: inline-block;
+      }
+      .search-hero-inner:has(#search-input:not(:placeholder-shown)) .search-icon{
+        background-color: var(--primary);
+        color: var(--primary);
+      }
 
-/* （可选）没文字时隐藏清除按钮 */
-#search-input:placeholder-shown ~ .search-clear{
-  opacity:0;
-  pointer-events:none;
-}
+      #search-input:placeholder-shown ~ .search-clear{
+        opacity:0;
+        pointer-events:none;
+      }
          
         .search-input {
             flex: 1; border: none; outline: none; background: transparent;
@@ -105,16 +104,15 @@
         .search-input::placeholder { color: #999; }
         
         .search-clear { cursor: pointer; color:var(--primary); font-size: 18px; display: none; }
-input[type="search"]::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-  display: none;
-}
+        input[type="search"]::-webkit-search-cancel-button {
+          -webkit-appearance: none;
+          appearance: none;
+          display: none;
+        }
 
-/* 干掉 Safari 额外装饰 */
-input[type="search"]::-webkit-search-decoration {
-  -webkit-appearance: none;
-}
+        input[type="search"]::-webkit-search-decoration {
+          -webkit-appearance: none;
+        }
 
         /* --- 4. 首页分类 --- */
         .category-grid {
@@ -136,49 +134,45 @@ input[type="search"]::-webkit-search-decoration {
 
         /* --- 5. 列表页 --- */
         .back-nav {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px; 
-}
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px; 
+        }
 
-.nav-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #6e6e73;   /* Apple 常用次级文字 */
-  white-space: nowrap;
-}
+        .nav-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #6e6e73;
+          white-space: nowrap;
+        }
 
         .btn-back {
             background: var(--white); border: 1px solid #E5E7EB;
             padding: 12px 24px 12px 18.5px; border-radius: var(--radius-btn);
             display: inline-flex; align-items: center; gap: 8px;
             font-weight: 800; font-size: 16px; color: var(--primary); cursor: pointer;
-              color: var(--primary); /* 文字颜色 = 图标颜色 */
+              color: var(--primary);
         }
 
+        .back-nav {
+          --nav-icon: url("https://i.ibb.co/Q3hkmW9x/IMG-20251219-145724.png");
+          --nav-icon-size: 22px;
+        }
 
-.back-nav {
-  /* 默认：Home 状态 */
-  --nav-icon: url("https://i.ibb.co/Q3hkmW9x/IMG-20251219-145724.png");
-  --nav-icon-size: 22px;   /* Home 图标更大 */
-}
+        .back-icon {
+          width: var(--nav-icon-size);
+          height: var(--nav-icon-size);
+          background-color: currentColor;
 
-.back-icon {
-  width: var(--nav-icon-size);
-  height: var(--nav-icon-size);
-  background-color: currentColor;
+          -webkit-mask: var(--nav-icon) no-repeat center;
+          -webkit-mask-size: contain;
 
-  -webkit-mask: var(--nav-icon) no-repeat center;
-  -webkit-mask-size: contain;
+          mask: var(--nav-icon) no-repeat center;
+          mask-size: contain;
 
-  mask: var(--nav-icon) no-repeat center;
-  mask-size: contain;
-
-  display: inline-block;
-}
-
-
+          display: inline-block;
+        }
 
         .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .prod-card {
@@ -202,20 +196,19 @@ input[type="search"]::-webkit-search-decoration {
         /* --- 6. 弹窗 (Modal) --- */
         .modal-overlay, .cart-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px); display: none; justify-content: center; align-items: flex-end;
+            backdrop-filter: blur(0.5px); display: none; justify-content: center; align-items: flex-end;
             transition: opacity 0.3s; 
         }
         .cart-overlay { z-index: 2000; }
-        .modal-overlay { z-index: 2100; } /* Product above Cart */
+        .modal-overlay { z-index: 2100; }
 
         @media(min-width: 768px) {
             .modal-overlay, .cart-overlay { align-items: center; }
             .modal-shell, .cart-shell { max-width: 480px !important; border-radius: 24px !important; height: 85vh !important; }
         }
 
-        /* Animation & Structure */
         .modal-shell, .cart-shell {
-            background: var(--white); width: 100%; height: 90vh;
+            background: var(--white); width: 100%; height: 91.25%;
             border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
             position: relative; overflow: hidden;
             transform: translateY(100%); 
@@ -233,7 +226,6 @@ input[type="search"]::-webkit-search-decoration {
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* Modal Content */
         .modal-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; }
         .modal-hero-img { width: 100%; height: 280px; object-fit: cover; display: block; }
         .modal-content-box { padding: 24px; }
@@ -261,9 +253,9 @@ input[type="search"]::-webkit-search-decoration {
         .v-price { font-weight: 800; font-size: 16px; color: var(--primary); }
 
         .modal-footer {
-            padding: 15px 20px 30px 20px; background: var(--white);
-            border-top: 1.5px solid var(--border); z-index: 20;
-            display: flex; flex-direction: column; gap: 15px;
+            padding: 25px 20px 25px 20px; background: var(--white);
+            border-top: 0px solid var(--border); z-index: 20;
+            display: flex; flex-direction: column; gap: 10px;
         }
         .qty-control {
             display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;
@@ -275,16 +267,16 @@ input[type="search"]::-webkit-search-decoration {
         .qty-val { font-size: 20px; font-weight: 800; width: 30px; text-align: center; }
         .btn-add-cart {
             width: 100%; background: var(--accent); color: var(--primary); border: none;
-            padding: 18px 27px; border-radius: var(--radius-btn); font-size: 18px; font-weight: 800;
-            display: flex; justify-content: space-between; cursor: pointer; box-shadow: 0 5px 15px rgba(244, 192, 75, 0.3);
+            padding: 17px 17px; border-radius: var(--radius-btn); font-size: 17px; font-weight: 900;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(244, 192, 75, 0.3);
         }
 
-        /* Cart Content */
         .cart-header {
-            padding: 20px; background: white; text-align: center;
+            padding: 14px 18px; background: white; text-align: center;
             font-weight: 900; font-size: 18px; border-bottom: 1px solid var(--border);
         }
-        .cart-list { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg);}
+        .cart-list { flex: 1; overflow-y: auto; padding: 16px; background: var(--bg);}
         .cart-item {
             background: white; border-radius: 16px; padding: 15px;
             display: flex; gap: 15px; margin-bottom: 15px;
@@ -305,11 +297,10 @@ input[type="search"]::-webkit-search-decoration {
         .mini-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .edit-hint { font-size: 11px; color: #AAA; font-weight: 600; text-transform: uppercase; }
 
-        /* Sticky Cart */
-        .sticky-cart {
+  .sticky-cart {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px; background: var(--primary); color: white;
-            padding: 14px 20px; border-radius: 50px;
+            padding: 15px 20px; border-radius: 50px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 8px 20px rgba(16, 41, 64, 0.3); z-index: 800;
             cursor: pointer; transition: all 0.2s;
@@ -317,7 +308,6 @@ input[type="search"]::-webkit-search-decoration {
         .sticky-cart:active { transform: translateX(-50%) scale(0.96); }
         .badge { background: var(--accent); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 14px; margin-right: 10px; }
 
-        /* Toast */
         .toast {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.85); color: white; padding: 16px 30px;
@@ -329,6 +319,43 @@ input[type="search"]::-webkit-search-decoration {
             padding: 12px; border-radius: var(--radius-btn); font-weight: 800;
             margin-top: 10px; cursor: pointer;
         }
+
+        /* [NEW] Variant rows with per-variant quantity */
+        .v-item{
+            cursor: default;
+        }
+        .v-left{ display:flex; flex-direction:column; gap:4px; }
+        .v-name{ font-weight: 800; font-size: 16px; color: var(--primary); }
+        .v-subprice{ font-weight: 800; font-size: 14px; color: var(--primary); opacity: 0.85; }
+        .v-qty{
+            display:flex; align-items:center; gap:10px;
+            background:#F3F4F6; border-radius: 14px; padding: 6px 10px;
+            font-weight: 900;
+        }
+        .v-qty-btn{
+            width: 28px; height: 28px; border-radius: 12px;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; user-select:none;
+        }
+        .v-qty-val{
+            min-width: 18px; text-align:center; font-weight: 900;
+        }
+
+        /* [NEW] Cart total row (below items, footer still single button) */
+        .cart-total-row{
+            padding: 18px 18px 0px 18px;
+            background: white;
+            border-top: 0px solid var(--border);
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-weight: 900;
+            font-size: 17px;
+        }
+
+        /* Make modal scroll feel roomier */
+        .modal-scroll{ padding-bottom: 10px; }
+
     </style>
 </head>
 <body>
@@ -349,23 +376,22 @@ input[type="search"]::-webkit-search-decoration {
         <!-- [NEW] Permanent Search Bar -->
         <div class="search-hero">
             <div class="back-nav">
-  <button class="btn-back" onclick="goBack()">
-    <span class="back-icon"></span>
-    <span id="txt-back">Home</span>
-  </button>
-</div>
+              <button class="btn-back" onclick="goBack()">
+                <span class="back-icon"></span>
+                <span id="txt-back">Home</span>
+              </button>
+            </div>
             <div class="search-hero-inner">
                 <span class="search-icon"></span>
                 <input
-  type="search"
-  id="search-input"
-  class="search-input"
-  placeholder="Search..."
-  enterkeyhint="search"
-  oninput="handleSearch()"
-  onkeydown="onSearchKeyDown(event)"
->
-
+                  type="search"
+                  id="search-input"
+                  class="search-input"
+                  placeholder="Search..."
+                  enterkeyhint="search"
+                  oninput="handleSearch()"
+                  onkeydown="onSearchKeyDown(event)"
+                >
                 <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
             </div>
         </div>
@@ -404,17 +430,8 @@ input[type="search"]::-webkit-search-decoration {
             </div>
 
             <div class="modal-footer">
-                <div class="qty-control">
-                    <div class="qty-btn" onclick="adjustQty(-1)">-</div>
-                    <div class="qty-val" id="m-qty">1</div>
-                    <div class="qty-btn" onclick="adjustQty(1)">+</div>
-                </div>
                 <button class="btn-add-cart" onclick="confirmAddToCart()">
-                    <span id="txt-add-btn">Add to Order</span>
-                    <span id="m-total-price">€ 0.00</span>
-                </button>
-                <button class="btn-remove" id="btn-remove-item" style="display:none;" onclick="removeCurrentItem()">
-                    <span id="txt-remove">Remove Item</span>
+                    <span id="txt-add-btn">Add 0 €0.00</span>
                 </button>
             </div>
         </div>
@@ -428,11 +445,11 @@ input[type="search"]::-webkit-search-decoration {
                 <div style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="closeCartDirect()">✕</div>
             </div>
             <div class="cart-list" id="cart-list"></div>
+            <div class="cart-total-row">
+                <span id="txt-total">Total</span>
+                <span id="cart-modal-total">€ 0.00</span>
+            </div>
             <div class="modal-footer">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:800; font-size:18px;">
-                    <span id="txt-total">Total</span>
-                    <span id="cart-modal-total">€ 0.00</span>
-                </div>
                 <button class="btn-add-cart" onclick="closeCartDirect()">
                     <span style="width:100%; text-align:center;" id="txt-confirm">Confirm</span>
                 </button>
@@ -456,514 +473,109 @@ input[type="search"]::-webkit-search-decoration {
         // 1. 数据中心
         // ==========================================
         const db = {
-            categories: [
-                { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg", 
-                  title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
-                  desc: { cn: "黑森林 / 提拉米苏 / 红丝绒", en: "Black Forest / Tiramisu / Red Velvet", pt: "Floresta Negra / Tiramisu" } },
-                { id: "layer", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0038becb-7292-4eea-93f7-9fa986281d21.jpeg", 
-                  title: { cn: "招牌千层蛋糕", en: "Signature Layer Cake", pt: "Bolo de Mil Camadas" },
-                  desc: { cn: "手工制作，层层美味", en: "Handmade crepe layers", pt: "Camadas de crepe artesanais" } },
-                { id: "naked", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-11f1f013-ffc3-4c14-a39e-af3edc99dab8.jpeg", 
-                  title: { cn: "原生态裸蛋糕", en: "Naked Fruit Cake", pt: "Bolo Nu" },
-                  desc: { cn: "新鲜水果搭配香草戚风", en: "Fresh fruits with vanilla chiffon", pt: "Frutas frescas com chiffon" } },
-                { id: "cheese", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-e4e9d0e4-c631-4a71-bd6a-52caa7a42fd2.jpeg", 
-                  title: { cn: "芝士与慕斯", en: "Cheesecake & Mousse", pt: "Bolo de queijo e mousse" },
-                  desc: { cn: "天然食材，浓郁口感", en: "Natural ingredients", pt: "Ingredientes naturais" } },
-                { id: "korean", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-153de66b-9952-45d1-9c9d-09d9b1015029.jpeg", 
-                  title: { cn: "韩式奶油调味", en: "Korean Style Cream", pt: "Estilo Coreano" },
-                  desc: { cn: "清新风格，独特调味", en: "Fresh style, flavored cream", pt: "Estilo fresco" } },
-                { id: "custom", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0a61f906-d8d7-45b4-b0c2-c240d5b14e80.jpeg", 
-                  title: { cn: "造型定制蛋糕", en: "Custom Design Cake", pt: "Bolo Personalizado" },
-                  desc: { cn: "有趣外表，好吃好玩", en: "Fun & Delicious", pt: "Divertido e delicioso" } }
-            ],
-            items: {
-                "classic": [
-                    { id:"c1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-b267cf6d-fb4d-4d57-9351-8c69c59c54b2.jpeg",
-                      title: { cn: "红丝绒乳酪蛋糕", en: "Red Velvet Cheesecake", pt: "Cheesecake de Veludo Vermelho" },
-                      desc: { cn: "鲜艳的红色蛋糕层和白色乳酪层形成鲜明对比。口感柔软湿润，甜而不腻。", en: "Bright red cake layer with white cheese layer. Soft, moist, sweet but not greasy.", pt: "Bolo vermelho vivo com camadas de cream cheese. Macio e úmido." },
-                      variants: [ 
-                          { id:"v1", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 42 },
-                          { id:"v2", names: { cn: "8英寸", en: "8 inches", pt: "8 polegadas" }, price: 58 } 
-                      ] },
-                    { id:"c2", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-25ad3750-4ed7-4c4f-a2cc-2d99925374a6.jpeg",
-                      title: { cn: "奶酱黑森林蛋糕", en: "Milk Sauce Black Forest", pt: "Bolo Floresta Negra" },
-                      desc: { cn: "非常浓郁的巧克力海绵蛋糕，夹层包含白巧奶油及酒渍黑樱桃。", en: "Rich chocolate sponge, white/dark choc cream, cherries.", pt: "Pão de ló de chocolate rico, creme de chocolate branco." },
-                      variants: [ 
-                          { id:"v1", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 45 },
-                          { id:"v2", names: { cn: "8英寸", en: "8 inches", pt: "8 polegadas" }, price: 60 } 
-                      ] }
-                ],
-                "layer": [
-                    { id:"l1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-38db952a-2ebb-4af1-b733-a223cede14f3.jpeg",
-                      title: { cn: "巧克力千层蛋糕", en: "Chocolate Mille Crepe", pt: "Bolo De Melaleuca De Chocolate" },
-                      desc: { cn: "浓郁的巧克力可丽饼，夹层为巧克力奶油及慕斯。", en: "Rich chocolate crepe with chocolate mousse.", pt: "Rico crepe de chocolate e mousse." },
-                      variants: [ 
-                          { id:"v1", names: { cn: "切块", en: "Slice", pt: "Fatia" }, price: 6.5 },
-                          { id:"v2", names: { cn: "8寸整圆", en: "Whole (8 inch)", pt: "Inteiro (8 pol)" }, price: 48 } 
-                      ] }
-                ],
-                "custom": [
-                    { id:"u1", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-450495cd-b008-4019-9569-55546dc3f80b.jpeg",
-                      title: { cn: "情侣兔子蛋糕", en: "Couple Rabbit Cake", pt: "Bolo de Coelho Casal" },
-                      desc: { cn: "卡通兔子风格。可选巧克力，柠檬，抹茶等口味。", en: "Cartoon style. Available in 4/6 inch.", pt: "Estilo cartoon. Tamanhos 4/6 pol." },
-                      variants: [ 
-                          { id:"v1", names: { cn: "4英寸", en: "4 inches", pt: "4 polegadas" }, price: 25 },
-                          { id:"v2", names: { cn: "6英寸", en: "6 inches", pt: "6 polegadas" }, price: 38 }
-                      ] }
-                ]
-            }
-        };
-
-   let state = {
-  lang: 'en',
-  isSearchMode: false,
-  cart: [],
-  modal: { item: null, variant: null, qty: 1, editUid: null },
-  scroll: { home: { en: 0, pt: 0, cn: 0 } },
-  currentCategoryId: null // NEW：记住当前分类
-};
-
-
-
-        const texts = {
-            cn: { 
-                back: "返回分类", homeTitle: "主页", select: "选择规格", add: "加入订单", update: "更新订单", 
-                view: "查看订单", more: "查看详情", order: "我的订单", total: "总计", 
-                confirm: "确认下单", remove: "移除此商品", empty: "购物车为空", 
-                added: "已加入订单", updated: "订单已更新", editHint: "点击编辑", 
-                searchPh: "搜索蛋糕...", noResult: "未找到相关商品", fallback: "当前语言无结果，已展示其他语言匹配。"
+    categories: [
+        { id: "classic", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-5a2f691a-f7d5-4d33-b3be-b84ecea1c831.jpeg", 
+          title: { cn: "永远的经典", en: "Eternal Classic", pt: "Clássico Eterno" },
+          desc: { cn: "黑森林 / 提拉米苏 / 红丝绒", en: "Black Forest / Tiramisu / Red Velvet", pt: "Floresta Negra / Tiramisu" } },
+        { id: "layer", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0038becb-7292-4eea-93f7-9fa986281d21.jpeg", 
+          title: { cn: "招牌千层蛋糕", en: "Signature Layer Cake", pt: "Bolo de Mil Camadas" },
+          desc: { cn: "手工制作，层层美味", en: "Handmade crepe layers", pt: "Camadas de crepe artesanais" } },
+        { id: "naked", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-11f1f013-ffc3-4c14-a39e-af3edc99dab8.jpeg", 
+          title: { cn: "原生态裸蛋糕", en: "Naked Fruit Cake", pt: "Bolo Nu" },
+          desc: { cn: "新鲜水果搭配香草戚风", en: "Fresh fruits with vanilla chiffon", pt: "Frutas frescas com chiffon" } },
+        { id: "cheese", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-e4e9d0e4-c631-4a71-bd6a-52caa7a42fd2.jpeg", 
+          title: { cn: "芝士与慕斯", en: "Cheesecake & Mousse", pt: "Bolo de queijo e mousse" },
+          desc: { cn: "天然食材，浓郁口感", en: "Natural ingredients", pt: "Ingredientes naturais" } },
+        { id: "korean", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-153de66b-9952-45d1-9c9d-09d9b1015029.jpeg", 
+          title: { cn: "韩式奶油调味", en: "Korean Style Cream", pt: "Estilo Coreano" },
+          desc: { cn: "清新风格，独特调味", en: "Fresh style, flavored cream", pt: "Estilo fresco" } },
+        { id: "custom", img: "https://dyj6gt4964deb.cloudfront.net/images/crop-0a61f906-d8d7-45b4-b0c2-c240d5b14e80.jpeg", 
+          title: { cn: "造型定制蛋糕", en: "Custom Design Cake", pt: "Bolo Personalizado" },
+          desc: { cn: "有趣外表，好吃好玩", en: "Fun & Delicious", pt: "Divertido e delicioso" } }
+    ],
+    items: {
+        "classic": [
+            { id:"c1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-b267cf6d-fb4d-4d57-9351-8c69c59c54b2.jpeg",
+              title:{ cn:"红丝绒乳酪蛋糕", en:"Red Velvet Cheesecake", pt:"Cheesecake de Veludo Vermelho" },
+              desc:{
+                en:"1. Appearance: The bright red cake layer and the white cheese layer form a sharp contrast, which is very visually attractive and especially suitable for festivals and celebrations.\n2. Taste: Red velvet cake is soft and moist, and paired with the rich cheese layer, it has a delicate taste, sweet but not greasy.\n3. Flavor: Red velvet cake usually has a hint of cocoa aroma, and paired with the slightly sour cheese, the overall taste is richer.",
+                pt:"1. Aparência: As camadas de bolo vermelho vivo contrastam nitidamente com as camadas de cream cheese branco, criando um efeito visual muito atraente, especialmente adequado para feriados e celebrações.\n2. Textura: O bolo de veludo vermelho é macio e úmido, combinado com as camadas ricas de cream cheese, resultando em uma textura delicada que é doce, mas não excessivamente.\n3. Sabor: O bolo de veludo vermelho geralmente tem um leve aroma de cacau, complementado pela leve acidez do cream cheese, tornando o sabor geral mais complexo e agradável.",
+                cn:"1. 外观： 鲜艳的红色蛋糕层和白色乳酪层形成鲜明对比，视觉效果非常吸引人，特别适合节日和庆典场合。\n2. 口感： 红丝绒蛋糕柔软湿润，搭配浓郁的乳酪层，口感细腻，甜而不腻。\n3. 风味： 红丝绒蛋糕通常带有一丝可可的香气，搭配乳酪的微酸，使整体口味更加丰富。"
+              },
+              variants:[
+                { id:"v1", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:42 },
+                { id:"v2", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:58 }
+              ]
             },
-            en: { 
-                back: "Back", homeTitle: "Home", select: "Select Size", add: "Add to Order", update: "Update Order", 
-                view: "View Order", more: "More Info", order: "Your Order", total: "Total", 
-                confirm: "Confirm", remove: "Remove Item", empty: "Empty Cart", 
-                added: "Added to Order", updated: "Order Updated", editHint: "Edit item",
-                searchPh: "Search cakes...", noResult: "No results found", fallback: "No results in English, showing matches from other languages."
+            { id:"c2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-25ad3750-4ed7-4c4f-a2cc-2d99925374a6.jpeg",
+              title:{ en:"Milk sauce black forest cake", cn:"奶酱黑森林蛋糕", pt:"Bolo floresta negra com molho de leite" },
+              desc:{
+                en:"A very rich chocolate sponge cake, with white chocolate cream, dark chocolate cream, and dark rum-stained black cherries in the middle layer. The improved Chantilly cream has a rich milky aroma. It is a classic handmade cake boutique with a blue ribbon",
+                cn:"非常浓郁的巧克力海绵蛋糕，夹层包含白巧奶油、黑巧奶油，以及黑朗姆酒渍黑樱桃，改良的香缇奶油奶香浓郁，是一款蓝带经典手工蛋糕精品",
+                pt:"Um pão de ló de chocolate muito rico com camadas de creme de chocolate branco, doce de leite de chocolate negro e cerejas pretas embebidas em rum escuro."
+              },
+              variants:[
+                { id:"v1", names:{ en:"6 inches", cn:"6寸", pt:"6 polegadas" }, price:40 },
+                { id:"v2", names:{ en:"8 inches", cn:"8寸", pt:"8 polegadas" }, price:55 }
+              ]
             },
-            pt: { 
-                back: "Voltar", homeTitle: "Início", select: "Selecione o Tamanho", add: "Adicionar", update: "Atualizar", 
-                view: "Ver Pedido", more: "Mais Info", order: "Seu Pedido", total: "Total", 
-                confirm: "Confirmar", remove: "Remover Item", empty: "Carrinho Vazio", 
-                added: "Adicionado", updated: "Atualizado", editHint: "Editar item",
-                searchPh: "Pesquisar bolos...", noResult: "Nenhum resultado", fallback: "Sem resultados em Português, a mostrar outras línguas."
+            { id:"c3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-6f9816fc-5d8f-436d-a97c-baea35005112.jpeg",
+              title:{ pt:"Tiramisu Clássico", cn:"经典提拉米苏", en:"Classic Tiramisu" },
+              desc:{
+                pt:"Um bolo tiramisu italiano muito clássico, queijo mascarpone, bolachas, café expresso líquido, feito à mão com ingredientes frescos.",
+                cn:"非常经典的意式提拉米苏蛋糕，马斯卡彭芝士、手指饼干、意式浓缩咖啡液，新鲜食材手工制作，蛋糕上的整体装饰经过我们的蛋糕师的创作，更显得唯美精致",
+                en:"Very classic Italian tiramisu cake, mascarpone cheese, ladyfingers, espresso liquid, handmade with fresh ingredients, the overall decoration on the cake is created by our baker, making it more beautiful and exquisite"
+              },
+              variants:[
+                { id:"v1", names:{ pt:"6 polegadas", cn:"6寸", en:"6 inches" }, price:38 },
+                { id:"v2", names:{ pt:"8 polegadas", cn:"8寸", en:"8 inches" }, price:49 }
+              ]
             }
-        };
+        ],
+        "layer": [
+            { id:"l1", img:"https://dyj6gt4964deb.cloudfront.net/images/38db952a-2ebb-4af1-b733-a223cede14f3.jpeg",
+              title:{ cn:"巧克力千层蛋糕", en:"Chocolate Melaleuca Cake", pt:"Bolo De Melaleuca De Chocolate" },
+              desc:{
+                cn:"浓郁的巧克力可丽饼，夹层为巧克力奶油，其中还有一层巧克力慕斯，如果你热爱浓郁的巧克力风味，一定不能错过",
+                en:"Rich chocolate crepe, sandwiched with chocolate cream and a layer of chocolate mousse. If you love rich chocolate flavor, you must not miss it.",
+                pt:"Rico crepe de chocolate, prensado com creme de chocolate e uma camada de mousse de chocolate."
+              },
+              variants:[
+                { id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+                { id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+                { id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+              ]
+            },
+            
+            { id:"l2", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-c168cd8a-0bc8-49bc-928e-0ed3239e0ac2.jpeg",
+title:{ cn:"草莓千层蛋糕", en:"Strawberry Melaleuca Cake", pt:"Bolo De Melaleuca De Morango" },
+desc:{ cn:"红丝绒口味的可丽饼皮，夹层为新鲜草莓熬制果酱融合白巧克力奶油，新鲜草莓点缀在蛋糕上面，口味清新独特", en:"The red velvet crepe crust is sandwiched with fresh strawberry jam blended with white chocolate cream. Fresh strawberries are dotted on the cake, giving it a fresh and unique taste.", pt:"Crosta de crepe com sabor a veludo vermelho, prensada com geleia de morango fresca e creme de chocolate branco, morangos frescos estão espalhados por cima do bolo e o sabor é fresco e único" },
+variants:[
+{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:38 },
+{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+] },
 
-        init();
+{ id:"l3", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-3854a4fe-b655-42f2-8521-19638e9e5d9c.jpeg",
+title:{ cn:"抹茶千层蛋糕", en:"Matcha Melaleuca Cake", pt:"Bolo Matcha Melaleuca" },
+desc:{ cn:"特级日本宇治抹茶粉，夹层为抹茶口味的巧克力奶油，口感细腻，层次丰富", en:"Premium Japanese Uji Matcha powder, with a layer of Matcha-flavored chocolate cream, for a delicate taste and rich layers", pt:"Pó Uji matcha japonês de qualidade especial, prensado com creme de chocolate com sabor a matcha, com um sabor delicado e camadas ricas" },
+variants:[
+{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:25 },
+{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:40 },
+{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:55 }
+] },
 
-        function init() {
-            setLang('en'); 
-        }
-
-        function setLang(l) {
-            state.lang = l;
-            document.querySelectorAll('.lang-btn').forEach(b => {
-                b.classList.toggle('active', b.innerText.toLowerCase() === l);
-            });
-            updateUI();
-            if(state.isSearchMode) handleSearch();
-        }
-function onSearchKeyDown(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault(); // 防止表单默认行为
-    const input = e.target;
-
-    // 1) 收起键盘
-    input.blur();
-
-    // 2) 执行搜索（用你现成的逻辑）
-    handleSearch();
-  }
-}
-
-function updateTopButtonLabel() {
-  const isHome = document.getElementById('view-home').classList.contains('active');
-  const t = texts[state.lang];
-
-  const txt = document.getElementById('txt-back');
-  if (txt) txt.innerText = isHome ? t.homeTitle : t.back;
-
-  const nav = document.querySelector('.back-nav');
-  if (!nav) return;
-
-  if (isHome) {
-    // Home：图标大一点
-    nav.style.setProperty('--nav-icon', 'url("https://i.ibb.co/kVS4zpC5/IMG-20251219-152124.png")');
-    nav.style.setProperty('--nav-icon-size', '22.5px');
-  } else {
-    // Back：箭头小一点
-    nav.style.setProperty('--nav-icon', 'url("https://lestoy.com/love/icones/back.svg")');
-    nav.style.setProperty('--nav-icon-size', '18px');
-  }
-}
-
-
-
-        function updateUI() {
-            const t = texts[state.lang];
-            const ids = {
-                'txt-view-order': t.view, 'txt-your-order': t.order,
-                'txt-select-size': t.select, 'txt-add-btn': state.modal.editUid ? t.update : t.add,
-                'txt-total': t.total, 'txt-confirm': t.confirm, 'txt-remove': t.remove
-            };
-            for(let id in ids) {
-                const el = document.getElementById(id);
-                if(el) el.innerText = ids[id];
-            }
-            document.getElementById('search-input').placeholder = t.searchPh;
-
-           if (document.getElementById('view-home').classList.contains('active') && !state.isSearchMode) {
-  // NEW: 语言切换时，保持当前滚动位置
-  state.scroll.home[state.lang] = window.scrollY || 0;
-  renderHome(true);
-}
-
-          else if (!state.isSearchMode) {
-  // NEW：分类页切语言 -> 重渲染当前分类，并保持滚动位置
-  if (document.getElementById('view-category').classList.contains('active') && state.currentCategoryId) {
-    const y = window.scrollY || 0;
-    renderCategory(state.currentCategoryId, { skipSaveHome: true, keepScrollY: y });
-  }
-}
-const hint = state.lang === 'cn' ? 'search' : 'search'; // 这里不用改也行
-document.getElementById('search-input').setAttribute('enterkeyhint', hint);
-
-            updateCartBar();
-            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
-            updateTopButtonLabel();
-
-        }
-
-      function renderHome(restoreScroll = false) {
-  const grid = document.getElementById('category-grid');
-  grid.innerHTML = db.categories.map(c => `
-      <div class="cat-card" onclick="renderCategory('${c.id}')">
-          <div class="cat-img-box"><img src="${c.img}" class="cat-img" loading="lazy"></div>
-          <div class="cat-info">
-              <div class="cat-title">${c.title[state.lang]}</div>
-              <div class="cat-desc">${c.desc[state.lang]}</div>
-          </div>
-      </div>
-  `).join('');
-
-  const saved = state.scroll.home[state.lang] || 0;
-
-  // NEW: 恢复滚动 or 默认顶部
-  switchView('view-home', restoreScroll ? { scrollTop: saved } : {});
-}
-
-
-function renderCategory(id, opts = {}) {
-  state.currentCategoryId = id; // NEW
-
-  // 只有从首页点进来时才记录首页滚动；语言切换重渲染时别覆盖
-  if (!opts.skipSaveHome) {
-    state.scroll.home[state.lang] = window.scrollY || window.pageYOffset || 0;
-  }
-
-  const items = db.items[id] || [];
-  const container = document.getElementById('category-content');
-  renderProductList(container, items, id);
-
-  // 如果是在分类页切语言，别滚回顶部
-  if (typeof opts.keepScrollY === 'number') {
-    switchView('view-category', { scrollTop: opts.keepScrollY });
-  } else {
-    switchView('view-category');
-  }
-}
-
-
+{ id:"l4", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-2d13e6b9-ce8b-4516-a663-f9c90e1935ee.jpeg",
+title:{ cn:"芒果千层蛋糕", en:"Mango Melaleuca Cake", pt:"Bolo Melaleuca De Manga" },
+desc:{ cn:"香草口味的可丽饼，夹层包含芒果布丁和白巧奶油，点缀芒果果肉，清新爽口的夏天的感觉", en:"Vanilla-flavored crepes with mango pudding and white chocolate cream in between, dotted with mango pulp, giving you a refreshing summer feel", pt:"Crepe com sabor a baunilha, prensado com pudim de manga e creme de chocolate branco, embelezado com polpa de manga, refrescante sensação de verão" },
+variants:[
+{ id:"v1", names:{ cn:"4英寸", en:"4 inches", pt:"4 polegadas" }, price:23 },
+{ id:"v2", names:{ cn:"6英寸", en:"6 inches", pt:"6 polegadas" }, price:36 },
+{ id:"v3", names:{ cn:"8英寸", en:"8 inches", pt:"8 polegadas" }, price:48 }
+] }
+        ],
         
-        function renderProductList(container, items, catId) {
-            container.innerHTML = `
-                <div class="product-list">
-                    ${items.map((item, idx) => `
-                        <div class="prod-card">
-                            <img src="${item.img}" class="prod-img" loading="lazy">
-                            <div class="prod-body">
-                                <div class="prod-title">${item.title[state.lang] || item.title['en']}</div>
-                                <div class="prod-desc">${item.desc[state.lang] || item.desc['en']}</div>
-                                <div class="prod-footer">
-                                    <button class="btn-action" onclick="openProductModal('${item._catId || catId}', ${item._idx !== undefined ? item._idx : idx})">
-                                        ${texts[state.lang].more}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-     function switchView(viewId, opts = {}) {
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-  document.getElementById(viewId).classList.add('active');
-updateTopButtonLabel();
-
-  // 默认滚到顶部；如果传了 opts.scrollTop 就恢复到指定位置；如果 opts.noScroll 就不动
-  if (opts.noScroll) return;
-
-  const top = typeof opts.scrollTop === 'number' ? opts.scrollTop : 0;
-  requestAnimationFrame(() => window.scrollTo(0, top));
-}
-
-        
-function goBack() {
-  const isHome = document.getElementById('view-home').classList.contains('active');
-  if (isHome) return; // 主页点它不做事（你也可以改成滚到顶部）
-
-  if (state.isSearchMode) clearSearch();
-  else renderHome(true);
-}
-
-
-
-        // --- Search Logic ---
-        function handleSearch() {
-            const query = document.getElementById('search-input').value.trim().toLowerCase();
-            document.getElementById('search-clear').style.display = query.length > 0 ? 'block' : 'none';
-
-            if(query.length < 1) {
-                if(state.isSearchMode) {
-                    state.isSearchMode = false;
-                    renderHome();
-                }
-                return;
-            }
-
-            state.isSearchMode = true;
-            
-            // Flatten all items
-            let allItems = [];
-            for(let cat in db.items) {
-                db.items[cat].forEach((item, idx) => {
-                    item._catId = cat; item._idx = idx; // Store ref
-                    allItems.push(item);
-                });
-            }
-
-            // Strategy: 1. Current Lang  2. Fallback
-            const lang = state.lang;
-            let results = allItems.filter(item => {
-                const t = (item.title[lang] || '').toLowerCase();
-                const d = (item.desc[lang] || '').toLowerCase();
-                return t.includes(query) || d.includes(query);
-            });
-
-            let isFallback = false;
-            if(results.length === 0) {
-                // Fallback search
-                results = allItems.filter(item => {
-                    return Object.values(item.title).some(v => v.toLowerCase().includes(query)) ||
-                           Object.values(item.desc).some(v => v.toLowerCase().includes(query));
-                });
-                if(results.length > 0) isFallback = true;
-            }
-
-            // Render Results
-            const container = document.getElementById('category-content');
-            if(results.length > 0) {
-                renderProductList(container, results, null); // catId null means search mode
-            } else {
-                container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].noResult}</div>`;
-            }
-            
-            switchView('view-category');
-        }
-
-        function clearSearch() {
-            document.getElementById('search-input').value = '';
-            document.getElementById('search-clear').style.display = 'none';
-            state.isSearchMode = false;
-            renderHome();
-        }
-        
-        // --- Modal Logic ---
-        function openProductModal(catId, itemIdx, editCartItem = null) {
-            let item, variant, qty = 1;
-            
-            if (editCartItem) {
-                // Find item by ID scan (safe way)
-                for(let c in db.items) {
-                    const found = db.items[c].find(i => i === editCartItem._rawItem || i.title.en === editCartItem.title.en); // Fallback match
-                    if(found) { item = found; break; }
-                }
-                // Fallback if raw obj stored
-                if(!item && editCartItem._rawItem) item = editCartItem._rawItem;
-                
-                variant = item.variants.find(v => v.price === editCartItem.price); // Simplified match
-                qty = editCartItem.qty;
-                state.modal.editUid = editCartItem.uid;
-                document.getElementById('btn-remove-item').style.display = 'block';
-                document.getElementById('txt-add-btn').innerText = texts[state.lang].update;
-            } else {
-                item = db.items[catId][itemIdx];
-                variant = item.variants[0];
-                state.modal.editUid = null;
-                document.getElementById('btn-remove-item').style.display = 'none';
-                document.getElementById('txt-add-btn').innerText = texts[state.lang].add;
-            }
-
-            state.modal.item = item;
-            state.modal.variant = variant;
-            state.modal.qty = qty;
-
-            document.getElementById('m-img').src = item.img;
-            document.getElementById('m-title').innerText = item.title[state.lang] || item.title['en'];
-            document.getElementById('m-desc').innerText = item.desc[state.lang] || item.desc['en'];
-            document.getElementById('m-qty').innerText = qty;
-
-            const vList = document.getElementById('variant-list');
-            vList.innerHTML = item.variants.map((v, idx) => {
-                const isSelected = (v.id === variant.id) ? 'selected' : '';
-                return `
-                <div class="v-item ${isSelected}" onclick="selectVariant(${idx})">
-                    <div class="v-info">
-                        <div class="v-radio"></div>
-                        <span class="v-text">${v.names[state.lang] || v.names['en']}</span>
-                    </div>
-                    <span class="v-price">€ ${v.price}</span>
-                </div>
-            `}).join('');
-
-            updateModalPrice();
-            
-            const modal = document.getElementById('product-modal');
-            const shell = document.getElementById('modal-shell');
-            modal.style.display = 'flex';
-            modal.style.opacity = 1;
-            // Trigger animation
-            requestAnimationFrame(() => shell.classList.add('open'));
-        }
-
-        function selectVariant(idx) {
-            state.modal.variant = state.modal.item.variants[idx];
-            const els = document.querySelectorAll('.v-item');
-            els.forEach((el, i) => el.classList.toggle('selected', i === idx));
-            updateModalPrice();
-        }
-
-        function adjustQty(delta) {
-            let newQty = state.modal.qty + delta;
-            if (newQty < 1) newQty = 1;
-            state.modal.qty = newQty;
-            document.getElementById('m-qty').innerText = newQty;
-            updateModalPrice();
-        }
-
-        function updateModalPrice() {
-            const total = state.modal.variant.price * state.modal.qty;
-            document.getElementById('m-total-price').innerText = `€ ${total.toFixed(2)}`;
-        }
-
-        function closeModalDirect() {
-            const modal = document.getElementById('product-modal');
-            const shell = document.getElementById('modal-shell');
-            shell.classList.remove('open'); // Slide Down
-            modal.style.opacity = 0; // Fade Out
-            setTimeout(() => { modal.style.display = 'none'; }, 300); // Wait for anim
-        }
-        function closeModal(e) { if(e.target.id === 'product-modal') closeModalDirect(); }
-
-        // --- Cart Logic ---
-        function confirmAddToCart() {
-            const { item, variant, qty, editUid } = state.modal;
-            if (editUid) {
-                const idx = state.cart.findIndex(c => c.uid === editUid);
-                if (idx !== -1) {
-                    state.cart[idx].variantNames = variant.names;
-                    state.cart[idx].price = variant.price;
-                    state.cart[idx].qty = qty;
-                }
-            } else {
-                const existing = state.cart.find(c => c.title.en === item.title.en && c.price === variant.price);
-                if (existing) existing.qty += qty;
-                else state.cart.push({ uid: Date.now(), _rawItem: item, img: item.img, title: item.title, variantNames: variant.names, price: variant.price, qty: qty });
-            }
-            closeModalDirect();
-            updateCartBar();
-            showToast(editUid ? texts[state.lang].updated : texts[state.lang].added);
-            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
-        }
-
-        function removeCurrentItem() {
-            const idx = state.cart.findIndex(c => c.uid === state.modal.editUid);
-            if (idx !== -1) state.cart.splice(idx, 1);
-            closeModalDirect();
-            updateCartBar();
-            if(document.getElementById('cart-modal').style.display === 'flex') openCartModal();
-        }
-
-        function updateCartBar() {
-            const totalQty = state.cart.reduce((sum, item) => sum + item.qty, 0);
-            const totalPrice = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('cart-count').innerText = totalQty;
-            document.getElementById('cart-bar-total').innerText = `€ ${totalPrice.toFixed(2)}`;
-        }
-
-        function openCartModal() {
-            const list = document.getElementById('cart-list');
-            list.innerHTML = '';
-            if(state.cart.length === 0) list.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">${texts[state.lang].empty}</div>`;
-            else {
-                state.cart.forEach((cartItem) => {
-                    const div = document.createElement('div');
-                    div.className = 'cart-item';
-                    div.onclick = (e) => { if(!e.target.closest('.mini-btn')) openProductModal(null, null, cartItem); };
-                    div.innerHTML = `
-                        <img src="${cartItem.img}" class="cart-img">
-                        <div class="cart-info">
-                            <div class="c-title">${cartItem.title[state.lang] || cartItem.title['en']}</div>
-                            <div class="c-sku">${cartItem.variantNames[state.lang] || cartItem.variantNames['en']}</div>
-                            <div class="c-price">€ ${(cartItem.price * cartItem.qty).toFixed(2)}</div>
-                        </div>
-                        <div class="cart-actions">
-                            <div class="mini-qty">
-                                <div class="mini-btn" onclick="updateCartItemQty(${cartItem.uid}, -1)">-</div>
-                                <span style="margin:0 5px;">${cartItem.qty}</span>
-                                <div class="mini-btn" onclick="updateCartItemQty(${cartItem.uid}, 1)">+</div>
-                            </div>
-                            <div class="edit-hint">${texts[state.lang].editHint}</div>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            }
-            const total = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('cart-modal-total').innerText = `€ ${total.toFixed(2)}`;
-            
-            const modal = document.getElementById('cart-modal');
-            const shell = document.getElementById('cart-shell');
-            modal.style.display = 'flex';
-            modal.style.opacity = 1;
-            requestAnimationFrame(() => shell.classList.add('open'));
-        }
-
-        function updateCartItemQty(uid, delta) {
-            const item = state.cart.find(c => c.uid === uid);
-            if(item) {
-                item.qty += delta;
-                if(item.qty <= 0) state.cart.splice(state.cart.indexOf(item), 1);
-                updateCartBar();
-                openCartModal(); 
-            }
-        }
-
-        function closeCartDirect() {
-            const modal = document.getElementById('cart-modal');
-            const shell = document.getElementById('cart-shell');
-            shell.classList.remove('open');
-            modal.style.opacity = 0;
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
-        function closeCart(e) { if(e.target.id === 'cart-modal') closeCartDirect(); }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.opacity = 1;
-            setTimeout(() => t.style.opacity = 0, 2000);
-        }
-    </script>
-</body>
-</html>
+        "naked": [
+{ id:"n1", img:"https://dyj6gt4964deb.cloudfront.net/images/crop-e378d704-2d39-4765-8f46-14c5ece07b85.jpeg",
+title:{ cn:"香草奶油水果裸蛋糕", en:"Vanilla Cream Fruit Naked Cake", pt:"Bolo Nu De Fruta Com Creme De Baunilha" },
+desc:{ cn:"香草戚风蛋糕结合白巧克力奶油，融合草莓、蓝莓、芒果等新鲜水果。口感柔软，清爽，层次丰富，非常健康美味。", en:"Vanilla chiffon cake is combined with white chocolate cream and fresh fruits such as strawberries, blueberries, and mangoes. It has a soft, refreshing texture, rich layers, and is very healthy and delicious.", pt:"O bolo chiffon de baunilha combina creme de chocol
