@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Neco's Orders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ====================
+           1. Necos 设计系统 (Admin版)
+           ==================== */
+        :root {
+            --primary: #102940;
+            --accent: #F4C04B;
+            --bg: #F5F5F7;
+            --white: #FFFFFF;
+            --text-gray: #666666;
+            
+            --radius: 16px;
+            
+            /* 统一阴影系统 */
+            --shadow-float: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --shadow-active: 0 8px 30px rgba(16, 41, 64, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ====================
+           2. 登录界面 (Login Gate)
+           ==================== */
+        #login-view {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-float);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title { font-size: 24px; font-weight: 900; margin-bottom: 30px; color: var(--primary); }
+
+        /* 登录输入框：无边框风格 */
+        .login-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: none;
+            background: var(--white);
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-weight: 700;
+            outline: none;
+            box-shadow: inset 0 0 0 1px #f0f0f0, var(--shadow-float); /* 微弱内描边+投影 */
+            transition: all 0.2s;
+        }
+        .login-input:focus { 
+            box-shadow: var(--shadow-active);
+            transform: translateY(-2px);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(16, 41, 64, 0.2);
+        }
+        .login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 41, 64, 0.3); }
+        .login-btn:active { transform: scale(0.98); }
+
+        /* ====================
+           3. 仪表盘界面 (Dashboard)
+           ==================== */
+        #dashboard-view { display: none; padding: 20px; }
+
+        .admin-header {
+            max-width: 1000px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { font-size: 24px; font-weight: 900; }
+        .logout-btn { 
+            font-size: 14px; font-weight: 800; color: #DC2626; 
+            cursor: pointer; background: none; border: none; 
+            padding: 8px 16px; border-radius: 50px;
+            transition: 0.2s;
+        }
+        .logout-btn:hover { background: #FEE2E2; }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 15px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            color: var(--text-gray);
+            cursor: pointer;
+            white-space: nowrap;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .tab:hover { background: rgba(0,0,0,0.03); color: var(--primary); }
+        .tab.active { background: var(--primary); color: var(--white); box-shadow: 0 4px 12px rgba(16, 41, 64, 0.2); }
+
+        /* Order Card */
+        .order-list { display: flex; flex-direction: column; gap: 15px; }
+        .order-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow-float);
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+        .order-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-active); }
+        
+        .card-main { display: flex; gap: 20px; align-items: center; flex: 1; }
+        .order-id { 
+            font-size: 13px; color: #999; font-weight: 800; 
+            background: #F9FAFB; padding: 6px 10px; border-radius: 8px; 
+        }
+        
+        .customer-info h3 { margin: 0 0 4px 0; font-size: 18px; font-weight: 900; }
+        .customer-info p { margin: 0; font-size: 14px; color: var(--text-gray); font-weight: 600; }
+        
+        .cake-info { 
+            flex: 1.5; padding: 0 25px; 
+            border-left: 2px dashed #F0F0F0; border-right: 2px dashed #F0F0F0; 
+            margin: 0 20px; 
+        }
+        .cake-desc { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+        .delivery-date { font-size: 13px; color: var(--accent); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .card-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; min-width: 120px; }
+        .price { font-size: 20px; font-weight: 900; color: var(--primary); }
+        
+        .status-tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-paid { background: #E6F4EA; color: #137333; }
+        .status-pending { background: #F3F4F6; color: #666; }
+        .status-refunded { background: #FEF2F2; color: #DC2626; text-decoration: line-through; }
+
+        .btn-refund {
+            background: transparent; border: 2px solid #FEE2E2; color: #DC2626;
+            padding: 8px 16px; border-radius: 50px; font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-refund:hover { background: #DC2626; color: white; border-color: #DC2626; }
+
+        .empty-state { text-align: center; padding: 60px; color: #999; font-weight: 700; }
+        
+        @media (max-width: 768px) {
+            .order-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .card-main { width: 100%; justify-content: space-between; }
+            .cake-info { border: none; padding: 15px 0; margin: 0; width: 100%; border-top: 2px dashed #F0F0F0; border-bottom: 2px dashed #F0F0F0; }
+            .card-actions { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-view">
+    <div class="login-card">
+        <div class="login-title">Admin Access</div>
+        <form id="login-form">
+            <input type="password" id="admin-key" class="login-input" placeholder="Enter Secure API Key" required>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+        <p id="login-error" style="color:#DC2626; font-weight:700; margin-top:20px; display:none;">Access Denied</p>
+    </div>
+</div>
+
+<div id="dashboard-view">
+    <div class="admin-header">
+        <div style="font-size: 24px; font-weight: 900;">Neco's Admin</div>
+        <button onclick="logout()" style="background:none; border:none; color:#DC2626; font-weight:800; cursor:pointer;">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('paid')">Active Orders</div>
+            <div class="tab" onclick="switchTab('pending')">Pending</div>
+            <div class="tab" onclick="switchTab('all')">History</div>
+        </div>
+        <div id="order-list"></div>
+    </div>
+</div>
+
+<script>
+    const BASE_API = 'https://restaurant-test.local/wp-json/cake-shop/v1';
+    let allOrders = [];
+    let currentTab = 'paid';
+    // 新增：自动刷新定时器变量
+    let refreshInterval; 
+
+    // 初始化
+    if (sessionStorage.getItem('neco_token')) {
+        showDashboard();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const key = document.getElementById('admin-key').value;
+        if (await verifyKey(key)) {
+            sessionStorage.setItem('neco_token', key);
+            showDashboard();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    });
+
+    async function verifyKey(key) {
+        try {
+            const res = await fetch(`${BASE_API}/get-orders`, {
+                headers: { 'Authorization': 'Bearer ' + key }
+            });
+            return res.status === 200;
+        } catch (e) { return false; }
+    }
+
+    function showDashboard() {
+        document.getElementById('login-view').style.display = 'none';
+        document.getElementById('dashboard-view').style.display = 'block';
+        
+        loadOrders();
+        
+        // 🟢 新增：每 5 秒自动刷新一次数据
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(loadOrders, 3000);
+    }
+
+    function logout() {
+        sessionStorage.removeItem('neco_token');
+        // 登出时清除定时器
+        if (refreshInterval) clearInterval(refreshInterval);
+        location.reload();
+    }
+
+    async function loadOrders() {
+        const token = sessionStorage.getItem('neco_token');
+        // 如果没有 token，停止刷新
+        if (!token) return; 
+
+        try {
+            const res = await fetch(`${BASE_API}/get-orders`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            
+            if (res.status === 403 || res.status === 401) { logout(); return; }
+            
+            const json = await res.json();
+            if (json.success) {
+                // 只有数据真的变了才重新渲染（可选优化，这里简单处理直接渲染）
+                allOrders = json.data;
+                renderList();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function renderList() {
+        const container = document.getElementById('order-list');
+        // 记录当前的滚动位置，防止刷新时页面跳动
+        const scrollPos = container.scrollTop;
+
+        const filtered = allOrders.filter(o => {
+            if (currentTab === 'paid') return o.status === 'paid';
+            if (currentTab === 'pending') return o.status === 'pending' || o.status === 'draft';
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">No orders found.</div>';
+            return;
+        }
+
+        container.innerHTML = filtered.map(o => `
+            <div class="order-card">
+                <div>
+                    <div style="font-weight:900;">${o.customer_name || 'Guest'}</div>
+                    <div style="font-size:13px; color:#666;">${o.phone || '-'}</div>
+                    <div style="margin-top:5px; font-weight:700; color:#102940;">${o.cake_details || 'No details'}</div>
+                    <div style="font-size:10px; color:#ccc; margin-top:5px;">${o.stripe_intent_id}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px; font-weight:900;">€${o.total_price}</div>
+                    <span class="status-tag status-${o.status}">${o.status}</span>
+                    ${o.status === 'paid' ? `<div style="margin-top:10px;"><button class="btn-refund" onclick="refundOrder(${o.id})">Refund</button></div>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        // 恢复滚动位置
+        container.scrollTop = scrollPos;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        renderList();
+    }
+
+    async function refundOrder(id) {
+        if(!confirm('Refund this order? Irreversible.')) return;
+        const token = sessionStorage.getItem('neco_token');
+        const res = await fetch(`${BASE_API}/refund-order`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({order_id: id})
+        });
+        const json = await res.json();
+        if(json.success) { alert('Refunded!'); loadOrders(); }
+        else { alert('Error: ' + json.error); }
+    }
+</script>
+
+</body>
+</html>
