@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout - Neco's Custom Cake</title>
+    <link rel="icon" type="image/png" href="https://lestoy.com/necos/f.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="products.js"></script> 
+    <style>
+        /* ====================
+           1. Design System
+           ==================== */
+        :root {
+            --primary: #102940;
+            --accent: #F4C04B; /* Neco Yellow */
+            --bg: #F5F5F7;
+            --white: #FFFFFF;
+            --text-gray: #666666;
+            --radius: 16px;
+            --header-h: 70px;
+            /* 阴影：保留给卡片容器 */
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0; padding-top: var(--header-h); min-height: 100vh;
+        }
+
+        /* Header */
+        .smart-header {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+            background: var(--white); z-index: 900;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+        }
+        .header-left, .header-right { flex: 1; display: flex; align-items: center; }
+        .header-right { justify-content: flex-end; }
+
+        .btn-back {
+            background: transparent; border: 1px solid #E5E7EB;
+            padding: 8px 16px; border-radius: 50px;
+            display: inline-flex; align-items: center; gap: 8px;
+            font-weight: 800; font-size: 14px; color: var(--primary); cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { background: #F3F4F6; }
+        .back-icon {
+            width: 16px; height: 16px; background-color: currentColor;
+            mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center/contain;
+            -webkit-mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center/contain;
+        }
+
+        .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; }
+        .lang-btn {
+            border: none; background: transparent; padding: 6px 10px;
+            border-radius: 16px; font-size: 12px; font-weight: 800; color: #999;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Layout */
+        .main-container {
+            max-width: 1100px; margin: 0 auto; padding: 40px 20px;
+            display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .main-container.visible { opacity: 1; transform: translateY(0); }
+        
+        /* 📱 响应式布局核心修改 */
+        @media (max-width: 900px) {
+            .main-container { 
+                grid-template-columns: 1fr; 
+                gap: 30px; 
+                padding: 20px;
+            }
+            /* 之前这里有 order: -1，导致卡片跑上面去了。现在删除了，它会自然排在下面 */
+        }
+
+        /* Typography & Forms */
+        h1 { font-size: 22px; font-weight: 900; margin: 0 0 20px 0; color: var(--primary); }
+        h2 { font-size: 16px; font-weight: 800; margin: 0 0 15px 5px; color: var(--primary); text-transform: uppercase; opacity: 0.8; }
+        
+        .section-group { margin-bottom: 35px; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; margin-left: 5px; }
+        
+        /* 🎨 输入框样式：黄色边框，无阴影 */
+        input, textarea {
+            width: 100%; padding: 16px 20px;
+            border: 2px solid #E5E7EB; /* 默认浅灰 */
+            border-radius: var(--radius);
+            font-size: 16px; background: var(--white); color: var(--primary);
+            font-family: 'Nunito', sans-serif; font-weight: 700;
+            box-shadow: none; /* 去除阴影 */
+            transition: all 0.2s; appearance: none;
+        }
+        /* 聚焦时变黄 */
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 0px rgba(244, 192, 75, 0.15); 
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        
+        .form-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .form-group { flex: 1; margin-bottom: 20px; }
+
+        /* Order List Box */
+        .order-summary-box {
+            background: #fff; border-radius: var(--radius); padding: 0 20px;
+            box-shadow: var(--shadow-card); margin-bottom: 35px; overflow: hidden;
+        }
+        .os-item { display: flex; gap: 15px; padding: 20px 0; border-bottom: 1px dashed #eee; }
+        .os-item:last-child { border-bottom: none; }
+        .os-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #f0f0f0; }
+        .os-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .os-title { font-weight: 800; font-size: 15px; line-height: 1.3; }
+        .os-variant { font-size: 13px; color: #888; margin-top: 4px; }
+        .os-price { font-weight: 900; font-size: 15px; }
+
+        /* Summary Card (Right Side) */
+        .summary-card {
+            background: var(--white); border-radius: var(--radius); padding: 30px;
+            box-shadow: var(--shadow-card); position: sticky; top: 100px;
+        }
+        .summary-header { font-size: 20px; font-weight: 900; margin-bottom: 20px; }
+        .feature-list { list-style: none; padding: 0; margin: 0 0 25px 0; }
+        .feature-list li { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; color: #666; font-weight: 700; }
+        .icon-check { color: var(--accent); font-weight: 900; }
+        .price-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 12px; color: #666; font-weight: 700; }
+        .total-row { display: flex; justify-content: space-between; font-size: 24px; font-weight: 900; color: var(--primary); margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+
+        /* Pay Button */
+        #submit {
+            width: 100%; 
+            background: var(--accent); /* Yellow */
+            color: var(--primary);     /* Dark Blue Text */
+            border: none;
+            padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 800;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(244, 192, 75, 0.3);
+            transition: transform 0.1s, opacity 0.2s; margin-top: 25px;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        #submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244, 192, 75, 0.4); }
+        #submit:active { transform: scale(0.98); }
+        #submit:disabled { opacity: 0.6; cursor: not-allowed; background: #e0e0e0; color:#999; box-shadow:none; }
+
+        /* Loading & Success */
+        #loading-screen { position: fixed; top: var(--header-h); left: 0; width: 100%; height: calc(100% - var(--header-h)); background: var(--bg); z-index: 800; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(16, 41, 64, 0.1); border-radius: 50%; border-top-color: var(--accent); animation: spin 0.8s ease-in-out infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        #success-view { display: none; text-align: center; padding: 80px 20px; max-width: 500px; margin: 0 auto; }
+        .success-icon { width: 90px; height: 90px; background: #EAFDF2; color: #1E8E3E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; margin: 0 auto 25px; }
+        #error-message { color: #DC2626; margin-top: 15px; font-weight: 800; font-size: 14px; text-align: center; display: none; }
+        
+        #payment-element { min-height: 200px; }
+    </style>
+</head>
+<body>
+
+<div class="smart-header">
+    <div class="header-left">
+        <button class="btn-back" onclick="history.back()">
+            <span class="back-icon"></span>
+            <span id="txt-back">Back</span>
+        </button>
+    </div>
+    <div class="header-right">
+        <div class="lang-switch">
+            <button class="lang-btn" onclick="setLang('en', true)">EN</button>
+            <button class="lang-btn" onclick="setLang('pt', true)">PT</button>
+            <button class="lang-btn" onclick="setLang('cn', true)">CN</button>
+        </div>
+    </div>
+</div>
+
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-txt">INITIALIZING...</div>
+</div>
+
+<div id="success-view">
+    <div class="success-icon">✓</div>
+    <h1 id="txt-success-title">Order Confirmed!</h1>
+    <p id="txt-success-msg">Thank you. Your order has been received.</p>
+    <button id="submit" onclick="location.href='index.html'" style="margin-top:20px;">
+        <span id="txt-return-home">Return to Home</span>
+    </button>
+</div>
+
+<div class="main-container" id="main-layout">
+    <div class="form-col">
+        <h1 id="txt-items-title">Order Items</h1>
+        <div class="order-summary-box" id="order-items-container"></div>
+
+        <h1 id="txt-details-title">Details</h1>
+        <form id="payment-form">
+            <div class="section-group">
+                <h2 id="txt-contact-title">Contact Info</h2>
+                <div class="form-group">
+                    <label id="lbl-email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="lbl-name">Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="lbl-phone">Phone</label>
+                        <input type="text" id="phone" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-group">
+                <h2 id="txt-pref-title">Preferences</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="lbl-date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label id="lbl-msg">Message</label>
+                    <textarea id="message"></textarea>
+                </div>
+            </div>
+
+            <div class="section-group">
+                <h2 id="txt-payment-title">Payment</h2>
+                <div id="payment-element"></div>
+            </div>
+            <div id="error-message"></div>
+        </form>
+    </div>
+
+    <div class="summary-col">
+        <div class="summary-card">
+            <div class="summary-header" id="txt-summary-title">Total Summary</div>
+            <ul class="feature-list">
+                <li><span class="icon-check">✓</span> <span id="feat-secure">Secure Payment</span></li>
+                <li><span class="icon-check">✓</span> <span id="feat-instant">Instant Confirmation</span></li>
+            </ul>
+            <div class="price-row"><span id="txt-subtotal">Items Total</span><span id="summary-subtotal">€0.00</span></div>
+            <div class="total-row"><span id="txt-total">Total</span><span id="summary-total">€0.00</span></div>
+
+            <button id="submit" onclick="document.getElementById('payment-form').requestSubmit()">
+                <span id="button-text">Pay</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_API = 'https://restaurant-test.local/wp-json/cake-shop/v1';
+    const STRIPE_KEY = 'pk_test_51ShFSFDMBa8CUwtYHBBZtzkG1RpHQwAnSMzvEPXJ2cFG53PsIimbieyysenm0Fep159qY3GXXSaLPcYUGG55irjz00RXG0hP8o'; 
+
+    const texts = {
+        cn: {
+            pageTitle: "订单结算", back: "返回",
+            itemsTitle: "订单内容", detailsTitle: "详细信息", contactTitle: "联系方式", prefTitle: "偏好设置", paymentTitle: "支付",
+            lblEmail: "电子邮箱", lblName: "您的姓名", lblPhone: "电话号码", lblDate: "日期", lblMsg: "留言备注 (过敏/口味等)",
+            summaryTitle: "订单汇总", featSecure: "安全支付", featInstant: "即时确认", subtotal: "商品总计", total: "合计",
+            payBtn: "立即支付", processing: "处理中...",
+            phEmail: "example@email.com", phName: "输入姓名", phPhone: "输入电话", phMsg: "例如：我对花生过敏...",
+            initTxt: "正在创建安全订单...",
+            successTitle: "订单已确认!", successMsg: "感谢您的购买，我们已收到您的订单。", returnHome: "返回首页",
+            emptyCart: "购物车为空，正在返回首页..."
+        },
+        en: {
+            pageTitle: "Checkout", back: "Back",
+            itemsTitle: "Order Items", detailsTitle: "Details", contactTitle: "Contact Info", prefTitle: "Preferences", paymentTitle: "Payment",
+            lblEmail: "Email", lblName: "Full Name", lblPhone: "Phone", lblDate: "Date", lblMsg: "Message / Request",
+            summaryTitle: "Total Summary", featSecure: "Secure Payment", featInstant: "Instant Confirmation", subtotal: "Items Total", total: "Total",
+            payBtn: "Pay Now", processing: "Processing...",
+            phEmail: "example@email.com", phName: "Your Name", phPhone: "910 000 000", phMsg: "Allergies, wishes...",
+            initTxt: "CREATING SECURE ORDER...",
+            successTitle: "Order Confirmed!", successMsg: "Thank you. Your order has been received.", returnHome: "Return to Home",
+            emptyCart: "Cart is empty. Returning to home..."
+        },
+        pt: {
+            pageTitle: "Finalizar Compra", back: "Voltar",
+            itemsTitle: "Artigos", detailsTitle: "Detalhes", contactTitle: "Contactos", prefTitle: "Preferências", paymentTitle: "Pagamento",
+            lblEmail: "Email", lblName: "Nome Completo", lblPhone: "Telefone", lblDate: "Data", lblMsg: "Mensagem / Pedidos",
+            summaryTitle: "Resumo", featSecure: "Pagamento Seguro", featInstant: "Confirmação Imediata", subtotal: "Total Artigos", total: "Total",
+            payBtn: "Finalizar Pedido", processing: "A processar...",
+            phEmail: "exemplo@email.com", phName: "O seu nome", phPhone: "910 000 000", phMsg: "Alergias, desejos...",
+            initTxt: "A CRIAR PEDIDO SEGURO...",
+            successTitle: "Pedido Confirmado!", successMsg: "Obrigado. O seu pedido foi recebido.", returnHome: "Voltar ao Início",
+            emptyCart: "Carrinho vazio. A voltar ao início..."
+        }
+    };
+
+    let state = { lang: 'en', finalAmount: 0 };
+    const stripe = Stripe(STRIPE_KEY);
+    let elements, currentOrderToken;
+
+    // --- Core: Multi-Language & Data Rendering ---
+    function setLang(l, userChosen) {
+        if (!['en','pt','cn'].includes(l)) l = 'en';
+        state.lang = l;
+        if(userChosen) localStorage.setItem('neco_lang_v1', l);
+
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === l));
+
+        const t = texts[l];
+        const ids = {
+            'txt-items-title': t.itemsTitle, 'txt-details-title': t.detailsTitle,
+            'txt-contact-title': t.contactTitle, 'txt-pref-title': t.prefTitle, 'txt-payment-title': t.paymentTitle,
+            'lbl-email': t.lblEmail, 'lbl-name': t.lblName, 'lbl-phone': t.lblPhone,
+            'lbl-date': t.lblDate, 'lbl-msg': t.lblMsg,
+            'txt-summary-title': t.summaryTitle, 'feat-secure': t.featSecure, 'feat-instant': t.featInstant,
+            'txt-subtotal': t.subtotal, 'txt-total': t.total,
+            'loading-txt': t.initTxt, 'txt-success-title': t.successTitle, 'txt-success-msg': t.successMsg, 'txt-return-home': t.returnHome
+        };
+        for(let id in ids) { const el = document.getElementById(id); if(el) el.innerText = ids[id]; }
+
+        document.getElementById('email').placeholder = t.phEmail;
+        document.getElementById('name').placeholder = t.phName;
+        document.getElementById('phone').placeholder = t.phPhone;
+        document.getElementById('message').placeholder = t.phMsg;
+
+        // 更新购物车显示
+        renderCartItems();
+        updatePayButton();
+
+        // 🎨 核心：动态更新 Stripe 组件语言，无需刷新页面
+        if(elements) {
+            elements.update({ locale: state.lang === 'cn' ? 'zh' : state.lang });
+        }
+    }
+
+    function renderCartItems() {
+        const rawCart = localStorage.getItem('neco_checkout_cart');
+        if(!rawCart) return;
+        
+        const cartItems = JSON.parse(rawCart);
+        const container = document.getElementById('order-items-container');
+        let html = '';
+        
+        cartItems.forEach(ci => {
+            const product = findProductById(ci.productId);
+            // 动态获取多语言变体名
+            let variantName = ci.variantName; 
+            if (product && product.variants) {
+                const variant = product.variants.find(v => v.id === ci.variantId);
+                if (variant && variant.names) {
+                    variantName = variant.names[state.lang] || variant.names['en'];
+                }
+            }
+
+            const title = product ? (product.title[state.lang] || product.title['en']) : "Unknown Item";
+            const displayTotal = (ci.price * ci.qty).toFixed(2);
+
+            html += `
+                <div class="os-item">
+                    <img src="${ci.img}" class="os-img">
+                    <div class="os-info">
+                        <div class="os-title">${title}</div>
+                        <div class="os-variant">${variantName} x ${ci.qty}</div>
+                    </div>
+                    <div class="os-price">€${displayTotal}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function updatePayButton() {
+        const btn = document.getElementById('button-text');
+        if(state.finalAmount > 0) {
+            btn.innerText = `${texts[state.lang].payBtn}`;
+        } else {
+            btn.innerText = texts[state.lang].payBtn;
+        }
+    }
+
+    // --- Init ---
+    async function initialize() {
+        const savedLang = localStorage.getItem('neco_lang_v1') || 'en';
+        setLang(savedLang, false);
+
+        const rawCart = localStorage.getItem('neco_checkout_cart');
+        if (!rawCart) { alert(texts[state.lang].emptyCart); window.location.href = 'index.html'; return; }
+        
+        renderCartItems();
+
+        try {
+            const cartItems = JSON.parse(rawCart);
+            const payload = {
+                items: cartItems.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    qty: item.qty,
+                    title: item.title, 
+                    variantName: item.variantName,
+                    approxPrice: item.price
+                }))
+            };
+
+            const res = await fetch(`${BASE_API}/create-intent`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            
+            if(!json.success) throw new Error(json.error || 'Init Failed');
+            
+            const { clientSecret, orderToken, amount } = json.data;
+            currentOrderToken = orderToken;
+            
+            state.finalAmount = (Number(amount) / 100).toFixed(2);
+            document.getElementById('summary-total').innerText = `€${state.finalAmount}`;
+            document.getElementById('summary-subtotal').innerText = `€${state.finalAmount}`;
+            updatePayButton();
+
+            // 🎨 Stripe UI 定制：无阴影 + 黄色边框
+           const appearance = {
+                theme: 'stripe',
+                variables: {
+                    fontFamily: '"Nunito", sans-serif',
+                    colorPrimary: '#F4C04B', // Focus color
+                    colorBackground: '#ffffff',
+                    colorText: '#102940',
+                    borderRadius: '16px',
+                    colorDanger: '#DC2626',
+                    focusBoxShadow: 'none', // 🚨 核心：禁用默认聚焦阴影
+                },
+                rules: {
+                    '.Input': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        padding: '16px 20px'
+                    },
+                    '.Input:focus': {
+                        border: '2px solid #F4C04B', // 聚焦时纯边框
+                        boxShadow: 'none' // 极淡的黄色光晕
+                    },
+                    '.Input--invalid': {
+                        border: '2px solid #DC2626',
+                        boxShadow: 'none'
+                    },
+                    '.Tab': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        backgroundColor: '#ffffff',
+                        color: '#666'
+                    },
+                    '.Tab:hover': {
+                        color: 'none'
+                    },
+                    '.Tab--selected': {
+                        border: '2px solid #F4C04B', /* 选中时的黄色边框 */
+                        color: '#102940',
+                        boxShadow: 'none'
+                    },
+                    '.Tab--selected:focus': {
+                        boxShadow: 'none', /* 去除选中后的黑框 */
+                        border: '2px solid #F4C04B'
+                    },
+                    '.Tab--selected:hover': {
+                        color: '#102940'
+                    },
+                    '.Tab:focus': {
+                        boxShadow: 'none',
+                        border: '2px solid #F4C04B'
+                    },
+                    '.TabIcon': {
+                        color: 'inherit' // 未选中时的颜色
+                    },
+                    '.TabIcon--selected': {
+                        color: '#102940', // 选中时的颜色 (对应 fill)
+                        fill: '#102940'   // 双重保险
+                    }
+                }
+            };
+
+            const fontLoader = {
+                cssSrc: 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap'
+            };
+            elements = stripe.elements({ 
+                clientSecret: clientSecret,
+                appearance, locale: state.lang === 'cn' ? 'zh' : state.lang,
+                fonts: [fontLoader]
+            });
+            const paymentElement = elements.create("payment", { layout: "tabs" });
+            paymentElement.mount("#payment-element");
+
+            paymentElement.on('ready', () => {
+                const loader = document.getElementById('loading-screen');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; document.getElementById('main-layout').classList.add('visible'); }, 400);
+            });
+
+        } catch (e) { console.error(e); alert("System Error: " + e.message); }
+    }
+
+    // --- Submit ---
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const data = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            date: document.getElementById('date').value,
+            message: document.getElementById('message').value
+        };
+
+        try {
+            await fetch(`${BASE_API}/update-order-info`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Order-Token': currentOrderToken }, body: JSON.stringify(data)
+            });
+
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: window.location.href,
+                    payment_method_data: { billing_details: { name: data.name, email: data.email, phone: data.phone } }
+                },
+                redirect: "if_required"
+            });
+
+            if (error) {
+                const errDiv = document.getElementById('error-message');
+                errDiv.innerText = error.message; errDiv.style.display = 'block';
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                localStorage.removeItem('neco_checkout_cart');
+                localStorage.removeItem('neco_cart_v2'); 
+                document.getElementById('main-layout').style.display = 'none';
+                document.getElementById('success-view').style.display = 'block';
+                window.scrollTo(0, 0);
+            }
+        } catch (err) { alert("Error: " + err.message); } finally { setLoading(false); }
+    });
+
+    function setLoading(isLoading) {
+        const btn = document.querySelector("#submit");
+        btn.disabled = isLoading;
+        const txt = document.getElementById("button-text");
+        if(isLoading) txt.innerText = texts[state.lang].processing;
+        else updatePayButton();
+    }
+
+    function findProductById(pid) {
+        if (typeof NECO_DB === 'undefined') return null;
+        for (const cat in NECO_DB.items) {
+            const found = NECO_DB.items[cat].find(p => p.id === pid);
+            if (found) return found;
+        }
+        return null;
+    }
+
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('date').value = tomorrow.toISOString().split('T')[0];
+
+    initialize();
+</script>
+</body>
+</html> 

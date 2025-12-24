@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Neco Admin</title>
+<link rel="icon" type="image/png" href="https://lestoy.com/necos/f.png" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<style>
+  /* --- 1. Design System --- */
+  :root {
+    --primary: #102940;         /* 深蓝主题色 */
+    --accent: #F4C04B;
+    --bg: #F5F5F7;
+    --white: #FFFFFF;
+    --text-gray: #666666;
+    --border: #F0F0F0;
+    --border-strong: #E5E7EB;
+    --radius-box: 20px;
+    --radius-btn: 50px;
+    --radius-input: 14px;
+    --shadow: 0 8px 24px rgba(16, 41, 64, 0.08);
+    --header-h: 70px;
+
+    --field-bg: #F9FAFB;
+    --field-bg-focus: #FFFFFF;
+    --muted: #999;
+    --danger: #EF4444;
+    --danger-bg: #FEE2E2;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body, button, input, select, textarea { font-family: 'Nunito', sans-serif; }
+
+  body {
+    background: var(--bg);
+    color: var(--primary);
+    margin: 0;
+    padding-top: var(--header-h);
+    overflow-x: hidden;
+  }
+
+  /* --- Header --- */
+  .smart-header {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+    background: var(--white); z-index: 900;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+  }
+  .header-left { display: flex; align-items: center; gap: 15px; }
+  .logo-img { height: 44px; width: auto; }
+  .header-title { font-weight: 900; font-size: 18px; }
+
+  /* Lang Switcher */
+  .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; margin-right: 10px; }
+  .lang-btn {
+    border: none; background: transparent; padding: 6px 10px;
+    border-radius: 16px; font-size: 12px; font-weight: 800; color: #999;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .header-actions { display: flex; align-items: center; }
+
+  /* --- Layout --- */
+  .container {
+    max-width: 1200px; margin: 0 auto; padding: 20px;
+    height: calc(100vh - var(--header-h));
+  }
+  .grid-layout {
+    display: grid; grid-template-columns: 380px 1fr; gap: 20px;
+    height: 100%;
+  }
+
+  /* --- Panels --- */
+  .panel {
+    background: var(--white); border-radius: var(--radius-box);
+    box-shadow: var(--shadow); display: flex; flex-direction: column;
+    overflow: hidden; height: 100%; position: relative;
+  }
+
+  .panel-head {
+    padding: 18px 20px; border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.98); z-index: 10;
+  }
+  .panel-title { font-size: 18px; font-weight: 900; }
+  .panel-body { padding: 20px; overflow-y: auto; flex: 1; position: relative; }
+
+  /* Mobile: editor slides */
+  .back-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%; background: #F3F4F6;
+    margin-right: 10px; cursor: pointer; border:none;
+  }
+  .back-icon {
+    width: 18px; height: 18px; background-color: var(--primary);
+    -webkit-mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center;
+    mask-size: contain; display: inline-block;
+  }
+  @media (max-width: 900px) {
+    .grid-layout { display: block; }
+    .editor-panel {
+      position: fixed; inset: 0; top: 0; z-index: 1000;
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      border-radius: 0 !important; height: 100vh;
+    }
+    .editor-panel.open { transform: translateX(0); }
+    .back-btn { display: flex; }
+    .smart-header { z-index: 900; }
+  }
+
+  /* --- List Items --- */
+  .search-box { padding: 0 0 15px 0; border-bottom: 2px solid var(--border); margin-bottom: 15px; }
+  .item-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+  .list-item {
+    display: flex; align-items: center; gap: 15px;
+    padding: 12px; border-radius: 16px; border: 2px solid var(--border);
+    cursor: pointer; transition: all 0.2s; background: #fff;
+  }
+  .list-item:hover, .list-item.active {
+    border-color: var(--accent); box-shadow: 0 4px 12px rgba(244,192,75,0.15);
+  }
+  .item-thumb {
+    width: 60px; height: 60px; border-radius: 12px; object-fit: cover;
+    background: #f0f0f0; flex-shrink: 0;
+  }
+  .item-info { flex: 1; overflow: hidden; }
+  .item-title { font-weight: 800; font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-meta { display: flex; gap: 8px; font-size: 12px; color: #888; font-weight: 700; align-items: center; flex-wrap: wrap; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+  .status-dot.active { background: #10B981; }
+
+  /* --- Form Elements --- */
+  .form-group { margin-bottom: 18px; }
+  label {
+    display: block; font-size: 12px; font-weight: 800; color: #999;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .upload-actions input  {
+    width: 100%;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-input);
+    padding: 12.5px 14px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+
+  input, textarea, .select-native {
+    width: 100%;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-input);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+  input:focus, textarea:focus, .select-native:focus {
+    border-color: var(--accent);
+    background: var(--field-bg-focus);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+  .lang-group {
+    background: #F8F9FA; border-radius: 16px; padding: 15px;
+    border: 2px solid var(--border); margin-bottom: 20px;
+  }
+  .lang-label { font-size: 13px; font-weight: 900; margin-bottom: 10px; display:flex; align-items:center; gap:6px; }
+  .lang-label .lang-pill {
+    font-size: 11px; font-weight: 900; padding: 4px 8px; border-radius: 999px;
+    background: #EEF2F7; color: var(--primary);
+  }
+
+  /* --- Buttons --- */
+  .btn {
+    border: none; border-radius: var(--radius-btn); padding: 12.5px 20px;
+    font-weight: 900; font-size: 14px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary { background: var(--accent); color: var(--primary); box-shadow: 0 4px 12px rgba(244,192,75,0.3); }
+  .btn-ghost { background: #F3F4F6; color: var(--primary); }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); }
+  .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
+  .btn-full { width: 100%; }
+  .btn-small { padding: 8px 14px; font-size: 13px; }
+
+  /* --- Variant Cards --- */
+  .variant-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .v-card {
+    background: #fff; border: 2px solid var(--border); border-radius: 14px; padding: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+  }
+  .v-info { min-width: 0; }
+  .v-info div { font-size: 14px; font-weight: 800; }
+  .v-price { color: var(--primary); font-weight: 900; font-size: 14px; margin-top: 2px; }
+
+  /* --- Select (统一风格，自定义箭头) --- */
+  .select-wrap { position: relative; width: 100%; }
+  .select-native {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 42px;
+    cursor: pointer;
+  }
+  .select-wrap:after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    background-color: var(--primary);
+    -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    mask-size: contain;
+    opacity: 0.9;
+  }
+
+  /* --- 2. Image Upload Layout (图片区域>=50%) --- */
+  .image-upload-container {
+    display: flex; gap: 16px; align-items: stretch;
+    background: #fff; border: 2px solid var(--border); border-radius: 16px; padding: 15px;
+  }
+  .current-img-box {
+    flex: 1 1 50%;
+    min-width: 50%;
+    min-height: 140px;
+    background: #f0f0f0; border-radius: 12px;
+    overflow: hidden; position: relative;
+  }
+  .current-img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .current-img-box .empty-txt {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #999; font-weight: 800; font-size: 12px; text-align: center;
+    padding: 10px;
+  }
+
+  .upload-actions { flex: 1 1 50%; display: flex; flex-direction: column; gap: 10px; justify-content: center; min-width: 0; }
+  .file-input-wrapper { position: relative; width: 100%; }
+  .file-input-wrapper input { padding-left: 10px; }
+
+  @media (max-width: 600px) {
+    .image-upload-container { flex-direction: column; }
+    .current-img-box { width: 100%; min-width: 100%; min-height: 170px; }
+  }
+
+  /* Loading Spinner */
+  .loader-overlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.8);
+    display: none; align-items: center; justify-content: center; z-index: 5;
+  }
+  .loader-overlay.active { display: flex; }
+  .loader {
+    border: 3px solid #f3f3f3; border-top: 3px solid var(--accent);
+    border-radius: 50%; width: 24px; height: 24px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  /* --- Modal --- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(16,41,64,0.6); backdrop-filter: blur(2px);
+    display: none; justify-content: center; align-items: center; z-index: 2000;
+  }
+  .modal-overlay.open { display: flex; }
+.modal-card{
+  background: var(--white);
+  width: 90%;
+  max-width: 420px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+  position: relative;
+
+  /* ✅ 关键：限制弹窗高度 + 三段式 */
+  max-height: min(86vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* ✅ padding 交给内部区域，避免 footer 被挤出屏幕 */
+  padding: 0;
+}
+
+/* 参考 index: close-btn + modal-scroll + modal-footer 的结构 :contentReference[oaicite:2]{index=2} */
+.modal-close-btn{
+  position: absolute;
+  top: 15px; right: 15px;
+  background: rgba(255,255,255,0.9);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: none;
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.modal-scroll{
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;         /* 你原来 modal-card 的 padding，搬到这里 */
+  padding-top: 52px;     /* 给右上角✕让空间 */
+}
+
+.modal-footer{
+  padding: 16px 24px 20px 24px;
+  background: var(--white);
+  border-top: 0px solid var(--border); /* ✅ 保持你 index 也是 0，不动边框体系 :contentReference[oaicite:3]{index=3} */
+  z-index: 20;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: rgba(16,41,64,0.9); color: #fff; padding: 12px 24px;
+    border-radius: 50px; font-weight: 800; z-index: 3000;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+
+  /* helper */
+  .divider { border-top: 2px solid #eee; margin:20px 0; }
+  .muted { font-size: 11px; color: #888; line-height: 1.2; }
+  .empty-state { font-size: 13px; color:#999; padding: 10px; text-align:center; }
+
+  /* =========================
+   Custom Select (cselect)
+   - progressive enhancement over native <select>
+   ========================= */
+
+/* hide native select but keep it in DOM for value + form + existing JS */
+.select-wrap select.select-native.cselect-native {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* the visible control */
+.cselect {
+  position: relative;
+  width: 100%;
+}
+
+.cselect-btn {
+  width: 100%;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-input);
+  padding: 12px 44px 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--field-bg);
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border 0.2s, background 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+
+.cselect-btn:active { transform: scale(0.99); }
+.cselect-btn:focus,
+.cselect-btn.cselect-open {
+  border-color: var(--accent);
+  background: var(--field-bg-focus);
+}
+
+.cselect-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  flex: 1;
+}
+
+.cselect-arrow {
+  width: 18px;
+  height: 18px;
+  background-color: var(--primary);
+  -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+  -webkit-mask-size: contain;
+  mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+  mask-size: contain;
+  opacity: 0.9;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.cselect-btn.cselect-open .cselect-arrow { transform: rotate(180deg); }
+
+/* dropdown panel */
+.cselect-pop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--white);
+  border: 2px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+  z-index: 2500;
+  overflow: hidden;
+  display: none;
+}
+
+.cselect-pop.open { display: block; }
+
+.cselect-search {
+  padding: 12px;
+  border-bottom: 2px solid var(--border);
+  background: rgba(255,255,255,0.98);
+}
+.cselect-search input {
+  width: 100%;
+  border: 2px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--field-bg);
+  outline: none;
+}
+.cselect-search input:focus {
+  border-color: var(--accent);
+  background: var(--field-bg-focus);
+}
+
+.cselect-list {
+  max-height: 260px;
+  overflow: auto;
+  padding: 6px;
+}
+
+.cselect-opt {
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cselect-opt:hover { background: #F3F4F6; }
+.cselect-opt[aria-selected="true"] {
+  background: rgba(244,192,75,0.25);
+}
+.cselect-opt .tick {
+  width: 18px;
+  height: 18px;
+  background-color: var(--primary);
+  -webkit-mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+  -webkit-mask-size: contain;
+  mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+  mask-size: contain;
+  opacity: 0;
+  flex-shrink: 0;
+}
+.cselect-opt[aria-selected="true"] .tick { opacity: 0.95; }
+
+.cselect-empty {
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #999;
+  text-align: center;
+}
+
+/* Mobile: give more room */
+@media (max-width: 600px) {
+  .cselect-list { max-height: 320px; }
+}
+
+</style>
+</head>
+
+<body>
+<header class="smart-header">
+  <div class="header-left">
+    <img class="logo-img" src="https://lestoy.com/necos/logo.png" alt="logo" onerror="this.style.display='none'">
+    <div class="header-title">Admin</div>
+  </div>
+
+  <div class="header-actions">
+    <div class="lang-switch" aria-label="Language Switcher">
+      <button class="lang-btn" onclick="setAdminLang('en')">EN</button>
+      <button class="lang-btn" onclick="setAdminLang('pt')">PT</button>
+      <button class="lang-btn" onclick="setAdminLang('cn')">CN</button>
+    </div>
+
+    <button class="btn btn-ghost btn-icon" id="btnLogout" title="Logout" aria-label="Logout">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid-layout">
+
+    <!-- LEFT: Product List -->
+    <div class="panel" id="listPanel">
+      <div class="panel-head">
+        <div class="panel-title" data-i18n="products">Products</div>
+        <button class="btn btn-primary" onclick="openNewProductModal()">+ <span data-i18n="new">New</span></button>
+      </div>
+
+      <div class="panel-body">
+        <div class="search-box">
+          <input id="searchInput" placeholder="Search..." oninput="renderList()">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+          <div class="select-wrap" style="flex:1">
+            <select id="catFilter" class="select-native" onchange="renderList()">
+              <option value="" data-i18n="allCats">All Categories</option>
+              <option value="classic" data-i18n="cat_classic">Classic</option>
+              <option value="layer" data-i18n="cat_layer">Layer</option>
+              <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="item-list" id="productList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Editor Panel -->
+    <div class="panel editor-panel" id="editorPanel">
+      <div class="panel-head">
+        <button class="back-btn" onclick="closeEditorMobile()"><span class="back-icon"></span></button>
+
+        <div class="panel-title" data-i18n="editProduct">Edit Product</div>
+
+        <div style="display:flex; gap:8px;">
+          <!-- 删除按钮移到底部，不在这里 -->
+          <button class="btn btn-primary" id="btnSave" onclick="saveProduct()" disabled data-i18n="save">Save</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div id="editorEmpty" class="empty-state" style="margin-top:50px;" data-i18n="selectHint">Select a product to edit</div>
+
+        <div id="editorForm" style="display:none;">
+          <!-- 1. Basic Info -->
+          <div class="row-2">
+            <div class="form-group">
+              <label data-i18n="id">ID</label>
+              <input id="pId" disabled style="background:#eee; color:#777;">
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="category">Category</label>
+              <div class="select-wrap">
+                <select id="pCategory" class="select-native">
+                  <option value="classic" data-i18n="cat_classic">Classic</option>
+                  <option value="layer" data-i18n="cat_layer">Layer</option>
+                  <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="form-group">
+              <label data-i18n="sort">Sort Order</label>
+              <input type="number" id="pSort" placeholder="0">
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="status">Status</label>
+              <div class="select-wrap">
+                <select id="pActive" class="select-native">
+                  <option value="1" data-i18n="active">Active</option>
+                  <option value="0" data-i18n="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 2. Image Management -->
+          <div class="form-group">
+            <label data-i18n="image">Product Image</label>
+            <div class="image-upload-container">
+              <div class="current-img-box">
+                <img id="pImgPreview" src="" style="display:none;">
+                <div id="pImgEmpty" class="empty-txt" data-i18n="noImage">No image</div>
+                <div class="loader-overlay" id="imgLoader"><div class="loader"></div></div>
+              </div>
+
+              <div class="upload-actions">
+                <input type="file" id="imgUploadInput" accept="image/*" />
+                <button class="btn btn-ghost btn-full" onclick="uploadImage()" data-i18n="uploadBtn">Upload & Replace</button>
+                <div class="muted">* <span data-i18n="imgNote">New image replaces old one automatically.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 3. Multi-language Content -->
+          <div class="lang-group">
+            <div class="lang-label"><span class="lang-pill">EN</span> <span data-i18n="lang_en">English</span></div>
+            <input id="tEN" placeholder="" style="margin-bottom:10px; font-weight:800;">
+            <textarea id="dEN" placeholder=""></textarea>
+          </div>
+
+          <div class="lang-group">
+            <div class="lang-label"><span class="lang-pill">PT</span> <span data-i18n="lang_pt">Portuguese</span></div>
+            <input id="tPT" placeholder="" style="margin-bottom:10px;">
+            <textarea id="dPT" placeholder=""></textarea>
+          </div>
+
+          <div class="lang-group">
+            <div class="lang-label"><span class="lang-pill">CN</span> <span data-i18n="lang_cn">Chinese</span></div>
+            <input id="tCN" placeholder="" style="margin-bottom:10px;">
+            <textarea id="dCN" placeholder=""></textarea>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 4. Variants -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <label style="margin:0;" data-i18n="variants">VARIANTS</label>
+            <button class="btn btn-ghost btn-small" onclick="openVariantModal()">+ <span data-i18n="add">Add</span></button>
+          </div>
+
+          <div id="variantList" class="variant-list"></div>
+
+          <div class="divider"></div>
+
+          <!-- Delete Product (moved to bottom) -->
+          <button class="btn btn-danger btn-full" id="btnDeleteBottom" onclick="deleteProduct()" disabled data-i18n="deleteProduct">
+            Delete Product
+          </button>
+
+          <div style="height:30px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Variant Editor Modal -->
+<div class="modal-overlay" id="variantModal" onclick="closeModalByOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close-btn" onclick="closeModal('variantModal')" aria-label="Close">✕</button>
+
+    <div class="modal-scroll">
+      <div class="panel-title" style="margin-bottom:20px;" data-i18n="editVariant">Edit Variant</div>
+
+      <div class="form-group">
+        <label data-i18n="priceEuro">Price (€)</label>
+        <input type="number" id="vPriceEuro" placeholder="">
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="variantNameEN">Name (EN)</label>
+        <input id="vNameEN" placeholder="">
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label data-i18n="variantNamePT">Name (PT)</label>
+          <input id="vNamePT" placeholder="">
+        </div>
+        <div class="form-group">
+          <label data-i18n="variantNameCN">Name (CN)</label>
+          <input id="vNameCN" placeholder="">
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label data-i18n="sort">Sort</label>
+          <input type="number" id="vSort" placeholder="0">
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="active">Active</label>
+          <div class="select-wrap">
+            <select id="vActive" class="select-native">
+              <option value="1" data-i18n="yes">Yes</option>
+              <option value="0" data-i18n="no">No</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('variantModal')" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVariant()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Product Modal -->
+<div class="modal-overlay" id="newProductModal" onclick="closeModalByOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close-btn" onclick="closeModal('newProductModal')" aria-label="Close">✕</button>
+
+    <div class="modal-scroll">
+      <div class="panel-title" style="margin-bottom:20px;" data-i18n="newProduct">New Product</div>
+
+      <div class="form-group">
+        <label data-i18n="idUnique">ID (Unique)</label>
+        <input id="newId" placeholder="">
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="category">Category</label>
+        <div class="select-wrap">
+          <select id="newCategory" class="select-native">
+            <option value="classic" data-i18n="cat_classic">Classic</option>
+            <option value="layer" data-i18n="cat_layer">Layer</option>
+            <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Multi-language names for new product -->
+      <div class="lang-group" style="margin-bottom: 14px;">
+        <div class="lang-label"><span class="lang-pill">EN</span> <span data-i18n="lang_en">English</span></div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label data-i18n="productName">Product Name</label>
+          <input id="newNameEN" placeholder="">
+        </div>
+      </div>
+
+      <div class="lang-group" style="margin-bottom: 14px;">
+        <div class="lang-label"><span class="lang-pill">PT</span> <span data-i18n="lang_pt">Portuguese</span></div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label data-i18n="productName">Product Name</label>
+          <input id="newNamePT" placeholder="">
+        </div>
+      </div>
+
+      <div class="lang-group" style="margin-bottom: 0;">
+        <div class="lang-label"><span class="lang-pill">CN</span> <span data-i18n="lang_cn">Chinese</span></div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label data-i18n="productName">Product Name</label>
+          <input id="newNameCN" placeholder="">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newProductModal')" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="createNewProduct()" data-i18n="create">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-overlay" id="loginModal" style="background:var(--primary);" onclick="event.stopPropagation()">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <!-- 登录一般不建议显示关闭按钮；你想要也可以取消注释 -->
+    <!-- <button class="modal-close-btn" onclick="closeModal('loginModal')" aria-label="Close">✕</button> -->
+
+    <div class="modal-scroll" style="text-align:center; padding-top:24px;">
+      <img src="https://lestoy.com/necos/logo.png" style="height:60px; margin-bottom:20px;">
+      <div class="panel-title" style="margin-bottom:10px;" data-i18n="adminAccess">Admin Access</div>
+
+      <div style="text-align:left;">
+        <label data-i18n="adminKey">Admin Key</label>
+        <input type="password" id="adminKeyInput" placeholder="" />
+      </div>
+    </div>
+
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-primary btn-full" style="padding:12px;" onclick="doLogin()" data-i18n="login">Login</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">Msg</div>
+
+
+<script>
+  // --- Config ---
+  const CFG = { api: "neco_adm_api", key: "neco_adm_key" };
+  const S = (id) => document.getElementById(id);
+
+  // State
+  let products = [];
+  let selectedProduct = null;
+  let editingVariantId = null;
+  let currentLang = 'en';
+
+  // --- I18n Texts ---
+  const TEXTS = {
+    en: {
+      // header / general
+      products: "Products",
+      new: "New",
+      search: "Search...",
+      allCats: "All Categories",
+      editProduct: "Edit Product",
+      save: "Save",
+      cancel: "Cancel",
+      create: "Create",
+      login: "Login",
+
+      // labels
+      id: "ID",
+      idUnique: "ID (Unique)",
+      category: "Category",
+      sort: "Sort Order",
+      status: "Status",
+      active: "Active",
+      inactive: "Inactive",
+      yes: "Yes",
+      no: "No",
+      image: "Product Image",
+      uploadBtn: "Upload & Replace",
+      imgNote: "New image replaces old one automatically.",
+      noImage: "No image",
+
+      // categories
+      cat_classic: "Classic",
+      cat_layer: "Layer",
+      cat_seasonal: "Seasonal",
+
+      // list meta
+      metaCategoryPrefix: "Category:",
+      metaSortPrefix: "Sort:",
+
+      // editor empty
+      selectHint: "Select a product to edit",
+
+      // lang labels
+      lang_en: "English",
+      lang_pt: "Portuguese",
+      lang_cn: "Chinese",
+
+      // placeholders for product fields
+      ph_productName_en: "Product Name",
+      ph_productName_pt: "Nome do Produto",
+      ph_productName_cn: "产品名称",
+      ph_desc_en: "Description",
+      ph_desc_pt: "Descrição",
+      ph_desc_cn: "产品描述",
+
+      // variants
+      variants: "VARIANTS",
+      add: "Add",
+      editVariant: "Edit Variant",
+      edit: "Edit",
+      delete: "Delete",
+      noVariants: "No variants added yet.",
+      priceEuro: "Price (€)",
+      variantNameEN: "Name (EN)",
+      variantNamePT: "Name (PT)",
+      variantNameCN: "Name (CN)",
+      ph_price: "e.g. 42 (means €42.00)",
+      ph_vname_en: "e.g. 6 inch",
+      ph_vname_pt: "e.g. 15 cm",
+      ph_vname_cn: "e.g. 6寸",
+
+      // new product
+      newProduct: "New Product",
+      productName: "Product Name",
+      ph_newId: "e.g. classic_cheese_cake",
+
+      // delete product
+      deleteProduct: "Delete Product",
+      confirmDeleteProduct: "Irreversible! Delete this product and ALL its images?",
+      confirmDeleteVariant: "Delete variant?",
+
+      // login modal
+      adminAccess: "Admin Access",
+      adminKey: "Admin Key",
+      apiUrl: "API URL",
+      ph_adminKey: "Enter key...",
+
+      // toast / status
+      uploading: "Uploading...",
+      uploaded: "Image Updated!",
+      deleted: "Deleted.",
+      saved: "Saved Successfully!",
+      created: "Created Successfully!",
+      errFillAll: "Please fill all fields",
+      errIdNameRequired: "ID and at least English name are required",
+      errPriceGt0: "Price must be > 0",
+      selectFileFirst: "Select a file first."
+    },
+
+    pt: {
+      products: "Produtos",
+      new: "Novo",
+      search: "Pesquisar...",
+      allCats: "Todas Categorias",
+      editProduct: "Editar Produto",
+      save: "Salvar",
+      cancel: "Cancelar",
+      create: "Criar",
+      login: "Entrar",
+
+      id: "ID",
+      idUnique: "ID (Único)",
+      category: "Categoria",
+      sort: "Ordem",
+      status: "Estado",
+      active: "Ativo",
+      inactive: "Inativo",
+      yes: "Sim",
+      no: "Não",
+      image: "Imagem do Produto",
+      uploadBtn: "Carregar e Substituir",
+      imgNote: "Nova imagem substitui a antiga automaticamente.",
+      noImage: "Sem imagem",
+
+      cat_classic: "Clássico",
+      cat_layer: "Camadas",
+      cat_seasonal: "Sazonal",
+
+      metaCategoryPrefix: "Categoria:",
+      metaSortPrefix: "Ordem:",
+
+      selectHint: "Selecione um produto",
+
+      lang_en: "Inglês",
+      lang_pt: "Português",
+      lang_cn: "Chinês",
+
+      ph_productName_en: "Nome do Produto",
+      ph_productName_pt: "Nome do Produto",
+      ph_productName_cn: "产品名称",
+      ph_desc_en: "Descrição",
+      ph_desc_pt: "Descrição",
+      ph_desc_cn: "产品描述",
+
+      variants: "VARIANTES",
+      add: "Adicionar",
+      editVariant: "Editar Variante",
+      edit: "Editar",
+      delete: "Apagar",
+      noVariants: "Ainda não há variantes.",
+      priceEuro: "Preço (€)",
+      variantNameEN: "Nome (EN)",
+      variantNamePT: "Nome (PT)",
+      variantNameCN: "Nome (CN)",
+      ph_price: "ex.: 42 (significa €42,00)",
+      ph_vname_en: "ex.: 6 inch",
+      ph_vname_pt: "ex.: 15 cm",
+      ph_vname_cn: "ex.: 6寸",
+
+      newProduct: "Novo Produto",
+      productName: "Nome do Produto",
+      ph_newId: "ex.: classic_cheese_cake",
+
+      deleteProduct: "Apagar Produto",
+      confirmDeleteProduct: "Irreversível! Apagar este produto e TODAS as imagens?",
+      confirmDeleteVariant: "Apagar variante?",
+
+      adminAccess: "Acesso Admin",
+      adminKey: "Chave Admin",
+      apiUrl: "URL da API",
+      ph_adminKey: "Insira a chave...",
+
+      uploading: "A carregar...",
+      uploaded: "Imagem Atualizada!",
+      deleted: "Apagado.",
+      saved: "Guardado com sucesso!",
+      created: "Criado com sucesso!",
+      errFillAll: "Por favor preencha tudo",
+      errIdNameRequired: "ID e pelo menos o nome em inglês são obrigatórios",
+      errPriceGt0: "O preço deve ser > 0",
+      selectFileFirst: "Selecione um ficheiro primeiro."
+    },
+
+    cn: {
+      products: "产品列表",
+      new: "新建",
+      search: "搜索...",
+      allCats: "所有分类",
+      editProduct: "编辑产品",
+      save: "保存",
+      cancel: "取消",
+      create: "创建",
+      login: "登录",
+
+      id: "ID",
+      idUnique: "ID（唯一）",
+      category: "分类",
+      sort: "排序",
+      status: "状态",
+      active: "启用",
+      inactive: "停用",
+      yes: "是",
+      no: "否",
+      image: "产品图片",
+      uploadBtn: "上传并替换",
+      imgNote: "上传新图会自动替换旧图。",
+      noImage: "暂无图片",
+
+      cat_classic: "经典",
+      cat_layer: "千层",
+      cat_seasonal: "季节",
+
+      metaCategoryPrefix: "分类：",
+      metaSortPrefix: "排序：",
+
+      selectHint: "请在左侧选择一个产品进行编辑",
+
+      lang_en: "英文",
+      lang_pt: "葡文",
+      lang_cn: "中文",
+
+      ph_productName_en: "产品名称（英文）",
+      ph_productName_pt: "产品名称（葡文）",
+      ph_productName_cn: "产品名称",
+      ph_desc_en: "描述（英文）",
+      ph_desc_pt: "描述（葡文）",
+      ph_desc_cn: "产品描述",
+
+      variants: "规格列表",
+      add: "添加",
+      editVariant: "编辑规格",
+      edit: "编辑",
+      delete: "删除",
+      noVariants: "暂无规格。",
+      priceEuro: "价格 (€)",
+      variantNameEN: "名称（EN）",
+      variantNamePT: "名称（PT）",
+      variantNameCN: "名称（CN）",
+      ph_price: "例如：42（表示 €42.00）",
+      ph_vname_en: "例如：6 inch",
+      ph_vname_pt: "例如：15 cm",
+      ph_vname_cn: "例如：6寸",
+
+      newProduct: "新建产品",
+      productName: "产品名称",
+      ph_newId: "例如：classic_cheese_cake",
+
+      deleteProduct: "删除产品",
+      confirmDeleteProduct: "不可撤销！确定删除该产品及其所有图片吗？",
+      confirmDeleteVariant: "确定删除该规格吗？",
+
+      adminAccess: "管理登录",
+      adminKey: "管理密码",
+      apiUrl: "API 地址",
+      ph_adminKey: "请输入密码…",
+
+      uploading: "上传中…",
+      uploaded: "图片已更新！",
+      deleted: "已删除",
+      saved: "保存成功！",
+      created: "创建成功！",
+      errFillAll: "请填写完整信息",
+      errIdNameRequired: "必须填写 ID，且至少填写英文名称",
+      errPriceGt0: "价格必须大于 0",
+      selectFileFirst: "请先选择文件。"
+    }
+  };
+
+  // --- Auth & Init ---
+  function getApi() { return (localStorage.getItem(CFG.api) || "").replace(/\/+$/, ""); }
+  function getKey() { return sessionStorage.getItem(CFG.key) || ""; }
+
+  function init() {
+    if (window.innerWidth <= 900) S('editorPanel').style.transition = 'transform 0.3s';
+
+    const key = getKey();
+    if (!key) {
+      S('loginModal').classList.add('open');
+    } else {
+      loadProducts();
+    }
+    updateAdminUI();
+    initCustomSelects();
+  }
+
+  function doLogin() {
+    const k = S('adminKeyInput').value.trim();
+    const u = "https://necosapi.lestoy.com";
+    if (!k || !u) return alert(TEXTS[currentLang].errFillAll);
+
+    sessionStorage.setItem(CFG.key, k);
+    localStorage.setItem(CFG.api, u);
+    S('loginModal').classList.remove('open');
+    loadProducts();
+  }
+
+  S('btnLogout').onclick = () => {
+    sessionStorage.removeItem(CFG.key);
+    window.location.reload();
+  };
+
+  function setAdminLang(l) {
+    currentLang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    const map = { en: 0, pt: 1, cn: 2 };
+    document.querySelectorAll('.lang-btn')[map[l]].classList.add('active');
+
+    updateAdminUI();
+
+    // 关键修复：切换语言即时刷新
+    renderList();
+    refreshEditorStaticTextOnly();
+    renderVariants(); // variants 名称立即按语言刷新
+    refreshOpenModalI18n(); // 如果 modal 开着，也立即刷新
+  }
+
+  function t(key) {
+    return (TEXTS[currentLang] && TEXTS[currentLang][key]) || (TEXTS.en[key] || key);
+  }
+
+  function updateAdminUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n');
+      if (t(k)) el.innerText = t(k);
+    });
+
+    // placeholders (products)
+    S('searchInput').placeholder = t('search');
+
+    // product edit placeholders
+    if (S('tEN')) S('tEN').placeholder = t('ph_productName_en');
+    if (S('tPT')) S('tPT').placeholder = t('ph_productName_pt');
+    if (S('tCN')) S('tCN').placeholder = t('ph_productName_cn');
+    if (S('dEN')) S('dEN').placeholder = t('ph_desc_en');
+    if (S('dPT')) S('dPT').placeholder = t('ph_desc_pt');
+    if (S('dCN')) S('dCN').placeholder = t('ph_desc_cn');
+
+    // variant modal placeholders
+    if (S('vPriceEuro')) S('vPriceEuro').placeholder = t('ph_price');
+    if (S('vNameEN')) S('vNameEN').placeholder = t('ph_vname_en');
+    if (S('vNamePT')) S('vNamePT').placeholder = t('ph_vname_pt');
+    if (S('vNameCN')) S('vNameCN').placeholder = t('ph_vname_cn');
+
+    // new product placeholders
+    if (S('newId')) S('newId').placeholder = t('ph_newId');
+    if (S('newNameEN')) S('newNameEN').placeholder = t('ph_productName_en');
+    if (S('newNamePT')) S('newNamePT').placeholder = t('ph_productName_pt');
+    if (S('newNameCN')) S('newNameCN').placeholder = t('ph_productName_cn');
+
+    // login placeholders
+    if (S('adminKeyInput')) S('adminKeyInput').placeholder = t('ph_adminKey');
+    refreshCustomSelectLabels();
+
+  }
+
+  // 刷新编辑区：不覆盖用户正在编辑但未保存的输入内容
+  function refreshEditorStaticTextOnly() {
+    // 这里只做不影响输入值的刷新：例如空状态、图片空文案、按钮文案已通过 data-i18n 更新
+    // 产品列表/variants 都会独立 render
+    // 另外：如果当前没有选中产品，就保持空状态文案即可（data-i18n 已更新）
+  }
+
+  function refreshOpenModalI18n() {
+    // modal 内 data-i18n 已由 updateAdminUI 更新，这里补充动态内容（如空 variants 文案）
+    // 目前无需额外处理
+  }
+
+  function apiCall(endpoint, method = 'GET', body = null) {
+    const headers = { 'Authorization': `Bearer ${getKey()}` };
+    if (!(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+
+    return fetch(`${getApi()}/cake-shop/v1/admin${endpoint}`, {
+      method, headers, body: (body instanceof FormData ? body : (body ? JSON.stringify(body) : null))
+    }).then(async r => {
+      const data = await r.json();
+      if (!r.ok || !data.ok) throw new Error(data.error || r.statusText);
+      return data;
+    }).catch(e => {
+      showToast("Error: " + e.message);
+      if (String(e.message).includes('403')) S('loginModal').classList.add('open');
+      throw e;
+    });
+  }
+
+  // --- Logic ---
+  async function loadProducts() {
+    try {
+      const res = await apiCall('/products');
+      products = res.products || [];
+      renderList();
+
+      // 如果之前选中某个产品，刷新后尽量保持选中并更新引用（修复 sort/category 保存后列表不更新的感觉）
+      if (selectedProduct) {
+        const fresh = products.find(x => x.id === selectedProduct.id);
+        if (fresh) {
+          selectedProduct = fresh;
+          // 注意：这里不强制覆盖编辑表单输入，避免用户未保存的内容被冲掉
+          // 只更新 variants / 图片预览 / list 高亮
+          renderList();
+          renderVariants();
+          refreshImagePreviewFromSelected();
+        }
+      }
+    } catch (e) {}
+  }
+
+  function getLocalizedCategory(cat) {
+    if (cat === 'classic') return t('cat_classic');
+    if (cat === 'layer') return t('cat_layer');
+    if (cat === 'seasonal') return t('cat_seasonal');
+    return cat || '';
+  }
+
+  function getLocalizedTitle(p) {
+    if (!p) return "";
+    if (p.title) return p.title[currentLang] || p.title.en || p.title.cn || p.title.pt || p.id;
+    return p.id;
+  }
+
+  function renderList() {
+    const q = S('searchInput').value.toLowerCase();
+    const cat = S('catFilter').value;
+    const listEl = S('productList');
+    listEl.innerHTML = '';
+
+    const filtered = products.filter(p => {
+      if (cat && p.category !== cat) return false;
+      const titleStr = JSON.stringify(p.title || {}).toLowerCase();
+      return p.id.toLowerCase().includes(q) || titleStr.includes(q);
+    });
+
+    filtered.forEach(p => {
+      const div = document.createElement('div');
+      div.className = `list-item ${selectedProduct?.id === p.id ? 'active' : ''}`;
+      div.onclick = () => selectProduct(p);
+
+      let imgUrl = "";
+      const primaryImg = (p.images || []).find(i => i.is_primary) || (p.images || [])[0];
+      if (primaryImg) imgUrl = primaryImg.public_url || primaryImg.url || "";
+
+      const title = getLocalizedTitle(p);
+      const statusClass = p.is_active ? 'active' : '';
+
+      const catLabel = `${t('metaCategoryPrefix')} ${getLocalizedCategory(p.category)}`;
+      const sortLabel = `${t('metaSortPrefix')} ${p.sort_order ?? 0}`;
+
+      div.innerHTML = `
+        <img src="${imgUrl}" class="item-thumb" onerror="this.style.display='none'">
+        <div class="item-info">
+          <div class="item-title">${escapeHtml(title)}</div>
+          <div class="item-meta">
+            <div class="status-dot ${statusClass}"></div>
+            <span>${escapeHtml(catLabel)}</span>
+            <span>•</span>
+            <span>${escapeHtml(sortLabel)}</span>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.innerText = '—';
+      listEl.appendChild(empty);
+    }
+  }
+
+  function selectProduct(p) {
+    selectedProduct = p;
+    renderList(); // highlight
+
+    if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
+
+    S('editorEmpty').style.display = 'none';
+    S('editorForm').style.display = 'block';
+    S('btnSave').disabled = false;
+    S('btnDeleteBottom').disabled = false;
+
+    // Fill Fields (these are actual values, ok to overwrite because user just selected a product)
+    S('pId').value = p.id;
+    S('pCategory').value = p.category;
+    S('pSort').value = p.sort_order ?? 0;
+    S('pActive').value = p.is_active ? "1" : "0";
+
+    const title = p.title || {};
+    const desc = p.description || {};
+    S('tEN').value = title.en || "";
+    S('tPT').value = title.pt || "";
+    S('tCN').value = title.cn || "";
+    S('dEN').value = desc.en || "";
+    S('dPT').value = desc.pt || "";
+    S('dCN').value = desc.cn || "";
+
+    refreshImagePreviewFromSelected();
+    renderVariants();
+  }
+
+  function refreshImagePreviewFromSelected() {
+    if (!selectedProduct) return;
+    const img = (selectedProduct.images || []).find(i => i.is_primary) || (selectedProduct.images || [])[0];
+    const preview = S('pImgPreview');
+    const emptyTxt = S('pImgEmpty');
+
+    if (img && (img.public_url || img.url)) {
+      preview.src = img.public_url || img.url;
+      preview.style.display = 'block';
+      emptyTxt.style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      emptyTxt.style.display = 'flex';
+    }
+  }
+
+  function closeEditorMobile() {
+    S('editorPanel').classList.remove('open');
+    selectedProduct = null;
+    renderList();
+    S('btnSave').disabled = true;
+    S('btnDeleteBottom').disabled = true;
+    S('editorEmpty').style.display = 'block';
+    S('editorForm').style.display = 'none';
+  }
+
+  // --- Modal Helpers ---
+  function openNewProductModal() {
+    S('newId').value = "";
+    S('newCategory').value = "classic";
+    S('newNameEN').value = "";
+    S('newNamePT').value = "";
+    S('newNameCN').value = "";
+    S('newProductModal').classList.add('open');
+    updateAdminUI(); // ensure placeholders are correct for current lang
+  }
+  function closeModal(id) {
+    S(id).classList.remove('open');
+  }
+
+  async function createNewProduct() {
+    const id = S('newId').value.trim();
+    const cat = S('newCategory').value;
+    const nameEN = S('newNameEN').value.trim();
+    const namePT = S('newNamePT').value.trim();
+    const nameCN = S('newNameCN').value.trim();
+
+    if (!id || !nameEN) return alert(t('errIdNameRequired'));
+
+    const payload = {
+      id,
+      category: cat,
+      title: { en: nameEN, pt: namePT, cn: nameCN },
+      is_active: false,
+      sort_order: 0
+    };
+
+    try {
+      await apiCall('/products', 'POST', payload);
+      closeModal('newProductModal');
+      showToast(t('created'));
+      await loadProducts();
+      const newP = products.find(x => x.id === id);
+      if (newP) selectProduct(newP);
+    } catch (e) {}
+  }
+
+  async function saveProduct() {
+    if (!selectedProduct) return;
+
+    const payload = {
+      category: S('pCategory').value,
+      is_active: S('pActive').value === "1",
+      sort_order: Number(S('pSort').value),
+      title: {
+        en: S('tEN').value.trim(),
+        pt: S('tPT').value.trim(),
+        cn: S('tCN').value.trim()
+      },
+      description: {
+        en: S('dEN').value.trim(),
+        pt: S('dPT').value.trim(),
+        cn: S('dCN').value.trim()
+      }
+    };
+
+    try {
+      await apiCall(`/products/${selectedProduct.id}`, 'PUT', payload);
+      showToast(t('saved'));
+
+      // 关键修复：保存后立即拉新数据并更新 selectedProduct 引用 + 列表展示
+      await loadProducts();
+      const fresh = products.find(x => x.id === selectedProduct.id);
+      if (fresh) {
+        selectedProduct = fresh;
+        // 同步部分字段（用户已保存，覆盖是合理的）
+        S('pCategory').value = fresh.category;
+        S('pSort').value = fresh.sort_order ?? 0;
+        S('pActive').value = fresh.is_active ? "1" : "0";
+        refreshImagePreviewFromSelected();
+        renderVariants();
+        renderList();
+      }
+    } catch (e) {}
+  }
+
+  async function deleteProduct() {
+    if (!selectedProduct) return;
+    if (!confirm(t('confirmDeleteProduct'))) return;
+
+    try {
+      await apiCall(`/products/${selectedProduct.id}`, 'DELETE');
+      showToast(t('deleted'));
+      selectedProduct = null;
+      S('editorEmpty').style.display = 'block';
+      S('editorForm').style.display = 'none';
+      S('btnSave').disabled = true;
+      S('btnDeleteBottom').disabled = true;
+
+      if (window.innerWidth <= 900) closeEditorMobile();
+      await loadProducts();
+    } catch (e) {}
+  }
+
+  // --- Image Logic ---
+  async function uploadImage() {
+    if (!selectedProduct) return;
+    const file = S('imgUploadInput').files[0];
+    if (!file) return showToast(t('selectFileFirst'));
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    S('imgLoader').classList.add('active');
+    try {
+      showToast(t('uploading'));
+      await apiCall(`/products/${selectedProduct.id}/image`, 'POST', fd);
+      showToast(t('uploaded'));
+      S('imgUploadInput').value = "";
+
+      await loadProducts();
+      const fresh = products.find(x => x.id === selectedProduct.id);
+      if (fresh) {
+        selectedProduct = fresh;
+        refreshImagePreviewFromSelected();
+        renderList();
+      }
+    } catch (e) {
+    } finally {
+      S('imgLoader').classList.remove('active');
+    }
+  }
+
+  // --- Variant Logic ---
+  function renderVariants() {
+    const list = S('variantList');
+    list.innerHTML = '';
+
+    if (!selectedProduct) return;
+
+    const vars = (selectedProduct.variants || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    if (vars.length === 0) {
+      const d = document.createElement('div');
+      d.className = 'empty-state';
+      d.innerText = t('noVariants');
+      list.appendChild(d);
+      return;
+    }
+
+    vars.forEach(v => {
+      const div = document.createElement('div');
+      div.className = 'v-card';
+
+      const name = (v.name && (v.name[currentLang] || v.name.en || v.name.cn || v.name.pt)) || "—";
+      const price = ((v.price_cents || 0) / 100).toFixed(2);
+
+      div.innerHTML = `
+        <div class="v-info">
+          <div>${escapeHtml(name)}</div>
+          <div class="v-price">€ ${escapeHtml(price)}</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button class="btn btn-ghost btn-small" onclick="openVariantModal('${v.id}')">${escapeHtml(t('edit'))}</button>
+          <button class="btn btn-danger btn-small" onclick="deleteVariant('${v.id}')">${escapeHtml(t('delete'))}</button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function openVariantModal(vid = null) {
+    editingVariantId = vid;
+    S('variantModal').classList.add('open');
+    updateAdminUI(); // refresh placeholders & labels
+
+    if (!selectedProduct) return;
+
+    if (vid) {
+      const v = selectedProduct.variants.find(x => x.id === vid);
+      S('vPriceEuro').value = (v.price_cents || 0) / 100;
+      S('vNameEN').value = (v.name && v.name.en) || "";
+      S('vNamePT').value = (v.name && v.name.pt) || "";
+      S('vNameCN').value = (v.name && v.name.cn) || "";
+      S('vSort').value = v.sort_order ?? 0;
+      S('vActive').value = v.is_active ? "1" : "0";
+    } else {
+      S('vPriceEuro').value = "";
+      S('vNameEN').value = "";
+      S('vNamePT').value = "";
+      S('vNameCN').value = "";
+      S('vSort').value = 0;
+      S('vActive').value = "1";
+    }
+  }
+
+  async function saveVariant() {
+    if (!selectedProduct) return;
+
+    const rawPrice = Number(S('vPriceEuro').value);
+    const priceCents = Math.round(rawPrice * 100);
+
+    const payload = {
+      product_id: selectedProduct.id,
+      price_cents: priceCents,
+      name: {
+        en: S('vNameEN').value.trim(),
+        pt: S('vNamePT').value.trim(),
+        cn: S('vNameCN').value.trim()
+      },
+      sort_order: Number(S('vSort').value),
+      is_active: S('vActive').value === "1"
+    };
+
+    if (payload.price_cents <= 0) return alert(t('errPriceGt0'));
+
+    try {
+      if (editingVariantId) {
+        await apiCall(`/variants/${editingVariantId}`, 'PUT', payload);
+      } else {
+        await apiCall(`/variants`, 'POST', payload);
+      }
+      closeModal('variantModal');
+      showToast(t('saved'));
+
+      await loadProducts();
+      const fresh = products.find(x => x.id === selectedProduct.id);
+      if (fresh) {
+        selectedProduct = fresh;
+        renderVariants();
+        renderList();
+      }
+    } catch (e) {}
+  }
+
+  async function deleteVariant(vid) {
+    if (!confirm(t('confirmDeleteVariant'))) return;
+    try {
+      await apiCall(`/variants/${vid}`, 'DELETE');
+      showToast(t('deleted'));
+
+      await loadProducts();
+      const fresh = products.find(x => x.id === selectedProduct.id);
+      if (fresh) {
+        selectedProduct = fresh;
+        renderVariants();
+        renderList();
+      }
+    } catch (e) {}
+  }
+
+  function showToast(msg) {
+    const toast = S('toast');
+    toast.innerText = msg;
+    toast.style.opacity = 1;
+    setTimeout(() => toast.style.opacity = 0, 2000);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function closeModalByOverlay(e){
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+    // login 不允许点遮罩关闭
+    if (e.target.id === 'loginModal') return;
+    e.target.classList.remove('open');
+  }
+}
+  /* =========================
+   Custom Select Enhancer
+   - keep native <select> for value + existing code
+   - render custom popover + searchable list + keyboard support
+   ========================= */
+
+let __cselectOpen = null;
+
+function initCustomSelects() {
+  document.querySelectorAll('.select-wrap select.select-native').forEach(sel => {
+    // avoid double enhance
+    if (sel.dataset.cselectEnhanced === "1") return;
+    enhanceSelect(sel);
+  });
+
+  // click outside closes
+  document.addEventListener('mousedown', (e) => {
+    if (!__cselectOpen) return;
+    if (!__cselectOpen.root.contains(e.target)) closeCSelect(__cselectOpen);
+  });
+
+  // esc closes
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && __cselectOpen) closeCSelect(__cselectOpen);
+  }, true);
+}
+
+function refreshCustomSelectLabels() {
+  // call this after i18n update to re-read option text
+  document.querySelectorAll('.select-wrap select.select-native[data-cselect-id]').forEach(sel => {
+    const id = sel.dataset.cselectId;
+    const state = window.__cselectStates?.get(id);
+    if (!state) return;
+    buildCSelectOptions(state, { keepFilter: true });
+    syncCSelectFromNative(state);
+  });
+}
+
+function enhanceSelect(selectEl) {
+  selectEl.dataset.cselectEnhanced = "1";
+  selectEl.classList.add('cselect-native');
+
+  // unique id per select
+  const uid = selectEl.id || ('cselect_' + Math.random().toString(16).slice(2));
+  if (!selectEl.id) selectEl.id = uid;
+  selectEl.dataset.cselectId = uid;
+
+  // container
+  const wrap = selectEl.closest('.select-wrap');
+  const root = document.createElement('div');
+  root.className = 'cselect';
+  root.setAttribute('data-cselect-root', uid);
+
+  // button
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cselect-btn';
+  btn.setAttribute('aria-haspopup', 'listbox');
+  btn.setAttribute('aria-expanded', 'false');
+
+  const label = document.createElement('div');
+  label.className = 'cselect-label';
+
+  const arrow = document.createElement('div');
+  arrow.className = 'cselect-arrow';
+
+  btn.appendChild(label);
+  btn.appendChild(arrow);
+
+  // popover
+  const pop = document.createElement('div');
+  pop.className = 'cselect-pop';
+  pop.setAttribute('role', 'listbox');
+
+  // search
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'cselect-search';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.autocomplete = 'off';
+  searchInput.spellcheck = false;
+  searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : (currentLang === 'pt' ? 'Pesquisar...' : 'Search...');
+  searchWrap.appendChild(searchInput);
+
+  const list = document.createElement('div');
+  list.className = 'cselect-list';
+
+  pop.appendChild(searchWrap);
+  pop.appendChild(list);
+
+  // mount
+  root.appendChild(btn);
+  root.appendChild(pop);
+  wrap.appendChild(root); // keep native select in wrap; hide it via CSS
+
+  // state store
+  if (!window.__cselectStates) window.__cselectStates = new Map();
+  const state = {
+    id: uid,
+    selectEl,
+    root,
+    btn,
+    label,
+    pop,
+    list,
+    searchInput,
+    // for keyboard navigation
+    activeIndex: -1,
+    optionNodes: [],
+  };
+  window.__cselectStates.set(uid, state);
+
+  // build options UI
+  buildCSelectOptions(state);
+
+  // initial sync
+  syncCSelectFromNative(state);
+
+  // native select changes (if your code sets value programmatically)
+  selectEl.addEventListener('change', () => {
+    syncCSelectFromNative(state);
+  });
+
+  // open/close
+  btn.addEventListener('click', () => {
+    if (state.pop.classList.contains('open')) {
+      closeCSelect(state);
+    } else {
+      openCSelect(state);
+    }
+  });
+
+  // keyboard on button
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openCSelect(state);
+      focusFirstOption(state);
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      openCSelect(state);
+      focusLastOption(state);
+    }
+  });
+
+  // search filter
+  searchInput.addEventListener('input', () => {
+    buildCSelectOptions(state, { keepFilter: true });
+  });
+
+  // keyboard in popover (list navigation)
+  pop.addEventListener('keydown', (e) => {
+    if (!state.pop.classList.contains('open')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(state, +1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(state, -1); }
+    else if (e.key === 'Enter') { e.preventDefault(); selectActive(state); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeCSelect(state); }
+  });
+
+  // Also update placeholder of search on language changes by hooking into updateAdminUI
+  // (we will call refreshCustomSelectLabels() inside updateAdminUI below)
+}
+
+function buildCSelectOptions(state, opts = {}) {
+  const { selectEl, list, searchInput } = state;
+  const q = (searchInput.value || '').trim().toLowerCase();
+
+  list.innerHTML = '';
+  state.optionNodes = [];
+  state.activeIndex = -1;
+
+  const options = Array.from(selectEl.options || []);
+  const visible = options.filter(o => {
+    const text = (o.textContent || '').toLowerCase();
+    return !q || text.includes(q);
+  });
+
+  if (visible.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'cselect-empty';
+    empty.innerText = (currentLang === 'cn') ? '没有结果' : (currentLang === 'pt' ? 'Sem resultados' : 'No results');
+    list.appendChild(empty);
+    return;
+  }
+
+  visible.forEach((opt, idx) => {
+    const row = document.createElement('div');
+    row.className = 'cselect-opt';
+    row.setAttribute('role', 'option');
+    row.setAttribute('data-value', opt.value);
+    row.setAttribute('tabindex', '-1');
+
+    const left = document.createElement('div');
+    left.style.minWidth = '0';
+    left.style.flex = '1';
+    left.style.overflow = 'hidden';
+    left.style.textOverflow = 'ellipsis';
+    left.style.whiteSpace = 'nowrap';
+    left.innerText = opt.textContent || '';
+
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+
+    row.appendChild(left);
+    row.appendChild(tick);
+
+    row.addEventListener('click', () => {
+      setNativeValue(state, opt.value);
+      closeCSelect(state);
+      state.btn.focus();
+    });
+
+    row.addEventListener('mousemove', () => {
+      // hover updates active index for keyboard visual consistency
+      state.activeIndex = idx;
+    });
+
+    list.appendChild(row);
+    state.optionNodes.push(row);
+  });
+
+  // keep selection highlight
+  syncCSelectFromNative(state);
+
+  // keep filter if requested; otherwise reset
+  if (!opts.keepFilter) searchInput.value = '';
+}
+
+function syncCSelectFromNative(state) {
+  const { selectEl, label } = state;
+  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0] ? selectEl.selectedOptions[0] : null;
+  label.innerText = opt ? (opt.textContent || '') : '';
+
+  // highlight
+  state.optionNodes.forEach(node => {
+    const v = node.getAttribute('data-value');
+    const sel = (v === selectEl.value);
+    node.setAttribute('aria-selected', sel ? 'true' : 'false');
+  });
+
+  // update search placeholder language (small but nice)
+  state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : (currentLang === 'pt' ? 'Pesquisar...' : 'Search...');
+}
+
+function setNativeValue(state, value) {
+  const { selectEl } = state;
+  if (selectEl.value === value) return;
+
+  selectEl.value = value;
+
+  // trigger native change so your existing onchange handlers still work
+  const evt = new Event('change', { bubbles: true });
+  selectEl.dispatchEvent(evt);
+
+  syncCSelectFromNative(state);
+}
+
+function openCSelect(state) {
+  // close previous
+  if (__cselectOpen && __cselectOpen !== state) closeCSelect(__cselectOpen);
+  __cselectOpen = state;
+
+  state.pop.classList.add('open');
+  state.btn.classList.add('cselect-open');
+  state.btn.setAttribute('aria-expanded', 'true');
+
+  // reset active index
+  state.activeIndex = -1;
+
+  // focus search on open (mobile friendly)
+  setTimeout(() => {
+    state.searchInput.focus({ preventScroll: true });
+    state.searchInput.select();
+  }, 0);
+}
+
+function closeCSelect(state) {
+  state.pop.classList.remove('open');
+  state.btn.classList.remove('cselect-open');
+  state.btn.setAttribute('aria-expanded', 'false');
+
+  if (__cselectOpen === state) __cselectOpen = null;
+}
+
+function moveActive(state, delta) {
+  if (!state.optionNodes.length) return;
+  let i = state.activeIndex;
+  i = (i < 0) ? 0 : i + delta;
+  if (i < 0) i = 0;
+  if (i >= state.optionNodes.length) i = state.optionNodes.length - 1;
+  state.activeIndex = i;
+
+  const node = state.optionNodes[i];
+  node.scrollIntoView({ block: 'nearest' });
+  // visual focus
+  state.optionNodes.forEach(n => n.style.outline = 'none');
+  node.style.outline = '2px solid rgba(244,192,75,0.5)';
+}
+
+function selectActive(state) {
+  const i = state.activeIndex;
+  if (i < 0 || i >= state.optionNodes.length) return;
+  const node = state.optionNodes[i];
+  const v = node.getAttribute('data-value');
+  setNativeValue(state, v);
+  closeCSelect(state);
+  state.btn.focus();
+}
+
+function focusFirstOption(state) {
+  if (!state.optionNodes.length) return;
+  state.activeIndex = 0;
+  state.optionNodes[0].scrollIntoView({ block: 'nearest' });
+}
+
+function focusLastOption(state) {
+  if (!state.optionNodes.length) return;
+  state.activeIndex = state.optionNodes.length - 1;
+  state.optionNodes[state.activeIndex].scrollIntoView({ block: 'nearest' });
+}
+
+  // Default lang
+  setAdminLang('cn');
+  init();
+</script>
+</body>
+</html>
