@@ -10,7 +10,7 @@
 <style>
   /* --- 1. Design System --- */
   :root {
-    --primary: #102940;         /* 深蓝主题色 */
+    --primary: #102940;
     --accent: #F4C04B;
     --bg: #F5F5F7;
     --white: #FFFFFF;
@@ -40,6 +40,11 @@
     padding-top: var(--header-h);
     overflow-x: hidden;
   }
+  body.modal-open{
+    overflow:hidden;
+    position:fixed;
+    width:100%;
+  }
 
   /* --- Header --- */
   .smart-header {
@@ -48,6 +53,7 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px;
+    border-bottom: 2px solid var(--border);
   }
   .header-left { display: flex; align-items: center; gap: 15px; }
   .logo-img { height: 44px; width: auto; }
@@ -87,8 +93,8 @@
   }
   .panel-title { font-size: 18px; font-weight: 900; }
   .panel-body { padding: 20px; padding-top: 10px; overflow-y: auto; flex: 1; position: relative;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
- }
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Mobile: editor slides */
   .back-btn {
@@ -105,17 +111,28 @@
   }
   @media (max-width: 900px) {
     .grid-layout { display: block; }
+    .container { padding: 0; height: calc(100dvh - var(--header-h)); }
+    #listPanel {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0; bottom: 0;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      z-index: 950;
+      display:flex;flex-direction:column;
+    }
+    .panel-body {padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  }
+    #listPanel .panel-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
     .editor-panel {
       position: fixed; inset: 0; top: 0; z-index: 1000;
-      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
       border-radius: 0 !important; height: 100vh;
     }
     .editor-panel.open { transform: translateX(0); }
     .back-btn { display: flex; }
-    .smart-header { z-index: 900; }
-    #listPanel {
-    bottom: env(safe-area-inset-bottom, 0px);
-  }
+    .panel-head { padding: 20px 20px 10px 20px; border-bottom: 0; }
   }
 
   /* --- List Items --- */
@@ -145,20 +162,6 @@
     display: block; font-size: 13px; font-weight: 800; color: #999;
     text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
   }
-  .upload-actions input  {
-    width: 100%;
-    border: 2px solid var(--border-strong);
-    border-radius: var(--radius-input);
-    padding: 12.5px 14px;
-    margin-bottom: 15px;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--primary);
-    background: var(--field-bg);
-    outline: none;
-    transition: border 0.2s, background 0.2s;
-  }
-
   input, textarea, .select-native {
     width: 100%;
     border: 2px solid var(--border-strong);
@@ -216,32 +219,10 @@
   .v-info div { font-size: 15px; font-weight: 800; }
   .v-price { color: var(--primary); font-weight: 900; font-size: 15px; margin-top: 2px; }
 
-  /* --- Select (统一风格，自定义箭头) --- */
+  /* --- Select wrapper --- */
   .select-wrap { position: relative; width: 100%; }
-  .select-native {
-    -webkit-appearance: none;
-    appearance: none;
-    padding-right: 42px;
-    cursor: pointer;
-  }
-  .select-wrap:after {
-    content: "";
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    pointer-events: none;
-    background-color: var(--primary);
-    -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
-    -webkit-mask-size: contain;
-    mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
-    mask-size: contain;
-    opacity: 0.9;
-  }
 
-  /* --- 2. Image Upload Layout (图片区域>=50%) --- */
+  /* --- 2. Image Upload Layout --- */
   .image-upload-container {
     display: flex; gap: 16px; align-items: stretch;
     background: #fff; border: 2px solid var(--border); border-radius: 16px; padding: 15px;
@@ -259,10 +240,8 @@
     color: #999; font-weight: 800; font-size: 12px; text-align: center;
     padding: 10px;
   }
-
   .upload-actions { flex: 1 1 50%; display: flex; flex-direction: column; gap: 10px; justify-content: center; min-width: 0; }
-  .file-input-wrapper { position: relative; width: 100%; }
-  .file-input-wrapper input { padding-left: 10px; }
+  .upload-actions input { margin-bottom: 6px; }
 
   @media (max-width: 600px) {
     .image-upload-container { flex-direction: column; }
@@ -288,59 +267,49 @@
     display: none; justify-content: center; align-items: center; z-index: 2000;
   }
   .modal-overlay.open { display: flex; }
-.modal-card{
-  background: var(--white);
-  width: 90%;
-  max-width: 420px;
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-  animation: slideUp 0.3s ease;
-  position: relative;
 
-  /* ✅ 关键：限制弹窗高度 + 三段式 */
-  max-height: min(86vh, 760px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-
-  /* ✅ padding 交给内部区域，避免 footer 被挤出屏幕 */
-  padding: 0;
-}
-
-/* 参考 index: close-btn + modal-scroll + modal-footer 的结构 :contentReference[oaicite:2]{index=2} */
-.modal-close-btn{
-  position: absolute;
-  top: 15px; right: 15px;
-  background: rgba(255,255,255,0.9);
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; cursor: pointer;
-  z-index: 30;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border: none;
-  color: var(--primary);
-  font-weight: 900;
-}
-
-.modal-scroll{
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 24px;         /* 你原来 modal-card 的 padding，搬到这里 */
-  padding-top: 52px;     /* 给右上角✕让空间 */
-}
-
-.modal-footer{
-  padding: 16px 24px 20px 24px;
-  background: var(--white);
-  border-top: 0px solid var(--border); /* ✅ 保持你 index 也是 0，不动边框体系 :contentReference[oaicite:3]{index=3} */
-  z-index: 20;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
+  .modal-card{
+    background: var(--white);
+    width: 90%;
+    max-width: 520px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    animation: slideUp 0.3s ease;
+    position: relative;
+    max-height: min(86vh, 760px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+  .modal-close-btn{
+    position: absolute; top: 15px; right: 15px;
+    background: rgba(255,255,255,0.9);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer;
+    z-index: 30;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: none;
+    color: var(--primary);
+    font-weight: 900;
+  }
+  .modal-scroll{
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px;
+    padding-top: 52px;
+  }
+  .modal-footer{
+    padding: 16px 24px 20px 24px;
+    background: var(--white);
+    z-index: 20;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
   /* Toast */
@@ -356,217 +325,132 @@
   .muted { font-size: 12px; color: #888; line-height: 1.2; }
   .empty-state { font-size: 13px; color:#999; padding: 10px; text-align:center; }
 
-/* =========================
-   Custom Select (cselect) - Enterprise Grade
-   ========================= */
-
-/* Hide native select but keep accessible */
-.select-wrap select.select-native.cselect-native {
-  position: absolute !important;
-  left: -9999px !important;
-  width: 1px !important;
-  height: 1px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* The visible control (Button) */
-.cselect {
-  position: relative;
-  width: 100%;
-}
-
-.cselect-btn {
-  width: 100%;
-  border: 2px solid var(--border-strong);
-  border-radius: var(--radius-input);
-  padding: 12px 40px 12px 14px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
-  background: var(--field-bg);
-  outline: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  transition: border 0.2s, background 0.2s, box-shadow 0.2s;
-  min-height: 48px; /* Ensure touch target */
-}
-
-.cselect-btn:active { transform: scale(0.995); }
-.cselect-btn:focus,
-.cselect-btn.cselect-open {
-  border-color: var(--accent);
-  background: var(--field-bg-focus);
-}
-
-.cselect-label {
-  flex: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cselect-arrow {
-  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  width: 18px; height: 18px;
-  background-color: var(--primary);
-  -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
-  -webkit-mask-size: contain;
-  mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
-  mask-size: contain;
-  opacity: 0.8;
-  transition: transform 0.2s ease;
-  pointer-events: none;
-}
-.cselect-btn.cselect-open .cselect-arrow { transform: translateY(-50%) rotate(180deg); }
-
-/* 
-   Popover Panel (Attached to BODY) 
-   This ensures it floats above everything, including modals.
-*/
-.cselect-pop {
-  position: fixed; /* Fixed relative to viewport */
-  background: var(--white);
-  border: 2px solid var(--border-strong);
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(16, 41, 64, 0.15);
-  z-index: 9999; /* Highest priority */
-  overflow: hidden;
-  display: none;
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  box-sizing: border-box;
-}
-
-.cselect-pop.open {
-  display: flex;
-  flex-direction: column;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.cselect-search {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  background: #FAFAFA;
-}
-.cselect-search input {
-  width: 100%;
-  border: 1px solid #E5E7EB;
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--primary);
-  background: #FFF;
-  outline: none;
-}
-.cselect-search input:focus {
-  border-color: var(--accent);
-}
-
-.cselect-list {
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 6px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.cselect-opt {
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: background 0.1s;
-}
-
-.cselect-opt:hover, .cselect-opt.highlighted {
-  background: #F3F4F6;
-}
-.cselect-opt[aria-selected="true"] {
-  background: rgba(244,192,75,0.15);
-  color: #D97706;
-}
-
-.cselect-opt .tick {
-  width: 16px; height: 16px;
-  background-color: currentColor;
-  -webkit-mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
-  -webkit-mask-size: contain;
-  mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
-  mask-size: contain;
-  opacity: 0;
-}
-.cselect-opt[aria-selected="true"] .tick { opacity: 1; }
-
-.cselect-empty {
-  padding: 16px;
-  font-size: 13px;
-  color: #999;
-  text-align: center;
-}
-
-/* Mobile: give more room */
-@media (max-width: 600px) {
-  .cselect-list { max-height: 320px; }
-}
-
-/* =========================
-   Mobile: Products list full-screen
-   ========================= */
-@media (max-width: 900px) {
-  .container {
-    padding: 0; /* 全屏直铺 */
-    height: calc(100dvh - var(--header-h));
-    #listPanel .panel-body,
-  #editorPanel .panel-body {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  /* =========================
+     Custom Select (cselect) - Enterprise Grade
+     ========================= */
+  .select-wrap select.select-native.cselect-native {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
-   .item-list { padding-bottom: 56px; }
+  .cselect { position: relative; width: 100%; }
+  .cselect-btn {
+    width: 100%;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-input);
+    padding: 12px 40px 12px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+    min-height: 48px;
   }
+  .cselect-btn:active { transform: scale(0.995); }
+  .cselect-btn:focus,
+  .cselect-btn.cselect-open {
+    border-color: var(--accent);
+    background: var(--field-bg-focus);
+  }
+  .cselect-label {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cselect-arrow {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px;
+    background-color: var(--primary);
+    -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    mask-size: contain;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+    pointer-events: none;
+  }
+  .cselect-btn.cselect-open .cselect-arrow { transform: translateY(-50%) rotate(180deg); }
 
-  /* 左侧产品列表面板：全屏 */
-  #listPanel {
+  .cselect-pop {
     position: fixed;
-    top: var(--header-h);
-    left: 0;
-    right: 0;
-    bottom: 0;
-
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    z-index: 950; /* header 下，editor(1000) 下 */
+    background: var(--white);
+    border: 2px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(16, 41, 64, 0.15);
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    box-sizing: border-box;
   }
-
-  /* 面板内部滚动交给 body，自适应高度 */
-  #listPanel {
+  .cselect-pop.open {
     display: flex;
     flex-direction: column;
+    opacity: 1;
+    transform: translateY(0);
   }
-
-  #listPanel .panel-body {
-    flex: 1;
+  .cselect-search {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    background: #FAFAFA;
+  }
+  .cselect-search input {
+    width: 100%;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    background: #FFF;
+    outline: none;
+  }
+  .cselect-search input:focus { border-color: var(--accent); }
+  .cselect-list {
+    max-height: 260px;
     overflow-y: auto;
+    padding: 6px;
     -webkit-overflow-scrolling: touch;
   }
- .smart-header {
-border-bottom: 2px solid var(--border);
-}
-.panel-head {
-    padding: 20px 20px 10px 20px;
-    border-bottom: 0px solid var(--border);
-}
-}
+  .cselect-opt {
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.1s;
+  }
+  .cselect-opt:hover, .cselect-opt.highlighted { background: #F3F4F6; }
+  .cselect-opt[aria-selected="true"] { background: rgba(244,192,75,0.15); color: #D97706; }
+  .cselect-opt .tick {
+    width: 16px; height: 16px;
+    background-color: currentColor;
+    -webkit-mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+    mask-size: contain;
+    opacity: 0;
+  }
+  .cselect-opt[aria-selected="true"] .tick { opacity: 1; }
+  .cselect-empty { padding: 16px; font-size: 13px; color: #999; text-align: center; }
+  @media (max-width: 600px) { .cselect-list { max-height: 320px; } }
 </style>
 </head>
 
@@ -583,14 +467,6 @@ border-bottom: 2px solid var(--border);
       <button class="lang-btn" onclick="setAdminLang('pt')">PT</button>
       <button class="lang-btn" onclick="setAdminLang('cn')">CN</button>
     </div>
-
-    <button class="btn btn-ghost btn-icon" id="btnLogout" title="Logout" aria-label="Logout">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-        <polyline points="16 17 21 12 16 7"></polyline>
-        <line x1="21" y1="12" x2="9" y2="12"></line>
-      </svg>
-    </button>
   </div>
 </header>
 
@@ -601,7 +477,11 @@ border-bottom: 2px solid var(--border);
     <div class="panel" id="listPanel">
       <div class="panel-head">
         <div class="panel-title" data-i18n="products">Products</div>
-        <button class="btn btn-primary" onclick="openNewProductModal()">+ <span data-i18n="new">New</span></button>
+        <div style="display:flex; gap:8px;">
+          <!-- 动态分类管理按钮 -->
+          <button class="btn btn-ghost" onclick="openCategoryManager()" data-i18n="manageCats">Categories</button>
+          <button class="btn btn-primary" onclick="openNewProductModal()">+ <span data-i18n="new">New</span></button>
+        </div>
       </div>
 
       <div class="panel-body">
@@ -611,11 +491,9 @@ border-bottom: 2px solid var(--border);
 
         <div style="display:flex; gap:10px; margin-bottom:15px;">
           <div class="select-wrap" style="flex:1">
-            <select id="catFilter" class="select-native" onchange="renderList()">
+            <!-- 动态分类筛选（不再写死） -->
+            <select id="catFilter" class="select-native" onchange="onRememberCategory(this.value); renderList()">
               <option value="" data-i18n="allCats">All Categories</option>
-              <option value="classic" data-i18n="cat_classic">Classic</option>
-              <option value="layer" data-i18n="cat_layer">Layer</option>
-              <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
             </select>
           </div>
         </div>
@@ -628,11 +506,8 @@ border-bottom: 2px solid var(--border);
     <div class="panel editor-panel" id="editorPanel">
       <div class="panel-head">
         <button class="back-btn" onclick="closeEditorMobile()"><span class="back-icon"></span></button>
-
         <div class="panel-title" data-i18n="editProduct">Edit Product</div>
-
         <div style="display:flex; gap:8px;">
-          <!-- 删除按钮移到底部，不在这里 -->
           <button class="btn btn-primary" id="btnSave" onclick="saveProduct()" disabled data-i18n="save">Save</button>
         </div>
       </div>
@@ -641,7 +516,6 @@ border-bottom: 2px solid var(--border);
         <div id="editorEmpty" class="empty-state" style="margin-top:50px;" data-i18n="selectHint">Select a product to edit</div>
 
         <div id="editorForm" style="display:none;">
-          <!-- 1. Basic Info -->
           <div class="row-2">
             <div class="form-group">
               <label data-i18n="id">ID</label>
@@ -651,11 +525,8 @@ border-bottom: 2px solid var(--border);
             <div class="form-group">
               <label data-i18n="category">Category</label>
               <div class="select-wrap">
-                <select id="pCategory" class="select-native">
-                  <option value="classic" data-i18n="cat_classic">Classic</option>
-                  <option value="layer" data-i18n="cat_layer">Layer</option>
-                  <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
-                </select>
+                <!-- 动态分类选择 -->
+                <select id="pCategory" class="select-native" onchange="onRememberCategory(this.value)"></select>
               </div>
             </div>
           </div>
@@ -679,7 +550,6 @@ border-bottom: 2px solid var(--border);
 
           <div class="divider"></div>
 
-          <!-- 2. Image Management -->
           <div class="form-group">
             <label data-i18n="image">Product Image</label>
             <div class="image-upload-container">
@@ -699,7 +569,6 @@ border-bottom: 2px solid var(--border);
 
           <div class="divider"></div>
 
-          <!-- 3. Multi-language Content -->
           <div class="lang-group">
             <div class="lang-label"><span class="lang-pill">EN</span> <span data-i18n="lang_en">English</span></div>
             <input id="tEN" placeholder="" style="margin-bottom:10px; font-weight:800;">
@@ -720,7 +589,6 @@ border-bottom: 2px solid var(--border);
 
           <div class="divider"></div>
 
-          <!-- 4. Variants -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <label style="margin:0;" data-i18n="variants">VARIANTS</label>
             <button class="btn btn-ghost btn-small" onclick="openVariantModal()">+ <span data-i18n="add">Add</span></button>
@@ -730,15 +598,13 @@ border-bottom: 2px solid var(--border);
 
           <div class="divider"></div>
 
-          <!-- Delete Product (moved to bottom) -->
           <button class="btn btn-danger btn-full" id="btnDeleteBottom" onclick="deleteProduct()" disabled data-i18n="deleteProduct">
             Delete Product
           </button>
-
-          <div style="height:30px;"></div>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -807,12 +673,10 @@ border-bottom: 2px solid var(--border);
       <div class="form-group">
         <label data-i18n="category">Category</label>
         <div class="select-wrap">
-          <select id="newCategory" class="select-native">
-            <option value="classic" data-i18n="cat_classic">Classic</option>
-            <option value="layer" data-i18n="cat_layer">Layer</option>
-            <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
-          </select>
+          <!-- 动态分类选择 -->
+          <select id="newCategory" class="select-native" onchange="onRememberCategory(this.value)"></select>
         </div>
+        <div class="muted" data-i18n="newProductHint" style="margin-top:8px;">The product will be created as inactive by default.</div>
       </div>
     </div>
 
@@ -823,12 +687,116 @@ border-bottom: 2px solid var(--border);
   </div>
 </div>
 
-<!-- Login Modal -->
-<div class="modal-overlay" id="loginModal" style="background:var(--primary);" onclick="event.stopPropagation()">
+<!-- Category Manager Modal (新增) -->
+<div class="modal-overlay" id="categoryModal" onclick="closeModalByOverlay(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
-    <!-- 登录一般不建议显示关闭按钮；你想要也可以取消注释 -->
-    <!-- <button class="modal-close-btn" onclick="closeModal('loginModal')" aria-label="Close">✕</button> -->
+    <button class="modal-close-btn" onclick="closeModal('categoryModal')" aria-label="Close">✕</button>
+    <div class="modal-scroll">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;">
+        <div class="panel-title" data-i18n="manageCats">Categories</div>
+        <button class="btn btn-primary btn-small" onclick="openCategoryEdit(null)">+ <span data-i18n="new">New</span></button>
+      </div>
+      <div id="categoryList" class="item-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('categoryModal')" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
 
+<!-- Category Edit Modal -->
+<div class="modal-overlay" id="categoryEditModal" onclick="closeModalByOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close-btn" onclick="closeModal('categoryEditModal')" aria-label="Close">✕</button>
+
+    <div class="modal-scroll">
+      <div class="panel-title" style="margin-bottom:20px;" data-i18n="editCategory">Edit Category</div>
+
+      <!-- 1. ID 单独一行 -->
+      <div class="form-group">
+       <label data-i18n="catId">Category ID</label>
+<input id="cId" disabled style="background:#eee; color:#777;" placeholder="(Auto)" />
+
+      </div>
+
+      <!-- 2. 排序 和 状态 并排 -->
+      <div class="row-2">
+        <div class="form-group">
+          <label data-i18n="sort">Sort</label>
+          <input type="number" id="cSort" placeholder="0" />
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="status">Status</label>
+          <div class="select-wrap">
+            <select id="cActive" class="select-native">
+              <option value="1" data-i18n="active">Active</option>
+              <option value="0" data-i18n="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 状态下方的提示语 -->
+      <div class="form-group" style="margin-top:-10px; margin-bottom:20px;">
+         <div class="muted" data-i18n="catDisableHint">If disabled, all products in this category will be disabled automatically.</div>
+      </div>
+
+      <!-- 3. 图片上传区域（使用 flex 布局：左图右按钮） -->
+      <div class="form-group">
+        <label data-i18n="catImage">Category Cover</label>
+        <div class="image-upload-container">
+          <!-- 左侧：图片预览 -->
+          <div class="current-img-box" style="min-height:140px;">
+            <img id="cImgPreview" src="" style="display:none;">
+            <div id="cImgEmpty" class="empty-txt" data-i18n="noImage">No image</div>
+            <div class="loader-overlay" id="catImgLoader"><div class="loader"></div></div>
+          </div>
+
+          <!-- 右侧：操作按钮 -->
+          <div class="upload-actions">
+            <input type="file" id="cImgFile" accept="image/*" />
+            <button class="btn btn-ghost btn-full" onclick="uploadCategoryImage()" data-i18n="uploadBtn">Upload & Replace</button>
+            <div class="muted" data-i18n="catImageHint">This image is used on the home category cards.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 多语言输入区域 (保持不变) -->
+      <div class="lang-group">
+        <div class="lang-label"><span class="lang-pill">EN</span> <span data-i18n="lang_en">English</span></div>
+        <input id="cTEN" placeholder="" style="margin-bottom:10px; font-weight:800;">
+        <textarea id="cDEN" placeholder=""></textarea>
+      </div>
+
+      <div class="lang-group">
+        <div class="lang-label"><span class="lang-pill">PT</span> <span data-i18n="lang_pt">Portuguese</span></div>
+        <input id="cTPT" placeholder="" style="margin-bottom:10px;">
+        <textarea id="cDPT" placeholder=""></textarea>
+      </div>
+
+      <div class="lang-group">
+        <div class="lang-label"><span class="lang-pill">CN</span> <span data-i18n="lang_cn">Chinese</span></div>
+        <input id="cTCN" placeholder="" style="margin-bottom:10px;">
+        <textarea id="cDCN" placeholder=""></textarea>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn btn-danger btn-full" onclick="deleteCategory()" id="btnDeleteCategory" disabled data-i18n="deleteCategory">Delete Category</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('categoryEditModal')" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()" data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-overlay open" id="loginModal" style="background:var(--primary);" onclick="event.stopPropagation()">
+  <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-scroll" style="text-align:center; padding-top:24px;">
       <img src="https://lestoy.com/necos/logo.png" style="height:60px; margin-bottom:20px;">
       <div class="panel-title" style="margin-bottom:10px;" data-i18n="adminAccess">Admin Access</div>
@@ -847,20 +815,27 @@ border-bottom: 2px solid var(--border);
 
 <div id="toast">Msg</div>
 
-
 <script>
-  // --- Config ---
-  const CFG = { api: "neco_adm_api", key: "neco_adm_key" };
+  // =========================
+  // Config / State
+  // =========================
+  const CFG = {
+    api: "neco_adm_api",
+    key: "neco_adm_key",
+    lastCat: "neco_admin_last_cat_v1"
+  };
   const S = (id) => document.getElementById(id);
 
-  // State
   let products = [];
+  let categories = []; // {id,title,desc,is_active,sort_order,img}
   let selectedProduct = null;
   let editingVariantId = null;
+
+  let editingCategoryId = null;
   let currentLang = 'cn';
 
-  
-  // --- I18n Texts ---
+
+// --- I18n Texts ---
   const TEXTS = {
     en: {
       // header / general
@@ -868,9 +843,11 @@ border-bottom: 2px solid var(--border);
       new: "New",
       search: "Search...",
       allCats: "All Categories",
+      manageCats: "Categories",
       editProduct: "Edit Product",
       save: "Save",
       cancel: "Cancel",
+      close: "Close",
       create: "Create",
       login: "Login",
 
@@ -889,10 +866,15 @@ border-bottom: 2px solid var(--border);
       imgNote: "New image replaces old one automatically.",
       noImage: "No image",
 
-      // categories
-      cat_classic: "Classic",
-      cat_layer: "Layer",
-      cat_seasonal: "Seasonal",
+      // categories (dynamic text mostly, but labels for form)
+      editCategory: "Edit Category",
+      catId: "Category ID",
+      catDisableHint: "If disabled, all products in this category will be disabled automatically.",
+      catImage: "Category Cover",
+      catImageHint: "This image is used on the home category cards.",
+      catPreviewHint: "Preview",
+      deleteCategory: "Delete Category",
+      confirmDeleteCategory: "Delete this category? Products will remain but be hidden if category is missing.",
 
       // list meta
       metaCategoryPrefix: "Category:",
@@ -932,6 +914,7 @@ border-bottom: 2px solid var(--border);
 
       // new product
       newProduct: "New Product",
+      newProductHint: "The product will be created as inactive by default.",
       productName: "Product Name",
       ph_newId: "e.g. classic_cheese_cake",
 
@@ -953,6 +936,7 @@ border-bottom: 2px solid var(--border);
       saved: "Saved Successfully!",
       created: "Created Successfully!",
       errFillAll: "Please fill all fields",
+      errCatIdInvalid: "Invalid Category ID",
       errIdNameRequired: "ID and at least English name are required",
       errPriceGt0: "Price must be > 0",
       selectFileFirst: "Select a file first."
@@ -963,9 +947,11 @@ border-bottom: 2px solid var(--border);
       new: "Novo",
       search: "Pesquisar...",
       allCats: "Todas Categorias",
+      manageCats: "Categorias",
       editProduct: "Editar Produto",
       save: "Salvar",
       cancel: "Cancelar",
+      close: "Fechar",
       create: "Criar",
       login: "Entrar",
 
@@ -983,9 +969,14 @@ border-bottom: 2px solid var(--border);
       imgNote: "Nova imagem substitui a antiga automaticamente.",
       noImage: "Sem imagem",
 
-      cat_classic: "Clássico",
-      cat_layer: "Camadas",
-      cat_seasonal: "Sazonal",
+      editCategory: "Editar Categoria",
+      catId: "ID da Categoria",
+      catDisableHint: "Se desativado, todos os produtos serão desativados.",
+      catImage: "Capa da Categoria",
+      catImageHint: "Usado nos cartões da página inicial.",
+      catPreviewHint: "Pré-visualização",
+      deleteCategory: "Apagar Categoria",
+      confirmDeleteCategory: "Apagar categoria? Os produtos permanecerão.",
 
       metaCategoryPrefix: "Categoria:",
       metaSortPrefix: "Ordem:",
@@ -1019,6 +1010,7 @@ border-bottom: 2px solid var(--border);
       ph_vname_cn: "ex.: 6寸",
 
       newProduct: "Novo Produto",
+      newProductHint: "O produto será criado como inativo por padrão.",
       productName: "Nome do Produto",
       ph_newId: "ex.: classic_cheese_cake",
 
@@ -1037,6 +1029,7 @@ border-bottom: 2px solid var(--border);
       saved: "Guardado com sucesso!",
       created: "Criado com sucesso!",
       errFillAll: "Por favor preencha tudo",
+      errCatIdInvalid: "ID de Categoria Inválido",
       errIdNameRequired: "ID e pelo menos o nome em inglês são obrigatórios",
       errPriceGt0: "O preço deve ser > 0",
       selectFileFirst: "Selecione um ficheiro primeiro."
@@ -1047,9 +1040,11 @@ border-bottom: 2px solid var(--border);
       new: "新建",
       search: "搜索...",
       allCats: "所有分类",
+      manageCats: "分类管理",
       editProduct: "编辑产品",
       save: "保存",
       cancel: "取消",
+      close: "关闭",
       create: "创建",
       login: "登录",
 
@@ -1067,9 +1062,14 @@ border-bottom: 2px solid var(--border);
       imgNote: "上传新图会自动替换旧图。",
       noImage: "暂无图片",
 
-      cat_classic: "经典",
-      cat_layer: "千层",
-      cat_seasonal: "季节",
+      editCategory: "编辑分类",
+      catId: "分类 ID",
+      catDisableHint: "若停用，该分类下所有产品也将被隐藏。",
+      catImage: "分类封面图",
+      catImageHint: "用于首页分类卡片展示。",
+      catPreviewHint: "预览",
+      deleteCategory: "删除分类",
+      confirmDeleteCategory: "确定删除该分类吗？",
 
       metaCategoryPrefix: "分类：",
       metaSortPrefix: "排序：",
@@ -1103,6 +1103,7 @@ border-bottom: 2px solid var(--border);
       ph_vname_cn: "例如：6寸",
 
       newProduct: "新建产品",
+      newProductHint: "新创建的产品默认为停用状态。",
       productName: "产品名称",
       ph_newId: "例如：classic_cheese_cake",
 
@@ -1121,120 +1122,124 @@ border-bottom: 2px solid var(--border);
       saved: "保存成功！",
       created: "创建成功！",
       errFillAll: "请填写完整信息",
+      errCatIdInvalid: "分类 ID 无效",
       errIdNameRequired: "必须填写 ID，且至少填写英文名称",
       errPriceGt0: "价格必须大于 0",
       selectFileFirst: "请先选择文件。"
     }
   };
 
-  // --- Auth & Init ---
-  function getApi() { return (localStorage.getItem(CFG.api) || "").replace(/\/+$/, ""); }
-  function getKey() { return sessionStorage.getItem(CFG.key) || ""; }
 
-  function init() {
-    if (window.innerWidth <= 900) S('editorPanel').style.transition = 'transform 0.3s';
+  function t(key){ return (TEXTS[currentLang] && TEXTS[currentLang][key]) || (TEXTS.en[key] || key); }
 
-    const key = getKey();
-    if (!key) {
-      S('loginModal').classList.add('open');
-    } else {
-      loadProducts();
-    }
-    updateAdminUI();
-    initCustomSelects();
-  }
-
-  function doLogin() {
-    const k = S('adminKeyInput').value.trim();
-    const u = "https://necosapi.lestoy.com";
-    if (!k || !u) return alert(TEXTS[currentLang].errFillAll);
-
-    sessionStorage.setItem(CFG.key, k);
-    localStorage.setItem(CFG.api, u);
-    S('loginModal').classList.remove('open');
-    loadProducts();
-  }
-
-  S('btnLogout').onclick = () => {
-    sessionStorage.removeItem(CFG.key);
-    window.location.reload();
-  };
-
-  function setAdminLang(l) {
+  function setAdminLang(l){
     currentLang = l;
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    const map = { en: 0, pt: 1, cn: 2 };
+    const map = { en:0, pt:1, cn:2 };
     document.querySelectorAll('.lang-btn')[map[l]].classList.add('active');
-
     updateAdminUI();
-
-    // 关键修复：切换语言即时刷新
     renderList();
-    refreshEditorStaticTextOnly();
-    renderVariants(); // variants 名称立即按语言刷新
-    refreshOpenModalI18n(); // 如果 modal 开着，也立即刷新
+    if (selectedProduct) renderVariants();
+    renderCategorySelects();
+    if (S('categoryModal').classList.contains('open')) renderCategoryList();
   }
 
-  function t(key) {
-    return (TEXTS[currentLang] && TEXTS[currentLang][key]) || (TEXTS.en[key] || key);
-  }
-
-  function updateAdminUI() {
+  function updateAdminUI(){
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const k = el.getAttribute('data-i18n');
-      if (t(k)) el.innerText = t(k);
+      el.innerText = t(k);
     });
 
-    // placeholders (products)
     S('searchInput').placeholder = t('search');
 
-    // product edit placeholders
-    if (S('tEN')) S('tEN').placeholder = t('ph_productName_en');
-    if (S('tPT')) S('tPT').placeholder = t('ph_productName_pt');
-    if (S('tCN')) S('tCN').placeholder = t('ph_productName_cn');
-    if (S('dEN')) S('dEN').placeholder = t('ph_desc_en');
-    if (S('dPT')) S('dPT').placeholder = t('ph_desc_pt');
-    if (S('dCN')) S('dCN').placeholder = t('ph_desc_cn');
+    S('tEN').placeholder = t('ph_productName_en');
+    S('tPT').placeholder = t('ph_productName_pt');
+    S('tCN').placeholder = t('ph_productName_cn');
+    S('dEN').placeholder = t('ph_desc_en');
+    S('dPT').placeholder = t('ph_desc_pt');
+    S('dCN').placeholder = t('ph_desc_cn');
 
-    // variant modal placeholders
-    if (S('vPriceEuro')) S('vPriceEuro').placeholder = t('ph_price');
-    if (S('vNameEN')) S('vNameEN').placeholder = t('ph_vname_en');
-    if (S('vNamePT')) S('vNamePT').placeholder = t('ph_vname_pt');
-    if (S('vNameCN')) S('vNameCN').placeholder = t('ph_vname_cn');
+    S('vPriceEuro').placeholder = t('ph_price');
+    S('vNameEN').placeholder = t('ph_vname_en');
+    S('vNamePT').placeholder = t('ph_vname_pt');
+    S('vNameCN').placeholder = t('ph_vname_cn');
 
-    // new product placeholders
-    if (S('newId')) S('newId').placeholder = t('ph_newId');
-    if (S('newNameEN')) S('newNameEN').placeholder = t('ph_productName_en');
-    if (S('newNamePT')) S('newNamePT').placeholder = t('ph_productName_pt');
-    if (S('newNameCN')) S('newNameCN').placeholder = t('ph_productName_cn');
+    S('adminKeyInput').placeholder = t('ph_adminKey');
 
-    // login placeholders
-    if (S('adminKeyInput')) S('adminKeyInput').placeholder = t('ph_adminKey');
+    // category edit placeholders align with product
+    S('cTEN').placeholder = t('ph_productName_en');
+    S('cTPT').placeholder = t('ph_productName_pt');
+    S('cTCN').placeholder = t('ph_productName_cn');
+    S('cDEN').placeholder = t('ph_desc_en');
+    S('cDPT').placeholder = t('ph_desc_pt');
+    S('cDCN').placeholder = t('ph_desc_cn');
+  }
+
+  // =========================
+  // Toast
+  // =========================
+  let __toastTimer = null;
+  function showToast(msg){
+    const el = S('toast');
+    el.innerText = msg;
+    el.style.opacity = 1;
+    clearTimeout(__toastTimer);
+    __toastTimer = setTimeout(() => el.style.opacity = 0, 1700);
+  }
+
+  // =========================
+  // Modal (class open)
+  // =========================
+  let __lockedScrollY = 0;
+  function lockBodyScroll(){
+    if (document.body.classList.contains('modal-open')) return;
+    __lockedScrollY = window.scrollY || 0;
+    document.body.style.top = `-${__lockedScrollY}px`;
+    document.body.classList.add('modal-open');
+  }
+  function unlockBodyScrollIfNoModal(){
+    if (document.querySelector('.modal-overlay.open')) return;
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, __lockedScrollY);
+  }
+  function openModal(id){
+    const m = S(id);
+    lockBodyScroll();
+    m.classList.add('open');
+    updateAdminUI();
     refreshCustomSelectLabels();
-
+  }
+  function closeModal(id){
+    const m = S(id);
+    m.classList.remove('open');
+    unlockBodyScrollIfNoModal();
+  }
+  function closeModalByOverlay(e){
+    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
+      if (e.target.id === 'loginModal') return;
+      closeModal(e.target.id);
+    }
   }
 
-  // 刷新编辑区：不覆盖用户正在编辑但未保存的输入内容
-  function refreshEditorStaticTextOnly() {
-    // 这里只做不影响输入值的刷新：例如空状态、图片空文案、按钮文案已通过 data-i18n 更新
-    // 产品列表/variants 都会独立 render
-    // 另外：如果当前没有选中产品，就保持空状态文案即可（data-i18n 已更新）
-  }
+  // =========================
+  // Auth + API
+  // =========================
+  function getApi(){ return (localStorage.getItem(CFG.api) || "https://necosapi.lestoy.com").replace(/\/+$/, ""); }
+  function getKey(){ return sessionStorage.getItem(CFG.key) || ""; }
 
-  function refreshOpenModalI18n() {
-    // modal 内 data-i18n 已由 updateAdminUI 更新，这里补充动态内容（如空 variants 文案）
-    // 目前无需额外处理
-  }
-
-  function apiCall(endpoint, method = 'GET', body = null) {
+  function apiCall(endpoint, method='GET', body=null){
     const headers = { 'Authorization': `Bearer ${getKey()}` };
     if (!(body instanceof FormData)) headers['Content-Type'] = 'application/json';
 
     return fetch(`${getApi()}/cake-shop/v1/admin${endpoint}`, {
-      method, headers, body: (body instanceof FormData ? body : (body ? JSON.stringify(body) : null))
+      method,
+      headers,
+      body: (body instanceof FormData) ? body : (body ? JSON.stringify(body) : null)
     }).then(async r => {
-      const data = await r.json();
-      if (!r.ok || !data.ok) throw new Error(data.error || r.statusText);
+      let data = null;
+      try { data = await r.json(); } catch { data = null; }
+      if (!r.ok || !data || data.ok !== true) throw new Error((data && data.error) || r.statusText);
       return data;
     }).catch(e => {
       showToast("Error: " + e.message);
@@ -1243,42 +1248,120 @@ border-bottom: 2px solid var(--border);
     });
   }
 
-  // --- Logic ---
-  async function loadProducts() {
-    try {
-      const res = await apiCall('/products');
-      products = res.products || [];
-      renderList();
+  function doLogin(){
+    const k = S('adminKeyInput').value.trim();
+    if (!k) return alert(t('errFillAll'));
+    sessionStorage.setItem(CFG.key, k);
+    localStorage.setItem(CFG.api, "https://necosapi.lestoy.com");
+    S('loginModal').classList.remove('open');
+    unlockBodyScrollIfNoModal();
+    loadAll();
+  }
 
-      // 如果之前选中某个产品，刷新后尽量保持选中并更新引用（修复 sort/category 保存后列表不更新的感觉）
-      if (selectedProduct) {
-        const fresh = products.find(x => x.id === selectedProduct.id);
-        if (fresh) {
+  // =========================
+  // Remember last category
+  // =========================
+  function getRememberedCategory(){
+    try{ return localStorage.getItem(CFG.lastCat) || ""; }catch(e){ return ""; }
+  }
+  function onRememberCategory(catId){
+    try{ if (catId) localStorage.setItem(CFG.lastCat, catId); }catch(e){}
+  }
+
+  // =========================
+  // Categories helpers
+  // =========================
+function getCategoryById(id){
+  const key = String(id);
+  return categories.find(c => String(c.id) === key) || null;
+}
+function getLocalizedCategoryName(id){
+  const c = getCategoryById(id);
+  if (!c) return String(id || "");
+  const title = c.title || {};
+  return title[currentLang] || title.en || title.cn || title.pt || String(c.id);
+}
+
+  // Fill selects with categories, then refresh cselect UI
+function renderCategorySelects(){
+  const sorted = categories.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+
+  // filter
+  const f = S('catFilter');
+  const prevF = f.value;
+  f.innerHTML = `<option value="">${t('allCats')}</option>`;
+  sorted.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = String(c.id);
+    opt.textContent = getLocalizedCategoryName(c.id) + (c.is_active ? "" : ` (${t('inactive')})`);
+    f.appendChild(opt);
+  });
+  f.value = prevF;
+
+  // product category
+  const pc = S('pCategory');
+  const prevPC = pc.value;
+  pc.innerHTML = "";
+  sorted.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = String(c.id);
+    opt.textContent = getLocalizedCategoryName(c.id);
+    pc.appendChild(opt);
+  });
+  if (prevPC) pc.value = prevPC;
+
+  // new product default category
+  const nc = S('newCategory');
+  const remembered = getRememberedCategory();
+  const prevNC = nc.value;
+  nc.innerHTML = "";
+  sorted.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = String(c.id);
+    opt.textContent = getLocalizedCategoryName(c.id);
+    nc.appendChild(opt);
+  });
+  nc.value = remembered || prevNC || (sorted[0] ? String(sorted[0].id) : "");
+
+  refreshCustomSelectLabels();
+}
+
+
+  // =========================
+  // Load all
+  // =========================
+  async function loadAll(){
+    try{
+      const [cRes, pRes] = await Promise.all([
+        apiCall('/categories'),
+        apiCall('/products')
+      ]);
+      categories = cRes.categories || [];
+      products = pRes.products || [];
+      renderCategorySelects();
+      renderList();
+      // keep selection
+      if (selectedProduct){
+        const fresh = products.find(x => String(x.id) === String(selectedProduct.id));
+        if (fresh){
           selectedProduct = fresh;
-          // 注意：这里不强制覆盖编辑表单输入，避免用户未保存的内容被冲掉
-          // 只更新 variants / 图片预览 / list 高亮
-          renderList();
           renderVariants();
           refreshImagePreviewFromSelected();
         }
       }
-    } catch (e) {}
+    }catch(e){}
   }
 
-  function getLocalizedCategory(cat) {
-    if (cat === 'classic') return t('cat_classic');
-    if (cat === 'layer') return t('cat_layer');
-    if (cat === 'seasonal') return t('cat_seasonal');
-    return cat || '';
-  }
-
-  function getLocalizedTitle(p) {
+  // =========================
+  // Products
+  // =========================
+  function getLocalizedTitle(p){
     if (!p) return "";
-    if (p.title) return p.title[currentLang] || p.title.en || p.title.cn || p.title.pt || p.id;
-    return p.id;
+    const tt = p.title || {};
+    return tt[currentLang] || tt.en || tt.cn || tt.pt || p.id;
   }
 
-  function renderList() {
+  function renderList(){
     const q = S('searchInput').value.toLowerCase();
     const cat = S('catFilter').value;
     const listEl = S('productList');
@@ -1287,7 +1370,7 @@ border-bottom: 2px solid var(--border);
     const filtered = products.filter(p => {
       if (cat && p.category !== cat) return false;
       const titleStr = JSON.stringify(p.title || {}).toLowerCase();
-      return p.id.toLowerCase().includes(q) || titleStr.includes(q);
+      return String(p.id).toLowerCase().includes(q) || titleStr.includes(q);
     });
 
     filtered.forEach(p => {
@@ -1301,16 +1384,12 @@ border-bottom: 2px solid var(--border);
 
       const title = getLocalizedTitle(p);
       const statusClass = p.is_active ? 'active' : '';
-
-      const catLabel = `${t('metaCategoryPrefix')} ${getLocalizedCategory(p.category)}`;
+      const catLabel = `${t('metaCategoryPrefix')} ${getLocalizedCategoryName(p.category)}`;
       const sortLabel = `${t('metaSortPrefix')} ${p.sort_order ?? 0}`;
 
       div.innerHTML = `
-       <img
-  src="${imgUrl || 'https://lestoy.com/necos/noimg.png'}"
-  class="item-thumb"
-  onerror="this.onerror=null; this.src='https://lestoy.com/necos/noimg.png';"
-/>
+        <img src="${imgUrl || 'https://lestoy.com/necos/noimg.png'}" class="item-thumb"
+          onerror="this.onerror=null; this.src='https://lestoy.com/necos/noimg.png';" />
         <div class="item-info">
           <div class="item-title">${escapeHtml(title)}</div>
           <div class="item-meta">
@@ -1332,9 +1411,9 @@ border-bottom: 2px solid var(--border);
     }
   }
 
-  function selectProduct(p) {
+  function selectProduct(p){
     selectedProduct = p;
-    renderList(); // highlight
+    renderList();
 
     if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
 
@@ -1343,20 +1422,11 @@ border-bottom: 2px solid var(--border);
     S('btnSave').disabled = false;
     S('btnDeleteBottom').disabled = false;
 
-    // Fill Fields (these are actual values, ok to overwrite because user just selected a product)
     S('pId').value = p.id;
     S('pCategory').value = p.category;
+    onRememberCategory(p.category);
     S('pSort').value = p.sort_order ?? 0;
     S('pActive').value = (p.is_active == 1) ? "1" : "0";
-
-    // 2. 强制刷新自定义下拉框 (cselect) 的显示文本
-    ['pCategory', 'pActive'].forEach(id => {
-        const el = S(id);
-        if (el && el.dataset.cselectId && window.__cselectStates) {
-            const state = window.__cselectStates.get(el.dataset.cselectId);
-            if (state) syncCSelectFromNative(state);
-        }
-    });
 
     const title = p.title || {};
     const desc = p.description || {};
@@ -1367,27 +1437,12 @@ border-bottom: 2px solid var(--border);
     S('dPT').value = desc.pt || "";
     S('dCN').value = desc.cn || "";
 
+    refreshCustomSelectLabels();
     refreshImagePreviewFromSelected();
     renderVariants();
   }
 
-  function refreshImagePreviewFromSelected() {
-    if (!selectedProduct) return;
-    const img = (selectedProduct.images || []).find(i => i.is_primary) || (selectedProduct.images || [])[0];
-    const preview = S('pImgPreview');
-    const emptyTxt = S('pImgEmpty');
-
-    if (img && (img.public_url || img.url)) {
-      preview.src = img.public_url || img.url;
-      preview.style.display = 'block';
-      emptyTxt.style.display = 'none';
-    } else {
-      preview.style.display = 'none';
-      emptyTxt.style.display = 'flex';
-    }
-  }
-
-  function closeEditorMobile() {
+  function closeEditorMobile(){
     S('editorPanel').classList.remove('open');
     selectedProduct = null;
     renderList();
@@ -1397,440 +1452,85 @@ border-bottom: 2px solid var(--border);
     S('editorForm').style.display = 'none';
   }
 
-  // --- Modal Helpers ---
- let __lockedScrollY = 0;
-
-  function lockBodyScroll() {
-    if (document.body.classList.contains('modal-open')) return;
-    __lockedScrollY = window.scrollY || window.pageYOffset || 0;
-    document.body.style.top = `-${__lockedScrollY}px`;
-    document.body.classList.add('modal-open');
-  }
-
-  function unlockBodyScrollIfNoModal() {
-    const anyOpen = document.querySelector('.modal-overlay.open');
-    if (anyOpen) return; // 如果还有其他弹窗开着，不解锁
-    document.body.classList.remove('modal-open');
-    document.body.style.top = '';
-    window.scrollTo(0, __lockedScrollY);
-  }
-
-  // --- Modal Helpers ---
-  function openModal(id) {
-    const modal = S(id);
-    if (!modal) return;
-    
-    lockBodyScroll(); // 锁定背景滚动
-    
-    const shell = modal.querySelector('.modal-shell');
-    modal.style.display = 'flex';
-    
-    // 强制回流以触发 transition
-    requestAnimationFrame(() => {
-      modal.style.opacity = 1;
-      if(shell) shell.classList.add('open');
-    });
-    
-    // 如果是 variant modal，刷新多语言
-    if (id === 'variantModal' || id === 'newProductModal') {
-      updateAdminUI(); 
-    }
-  }
-
-  function closeModal(id) {
-    const modal = S(id);
-    if (!modal) return;
-    const shell = modal.querySelector('.modal-shell');
-    if(shell) shell.classList.remove('open');
-    modal.style.opacity = 0;
-    setTimeout(() => {
-      modal.style.display = 'none';
-      unlockBodyScrollIfNoModal(); // 确保在所有弹窗关闭后才解锁
-    }, 300);
-  }
-
-  function closeModalByOverlay(event) {
-    if (event.target && event.target.classList && event.target.classList.contains('modal-overlay')) {
-      // login 不允许点遮罩关闭
-      if (event.target.id === 'loginModal') return;
-      closeModal(event.target.id);
-    }
-  }
-
-  function openNewProductModal() {
-    // 重置为默认值，清空旧输入
-    S('newCategory').value = "classic";
-    
-    // 刷新 cselect（如果用了自定义下拉）
-    const sel = S('newCategory');
-    if (sel && sel.dataset.cselectId && window.__cselectStates) {
-      const state = window.__cselectStates.get(sel.dataset.cselectId);
-      if (state) syncCSelectFromNative(state);
-    }
-    
+  async function openNewProductModal(){
+    renderCategorySelects();
+    const remembered = getRememberedCategory();
+    const fallback = remembered || S('catFilter').value || categories[0]?.id || "";
+    S('newCategory').value = fallback;
+    refreshCustomSelectLabels();
     openModal('newProductModal');
   }
 
-  // --- Auth & Init ---
-  function getApi() { return (localStorage.getItem(CFG.api) || "").replace(/\/+$/, ""); }
-  function getKey() { return sessionStorage.getItem(CFG.key) || ""; }
-
-  function init() {
-    if (window.innerWidth <= 900) S('editorPanel').style.transition = 'transform 0.3s';
-
-    const key = getKey();
-    if (!key) {
-      S('loginModal').classList.add('open');
-    } else {
-      loadProducts();
-    }
-    updateAdminUI();
-    initCustomSelects();
-  }
-
-  function doLogin() {
-    const k = S('adminKeyInput').value.trim();
-    const u = "https://necosapi.lestoy.com"; // 硬编码API地址
-    if (!k || !u) return alert(t('errFillAll'));
-
-    sessionStorage.setItem(CFG.key, k);
-    localStorage.setItem(CFG.api, u);
-    closeModal('loginModal');
-    loadProducts();
-  }
-
-  S('btnLogout').onclick = () => {
-    sessionStorage.removeItem(CFG.key);
-    window.location.reload();
-  };
-
-  // --- Language ---
-  function setAdminLang(l) {
-    currentLang = l;
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    const map = {en:0, pt:1, cn:2};
-    document.querySelectorAll('.lang-btn')[map[l]].classList.add('active');
-
-    updateAdminUI();
-
-    // 关键修复：切换语言即时刷新
-    renderList();
-    refreshEditorStaticTextOnly();
-    renderVariants(); // variants 名称立即按语言刷新
-    refreshOpenModalI18n(); // 如果 modal 开着，也立即刷新
-  }
-
-  function t(key) {
-    return (TEXTS[currentLang] && TEXTS[currentLang][key]) || (TEXTS.en[key] || key);
-  }
-
-  function updateAdminUI() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const k = el.getAttribute('data-i18n');
-      if (t(k)) el.innerText = t(k);
-    });
-
-    // placeholders (products)
-    S('searchInput').placeholder = t('search');
-
-    // product edit placeholders
-    if (S('tEN')) S('tEN').placeholder = t('ph_productName_en');
-    if (S('tPT')) S('tPT').placeholder = t('ph_productName_pt');
-    if (S('tCN')) S('tCN').placeholder = t('ph_productName_cn');
-    if (S('dEN')) S('dEN').placeholder = t('ph_desc_en');
-    if (S('dPT')) S('dPT').placeholder = t('ph_desc_pt');
-    if (S('dCN')) S('dCN').placeholder = t('ph_desc_cn');
-
-    // variant modal placeholders
-    if (S('vPriceEuro')) S('vPriceEuro').placeholder = t('ph_price');
-    if (S('vNameEN')) S('vNameEN').placeholder = t('ph_vname_en');
-    if (S('vNamePT')) S('vNamePT').placeholder = t('ph_vname_pt');
-    if (S('vNameCN')) S('vNameCN').placeholder = t('ph_vname_cn');
-
-    // new product placeholders
-    if (S('newId')) S('newId').placeholder = t('ph_newId');
-    if (S('newNameEN')) S('newNameEN').placeholder = t('ph_productName_en');
-    if (S('newNamePT')) S('newNamePT').placeholder = t('ph_productName_pt');
-    if (S('newNameCN')) S('newNameCN').placeholder = t('ph_productName_cn');
-
-    // login placeholders
-    if (S('adminKeyInput')) S('adminKeyInput').placeholder = t('ph_adminKey');
-    refreshCustomSelectLabels(); // Ensure custom selects also update placeholders
-  }
-
-  // --- Product & List Logic ---
-  async function loadProducts() {
-    try {
-      const res = await apiCall('/products');
-      products = res.products || [];
-      renderList();
-    } catch(e) {}
-  }
-
-  function getLocalizedCategory(cat) {
-    if (cat === 'classic') return t('cat_classic');
-    if (cat === 'layer') return t('cat_layer');
-    if (cat === 'seasonal') return t('cat_seasonal');
-    return cat || '';
-  }
-
-  function getLocalizedTitle(p) {
-    if (!p) return "";
-    if (p.title) return p.title[currentLang] || p.title.en || p.title.cn || p.title.pt || p.id;
-    return p.id;
-  }
-
-  function renderList() {
-    const q = S('searchInput').value.toLowerCase();
-    const cat = S('catFilter').value;
-    const listEl = S('productList');
-    listEl.innerHTML = '';
-
-    const filtered = products.filter(p => {
-      if (cat && p.category !== cat) return false;
-      const titleStr = JSON.stringify(p.title || {}).toLowerCase();
-      return p.id.toLowerCase().includes(q) || titleStr.includes(q);
-    });
-
-    filtered.forEach(p => {
-      const div = document.createElement('div');
-      div.className = `list-item ${selectedProduct?.id === p.id ? 'active' : ''}`;
-      div.onclick = () => selectProduct(p);
-      
-      let imgUrl = "";
-      const primaryImg = (p.images || []).find(i => i.is_primary) || (p.images || [])[0];
-      if (primaryImg) imgUrl = primaryImg.public_url || primaryImg.url || "";
-
-      const title = getLocalizedTitle(p);
-      const statusClass = p.is_active ? 'active' : '';
-
-      const catLabel = `${t('metaCategoryPrefix')} ${getLocalizedCategory(p.category)}`;
-      const sortLabel = `${t('metaSortPrefix')} ${p.sort_order ?? 0}`;
-
-      div.innerHTML = `
-       <img
-  src="${imgUrl || 'https://lestoy.com/necos/noimg.png'}"
-  class="item-thumb"
-  onerror="this.onerror=null; this.src='https://lestoy.com/necos/noimg.png';"
-/>
-        <div class="item-info">
-          <div class="item-title">${escapeHtml(title)}</div>
-          <div class="item-meta">
-            <div class="status-dot ${statusClass}"></div>
-            <span>${escapeHtml(catLabel)}</span>
-            <span>•</span>
-            <span>${escapeHtml(sortLabel)}</span>
-          </div>
-        </div>
-      `;
-      listEl.appendChild(div);
-    });
-
-    if (filtered.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'empty-state';
-      empty.innerText = '—';
-      listEl.appendChild(empty);
-    }
-  }
-
-  function selectProduct(p) {
-    selectedProduct = p;
-    renderList(); // highlight
-
-    if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
-
-    S('editorEmpty').style.display = 'none';
-    S('editorForm').style.display = 'block';
-    S('btnSave').disabled = false;
-    S('btnDeleteBottom').disabled = false;
-
-    // Fill Fields (these are actual values, ok to overwrite because user just selected a product)
-    S('pId').value = p.id;
-    S('pCategory').value = p.category;
-    S('pSort').value = p.sort_order ?? 0;
-    S('pActive').value = (p.is_active == 1) ? "1" : "0";
-
-    // 2. 强制刷新自定义下拉框 (cselect) 的显示文本
-    ['pCategory', 'pActive'].forEach(id => {
-        const el = S(id);
-        if (el && el.dataset.cselectId && window.__cselectStates) {
-            const state = window.__cselectStates.get(el.dataset.cselectId);
-            if (state) syncCSelectFromNative(state);
-        }
-    });
-
-    const title = p.title || {};
-    const desc = p.description || {};
-    S('tEN').value = title.en || "";
-    S('tPT').value = title.pt || "";
-    S('tCN').value = title.cn || "";
-    S('dEN').value = desc.en || "";
-    S('dPT').value = desc.pt || "";
-    S('dCN').value = desc.cn || "";
-
-    refreshImagePreviewFromSelected();
-    renderVariants();
-  }
-
-  function refreshImagePreviewFromSelected() {
-    if (!selectedProduct) return;
-    const img = (selectedProduct.images || []).find(i => i.is_primary) || (selectedProduct.images || [])[0];
-    const preview = S('pImgPreview');
-    const emptyTxt = S('pImgEmpty');
-
-    if (img && (img.public_url || img.url)) {
-      preview.src = img.public_url || img.url;
-      preview.style.display = 'block';
-      emptyTxt.style.display = 'none';
-    } else {
-      preview.style.display = 'none';
-      emptyTxt.style.display = 'flex';
-    }
-  }
-
-  function closeEditorMobile() {
-    S('editorPanel').classList.remove('open');
-    selectedProduct = null;
-    renderList();
-    S('btnSave').disabled = true;
-    S('btnDeleteBottom').disabled = true;
-    S('editorEmpty').style.display = 'block';
-    S('editorForm').style.display = 'none';
-  }
-
-  // --- Modal Helpers ---
-  function openNewProductModal() {
-    S('newCategory').value = "classic";
-    
-    // 刷新 cselect（如果用了自定义下拉）
-    const sel = S('newCategory');
-    if (sel && sel.dataset.cselectId && window.__cselectStates) {
-      const state = window.__cselectStates.get(sel.dataset.cselectId);
-      if (state) syncCSelectFromNative(state);
-    }
-    
-    openModal('newProductModal');
-  }
-
-  function closeModal(id) {
-    const modal = S(id);
-    if (!modal) return;
-    const shell = modal.querySelector('.modal-shell');
-    if(shell) shell.classList.remove('open');
-    modal.style.opacity = 0;
-    setTimeout(() => {
-      modal.style.display = 'none';
-      unlockBodyScrollIfNoModal();
-    }, 300);
-  }
-
-  function closeModalByOverlay(e){
-    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
-      // login 不允许点遮罩关闭
-      if (e.target.id === 'loginModal') return;
-      closeModal(e.target.id);
-    }
-  }
-
-  function lockBodyScroll() {
-    if (document.body.classList.contains('modal-open')) return;
-    __lockedScrollY = window.scrollY || window.pageYOffset || 0;
-    document.body.style.top = `-${__lockedScrollY}px`;
-    document.body.classList.add('modal-open');
-  }
-
-  function unlockBodyScrollIfNoModal() {
-    const anyOpen = document.querySelector('.modal-overlay.open');
-    if (anyOpen) return;
-    document.body.classList.remove('modal-open');
-    document.body.style.top = '';
-    window.scrollTo(0, __lockedScrollY);
-  }
-
-  async function createNewProduct() {
+  async function createNewProduct(){
     const cat = S('newCategory').value;
-    // 获取当前弹窗内的创建按钮，防止重复点击
+    onRememberCategory(cat);
+
     const btn = S('newProductModal').querySelector('.btn-primary');
-    
     if (btn) btn.disabled = true;
-
-    // 后端只接收 category，其他字段（ID/Title/Status）会自动生成默认值
-    const payload = {
-      category: cat
-      // 后端会自动设置: title={}, is_active=0, sort_order=0
-    };
-
-    try {
-      const res = await apiCall('/products', 'POST', payload);
-      
+    try{
+      const res = await apiCall('/products', 'POST', { category: cat });
       closeModal('newProductModal');
       showToast(t('created'));
-
-      await loadProducts();
-      
-      // 选中新产品
-      if (res && res.id) {
-        const newP = products.find(x => String(x.id) === String(res.id));
-        if (newP) {
-          selectProduct(newP);
-          // 如果是手机端，可能需要这里触发面板打开
-          if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
-        }
-      }
-    } catch (e) {
-      console.error("Failed to create product:", e);
-    } finally {
+      await loadAll();
+      const newP = products.find(x => String(x.id) === String(res.id));
+      if (newP) selectProduct(newP);
+    }catch(e){
+    }finally{
       if (btn) btn.disabled = false;
     }
   }
 
-  async function saveProduct() {
+  async function saveProduct(){
     if (!selectedProduct) return;
 
     const payload = {
       category: S('pCategory').value,
       is_active: S('pActive').value === "1",
-      sort_order: Number(S('pSort').value),
-      title: {
-        en: S('tEN').value.trim(),
-        pt: S('tPT').value.trim(),
-        cn: S('tCN').value.trim()
-      },
-      description: {
-        en: S('dEN').value.trim(),
-        pt: S('dPT').value.trim(),
-        cn: S('dCN').value.trim()
-      }
+      sort_order: Number(S('pSort').value || 0),
+      title: { en: S('tEN').value.trim(), pt: S('tPT').value.trim(), cn: S('tCN').value.trim() },
+      description: { en: S('dEN').value.trim(), pt: S('dPT').value.trim(), cn: S('dCN').value.trim() }
     };
-
-    try {
+    onRememberCategory(payload.category);
+    try{
       await apiCall(`/products/${selectedProduct.id}`, 'PUT', payload);
       showToast(t('saved'));
-      await loadProducts();
-    } catch (e) {}
+      await loadAll();
+    }catch(e){}
   }
 
-  async function deleteProduct() {
+  async function deleteProduct(){
     if (!selectedProduct) return;
     if (!confirm(t('confirmDeleteProduct'))) return;
 
-    try {
+    try{
       await apiCall(`/products/${selectedProduct.id}`, 'DELETE');
       showToast(t('deleted'));
       selectedProduct = null;
-      S('editorEmpty').style.display = 'block';
-      S('editorForm').style.display = 'none';
-      S('btnSave').disabled = true;
-      S('btnDeleteBottom').disabled = true;
-
-      if (window.innerWidth <= 900) closeEditorMobile();
-      await loadProducts();
-    } catch (e) {}
+      closeEditorMobile();
+      await loadAll();
+    }catch(e){}
   }
 
-  // --- Image Logic ---
-  async function uploadImage() {
+  // =========================
+  // Product Image
+  // =========================
+  function refreshImagePreviewFromSelected(){
+    if (!selectedProduct) return;
+    const img = (selectedProduct.images || []).find(i => i.is_primary) || (selectedProduct.images || [])[0];
+    const preview = S('pImgPreview');
+    const emptyTxt = S('pImgEmpty');
+
+    if (img && (img.public_url || img.url)) {
+      preview.src = img.public_url || img.url;
+      preview.style.display = 'block';
+      emptyTxt.style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      emptyTxt.style.display = 'flex';
+    }
+  }
+
+  async function uploadImage(){
     if (!selectedProduct) return;
     const file = S('imgUploadInput').files[0];
     if (!file) return showToast(t('selectFileFirst'));
@@ -1839,171 +1539,294 @@ border-bottom: 2px solid var(--border);
     fd.append('file', file);
 
     S('imgLoader').classList.add('active');
-    try {
+    try{
       showToast(t('uploading'));
       await apiCall(`/products/${selectedProduct.id}/image`, 'POST', fd);
       showToast(t('uploaded'));
       S('imgUploadInput').value = "";
-
-      await loadProducts();
-      const fresh = products.find(x => x.id === selectedProduct.id);
-      if (fresh) {
-        selectedProduct = fresh;
-        refreshImagePreviewFromSelected();
-        renderList();
-      }
-    } catch (e) {
-    } finally {
+      await loadAll();
+      const fresh = products.find(x => String(x.id) === String(selectedProduct.id));
+      if (fresh){ selectedProduct = fresh; refreshImagePreviewFromSelected(); renderList(); }
+    }catch(e){
+    }finally{
       S('imgLoader').classList.remove('active');
     }
   }
 
-  // --- Variant Logic ---
-  function renderVariants() {
-      const list = S('variantList'); list.innerHTML = '';
-      if(!selectedProduct) return;
-      
-      // 确保 variants 是数组
-      const vars = (selectedProduct.variants || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-      
-      if(vars.length===0) {
-        list.innerHTML = `<div class="empty-state">${t('noVariants')}</div>`;
-        return;
-      }
-      
-      vars.forEach(v => {
-          // 获取当前语言名称
-          let name = "Variant";
-          if (v.name) {
-             name = v.name[currentLang] || v.name.en || v.name.cn || v.name.pt || "Variant";
-          }
-          
-          const div = document.createElement('div'); div.className='v-card';
-          // 注意：openVariantModal 的参数 v.id 需要加引号，防止数字被误解
-          div.innerHTML = `
-            <div class="v-info">
-              <div>${escapeHtml(name)}</div>
-              <div class="v-price">€ ${(v.price_cents/100).toFixed(2)}</div>
-            </div>
-            <div style="display:flex;gap:8px;flex-shrink:0;">
-              <button class="btn btn-ghost btn-small" onclick="openVariantModal('${v.id}')">${t('edit')}</button>
-              <button class="btn btn-danger btn-small" onclick="deleteVariant('${v.id}')">${t('delete')}</button>
-            </div>`;
-          list.appendChild(div);
-      });
+  // =========================
+  // Variants
+  // =========================
+  function renderVariants(){
+    const list = S('variantList'); list.innerHTML = '';
+    if(!selectedProduct) return;
+
+    const vars = (selectedProduct.variants || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+    if(vars.length===0){
+      list.innerHTML = `<div class="empty-state">${escapeHtml(t('noVariants'))}</div>`;
+      return;
+    }
+
+    vars.forEach(v => {
+      const n = v.name || {};
+      const name = n[currentLang] || n.en || n.cn || n.pt || "Variant";
+      const div = document.createElement('div'); div.className='v-card';
+      div.innerHTML = `
+        <div class="v-info">
+          <div>${escapeHtml(name)}</div>
+          <div class="v-price">€ ${((v.price_cents||0)/100).toFixed(2)}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-ghost btn-small" onclick="openVariantModal('${v.id}')">${t('edit')}</button>
+          <button class="btn btn-danger btn-small" onclick="deleteVariant('${v.id}')">${t('delete')}</button>
+        </div>`;
+      list.appendChild(div);
+    });
   }
 
-function openVariantModal(vid = null) {
-      editingVariantId = vid; // vid 是字符串 (e.g. "45")
-      
-      // 清空/初始化表单
-      S('vPriceEuro').value = "";
-      S('vNameEN').value = ""; S('vNamePT').value = ""; S('vNameCN').value = "";
-      S('vSort').value = 0; S('vActive').value = "1";
+  function openVariantModal(vid = null){
+    editingVariantId = vid;
 
-      if(vid && selectedProduct) {
-          // 这里的查找要小心类型转换，用 String() 包裹比较最稳
-          const v = selectedProduct.variants.find(x => String(x.id) === String(vid));
-          if (v) {
-              S('vPriceEuro').value = (v.price_cents / 100);
-              // v.name 可能是解析后的对象
-              const n = v.name || {};
-              S('vNameEN').value = n.en || "";
-              S('vNamePT').value = n.pt || "";
-              S('vNameCN').value = n.cn || "";
-              S('vSort').value = v.sort_order || 0;
-              S('vActive').value = v.is_active ? "1" : "0";
-          }
+    S('vPriceEuro').value = "";
+    S('vNameEN').value = ""; S('vNamePT').value = ""; S('vNameCN').value = "";
+    S('vSort').value = 0; S('vActive').value = "1";
+
+    if(vid && selectedProduct){
+      const v = (selectedProduct.variants || []).find(x => String(x.id) === String(vid));
+      if (v){
+        S('vPriceEuro').value = (v.price_cents || 0) / 100;
+        const n = v.name || {};
+        S('vNameEN').value = n.en || "";
+        S('vNamePT').value = n.pt || "";
+        S('vNameCN').value = n.cn || "";
+        S('vSort').value = v.sort_order || 0;
+        S('vActive').value = v.is_active ? "1" : "0";
       }
-      
-      // 刷新 UI 语言并打开
-      updateAdminUI();
-      // 这里也要刷新自定义下拉框（如果有）
-      const vActiveSel = S('vActive');
-      if (vActiveSel && vActiveSel.dataset.cselectId && window.__cselectStates) {
-          syncCSelectFromNative(window.__cselectStates.get(vActiveSel.dataset.cselectId));
-      }
-      
-      openModal('variantModal');
+    }
+
+    refreshCustomSelectLabels();
+    openModal('variantModal');
   }
 
-  async function saveVariant() {
-      if(!selectedProduct) return;
-      
-      const priceVal = parseFloat(S('vPriceEuro').value);
-      if (isNaN(priceVal) || priceVal <= 0) return alert(t('errPriceGt0'));
-      const priceCents = Math.round(priceVal * 100);
+  async function saveVariant(){
+    if(!selectedProduct) return;
 
-      const payload = {
-          product_id: selectedProduct.id,
-          price_cents: priceCents,
-          name: { 
-              en: S('vNameEN').value.trim(), 
-              pt: S('vNamePT').value.trim(), 
-              cn: S('vNameCN').value.trim() 
-          },
-          sort_order: Number(S('vSort').value),
-          is_active: S('vActive').value === "1"
-      };
+    const priceVal = parseFloat(S('vPriceEuro').value);
+    if (isNaN(priceVal) || priceVal <= 0) return alert(t('errPriceGt0'));
+    const priceCents = Math.round(priceVal * 100);
 
-      // 禁用按钮防止连点
-      const btn = S('variantModal').querySelector('.btn-primary');
-      if(btn) btn.disabled = true;
+    const payload = {
+      product_id: selectedProduct.id,
+      price_cents: priceCents,
+      name: {
+        en: S('vNameEN').value.trim(),
+        pt: S('vNamePT').value.trim(),
+        cn: S('vNameCN').value.trim()
+      },
+      sort_order: Number(S('vSort').value || 0),
+      is_active: S('vActive').value === "1"
+    };
 
-      try {
-          const url = editingVariantId ? `/variants/${editingVariantId}` : '/variants';
-          const method = editingVariantId ? 'PUT' : 'POST';
-          
-          const res = await apiCall(url, method, payload);
-          
-          // 如果是新建，把新 ID 存起来
-          if (method === 'POST' && res.id) {
-            editingVariantId = String(res.id);
-          }
-          
-          closeModal('variantModal');
-          showToast(t('saved'));
-          
-          // 刷新数据
-          await loadProducts();
-          
-          // 重新定位 selectedProduct (因为 products 数组被替换了)
-          const fresh = products.find(p => String(p.id) === String(selectedProduct.id));
-          if(fresh) {
-              selectedProduct = fresh;
-              renderVariants();
-          }
-      } catch(e) {
-          console.error(e);
-          alert("Error: " + e.message);
-      } finally {
-          if(btn) btn.disabled = false;
-      }
+    const btn = S('variantModal').querySelector('.btn-primary');
+    if(btn) btn.disabled = true;
+    try{
+      const url = editingVariantId ? `/variants/${editingVariantId}` : '/variants';
+      const method = editingVariantId ? 'PUT' : 'POST';
+      await apiCall(url, method, payload);
+      closeModal('variantModal');
+      showToast(t('saved'));
+      await loadAll();
+      const fresh = products.find(x => String(x.id) === String(selectedProduct.id));
+      if (fresh){ selectedProduct = fresh; renderVariants(); renderList(); }
+    }catch(e){
+    }finally{
+      if(btn) btn.disabled = false;
+    }
   }
-  async function deleteVariant(vid) {
+
+  async function deleteVariant(vid){
     if (!confirm(t('confirmDeleteVariant'))) return;
-    try {
+    try{
       await apiCall(`/variants/${vid}`, 'DELETE');
       showToast(t('deleted'));
-
-      await loadProducts();
-      const fresh = products.find(x => x.id === selectedProduct.id);
-      if (fresh) {
-        selectedProduct = fresh;
-        renderVariants();
-        renderList();
-      }
-    } catch (e) {}
+      await loadAll();
+      const fresh = products.find(x => String(x.id) === String(selectedProduct.id));
+      if (fresh){ selectedProduct = fresh; renderVariants(); renderList(); }
+    }catch(e){}
   }
 
-  function showToast(msg) {
-    const toast = S('toast');
-    toast.innerText = msg;
-    toast.style.opacity = 1;
-    setTimeout(() => toast.style.opacity = 0, 2000);
+  // =========================
+  // Categories Manager
+  // =========================
+  function openCategoryManager(){
+    renderCategoryList();
+    openModal('categoryModal');
   }
 
-  function escapeHtml(str) {
+function renderCategoryList(){
+  const list = S('categoryList');
+  list.innerHTML = '';
+  const sorted = categories.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  if (sorted.length === 0){
+    list.innerHTML = `<div class="empty-state">—</div>`;
+    return;
+  }
+
+  sorted.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    const dot = c.is_active ? 'active' : '';
+    div.innerHTML = `
+      <img src="${(c.img || 'https://lestoy.com/necos/noimg.png')}" class="item-thumb"
+        onerror="this.onerror=null; this.src='https://lestoy.com/necos/noimg.png';" />
+      <div class="item-info">
+        <div class="item-title">${escapeHtml(getLocalizedCategoryName(c.id))}</div>
+        <div class="item-meta">
+          <div class="status-dot ${dot}"></div>
+          <span>#${escapeHtml(String(c.id))}</span>
+          <span>•</span>
+          <span>${escapeHtml(t('metaSortPrefix'))} ${c.sort_order ?? 0}</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost btn-small" onclick="openCategoryEdit('${escapeAttr(String(c.id))}')">${t('edit')}</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+ async function openCategoryEdit(catId){
+  // catId 是字符串数字，或 null
+  if (!catId){
+    // ✅ 先创建一条空分类，拿到自增 id
+    const payload = {
+      is_active: false,
+      sort_order: 0,
+      title: { en: "", pt: "", cn: "" },
+      description: { en: "", pt: "", cn: "" }
+    };
+    const res = await apiCall('/categories', 'POST', payload);
+
+    // ✅ 刷新数据，让列表/下拉框立刻出现新分类
+    await loadAll();
+
+    // ✅ 直接进入编辑态（此时有 id 了）
+    return openCategoryEdit(String(res.id));
+  }
+
+  editingCategoryId = String(catId);
+  const isEdit = true;
+  const c = getCategoryById(editingCategoryId); // loadAll 后应能拿到
+
+  S('btnDeleteCategory').disabled = false;
+
+  S('cId').disabled = true;
+  S('cId').value = String(editingCategoryId);
+
+  S('cSort').value = c ? (c.sort_order ?? 0) : 0;
+  S('cActive').value = c ? (c.is_active ? "1" : "0") : "0";
+
+  const tt = (c && c.title) ? c.title : {};
+  const dd = (c && c.desc) ? c.desc : {};
+  S('cTEN').value = tt.en || "";
+  S('cTPT').value = tt.pt || "";
+  S('cTCN').value = tt.cn || "";
+  S('cDEN').value = dd.en || "";
+  S('cDPT').value = dd.pt || "";
+  S('cDCN').value = dd.cn || "";
+
+  if (c && c.img){
+    S('cImgPreview').src = c.img;
+    S('cImgPreview').style.display = 'block';
+    S('cImgEmpty').style.display = 'none';
+  } else {
+    S('cImgPreview').style.display = 'none';
+    S('cImgEmpty').style.display = 'flex';
+  }
+  S('cImgFile').value = "";
+
+  refreshCustomSelectLabels();
+  openModal('categoryEditModal');
+}
+
+
+async function saveCategory(){
+  const payload = {
+    is_active: S('cActive').value === "1",
+    sort_order: Number(S('cSort').value || 0),
+    title: { en: S('cTEN').value.trim(), pt: S('cTPT').value.trim(), cn: S('cTCN').value.trim() },
+    description: { en: S('cDEN').value.trim(), pt: S('cDPT').value.trim(), cn: S('cDCN').value.trim() }
+  };
+
+  try{
+    if (!editingCategoryId){
+      const res = await apiCall('/categories', 'POST', payload);
+      editingCategoryId = String(res.id);       // ✅ 拿到新 id
+      S('cId').value = editingCategoryId;       // 显示出来
+    } else {
+      await apiCall(`/categories/${encodeURIComponent(editingCategoryId)}`, 'PUT', payload);
+    }
+    showToast(t('saved'));
+    closeModal('categoryEditModal');
+    await loadAll();
+    renderCategoryList();
+  }catch(e){}
+}
+
+async function uploadCategoryImage(){
+  // ✅ 必须先保存分类拿到 id 才能上传
+  const catId = editingCategoryId;
+if (!catId) return showToast(t('errFillAll')); // 或者专门加一个 i18n key
+
+
+  const file = S('cImgFile').files[0];
+  if (!file) return showToast(t('selectFileFirst'));
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  S('catImgLoader').classList.add('active');
+  try{
+    showToast(t('uploading'));
+    await apiCall(`/categories/${encodeURIComponent(catId)}/image`, 'POST', fd);
+    showToast(t('uploaded'));
+    S('cImgFile').value = "";
+    await loadAll();
+
+    const fresh = getCategoryById(catId);
+    if (fresh && fresh.img){
+      S('cImgPreview').src = fresh.img;
+      S('cImgPreview').style.display = 'block';
+      S('cImgEmpty').style.display = 'none';
+    }
+
+    renderCategorySelects();
+    renderCategoryList();
+    renderList();
+  }catch(e){
+  }finally{
+    S('catImgLoader').classList.remove('active');
+  }
+}
+
+async function deleteCategory(){
+  if (!editingCategoryId) return;
+  if (!confirm(t('confirmDeleteCategory'))) return;
+
+  try{
+    await apiCall(`/categories/${encodeURIComponent(editingCategoryId)}`, 'DELETE');
+    showToast(t('deleted'));
+    closeModal('categoryEditModal');
+    editingCategoryId = null;
+    await loadAll();
+    renderCategoryList();
+  }catch(e){}
+}
+
+  // =========================
+  // Utils
+  // =========================
+  function escapeHtml(str){
     return String(str ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
@@ -2011,301 +1834,264 @@ function openVariantModal(vid = null) {
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-
-  function closeModalByOverlay(e){
-    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
-      // login 不允许点遮罩关闭
-      if (e.target.id === 'loginModal') return;
-      closeModal(e.target.id);
-    }
+  function escapeAttr(str){
+    return String(str ?? "").replaceAll("'", "\\'").replaceAll('"','\\"');
   }
-  /* =========================
-   Custom Select Enhancer
-   - keep native <select> for value + existing code
-   - render custom popover + searchable list + keyboard support
-   ========================= */
 
-let __cselectOpenState = null;
+  // =========================
+  // Custom Select Enhancer
+  // =========================
+  let __cselectOpenState = null;
 
-function initCustomSelects() {
-  document.querySelectorAll('.select-wrap select.select-native').forEach(sel => {
-    if (sel.dataset.cselectEnhanced === "1") return;
-    enhanceSelect(sel);
-  });
+  function initCustomSelects() {
+    document.querySelectorAll('.select-wrap select.select-native').forEach(sel => {
+      if (sel.dataset.cselectEnhanced === "1") return;
+      enhanceSelect(sel);
+    });
 
-  // Global click listener to close
-  document.addEventListener('mousedown', (e) => {
+    document.addEventListener('mousedown', (e) => {
+      if (!__cselectOpenState) return;
+      if (!__cselectOpenState.btn.contains(e.target) && !__cselectOpenState.pop.contains(e.target)) {
+        closeCSelect(__cselectOpenState);
+      }
+    });
+
+    window.addEventListener('resize', updatePopoverPosition, { passive: true });
+    window.addEventListener('scroll', updatePopoverPosition, { passive: true, capture: true });
+  }
+
+  function updatePopoverPosition() {
     if (!__cselectOpenState) return;
-    // If click is outside button AND outside popover
-    if (!__cselectOpenState.btn.contains(e.target) && !__cselectOpenState.pop.contains(e.target)) {
-      closeCSelect(__cselectOpenState);
+    const { btn, pop } = __cselectOpenState;
+    const rect = btn.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let top = rect.bottom + 6;
+    let transformOrigin = 'top center';
+    if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+      top = rect.top - pop.offsetHeight - 6;
+      transformOrigin = 'bottom center';
     }
-  });
 
-  // Global resize/scroll listener to update position
-  window.addEventListener('resize', updatePopoverPosition, { passive: true });
-  window.addEventListener('scroll', updatePopoverPosition, { passive: true, capture: true });
-}
-
-function updatePopoverPosition() {
-  if (!__cselectOpenState) return;
-  const { btn, pop } = __cselectOpenState;
-  
-  const rect = btn.getBoundingClientRect();
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const spaceAbove = rect.top;
-  
-  // Decide position: prefer bottom, flip to top if space insufficient
-  let top = rect.bottom + 6;
-  let maxHeight = 260;
-  let transformOrigin = 'top center';
-
-  // Simple flip logic
-  if (spaceBelow < 280 && spaceAbove > spaceBelow) {
-    top = rect.top - pop.offsetHeight - 6;
-    transformOrigin = 'bottom center';
+    pop.style.top = `${top}px`;
+    pop.style.left = `${rect.left}px`;
+    pop.style.width = `${rect.width}px`;
+    pop.style.transformOrigin = transformOrigin;
   }
 
-  pop.style.top = `${top}px`;
-  pop.style.left = `${rect.left}px`;
-  pop.style.width = `${rect.width}px`;
-  pop.style.transformOrigin = transformOrigin;
-}
+  function refreshCustomSelectLabels() {
+    document.querySelectorAll('.select-wrap select.select-native[data-cselect-id]').forEach(sel => {
+      const id = sel.dataset.cselectId;
+      const state = window.__cselectStates?.get(id);
+      if (!state) return;
+      buildCSelectOptions(state, { keepFilter: true });
+      syncCSelectFromNative(state);
+    });
+  }
 
-function refreshCustomSelectLabels() {
-  document.querySelectorAll('.select-wrap select.select-native[data-cselect-id]').forEach(sel => {
-    const id = sel.dataset.cselectId;
-    const state = window.__cselectStates?.get(id);
-    if (!state) return;
-    buildCSelectOptions(state, { keepFilter: true });
+  function enhanceSelect(selectEl) {
+    selectEl.dataset.cselectEnhanced = "1";
+    selectEl.classList.add('cselect-native');
+
+    const uid = selectEl.id || ('cselect_' + Math.random().toString(16).slice(2));
+    selectEl.dataset.cselectId = uid;
+
+    const wrap = selectEl.closest('.select-wrap');
+    const root = document.createElement('div');
+    root.className = 'cselect';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cselect-btn';
+
+    const label = document.createElement('div');
+    label.className = 'cselect-label';
+
+    const arrow = document.createElement('div');
+    arrow.className = 'cselect-arrow';
+
+    btn.appendChild(label);
+    btn.appendChild(arrow);
+    root.appendChild(btn);
+    wrap.appendChild(root);
+
+    const pop = document.createElement('div');
+    pop.className = 'cselect-pop';
+    pop.id = `pop_${uid}`;
+
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'cselect-search';
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.autocomplete = 'off';
+    searchInput.spellcheck = false;
+    searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
+    searchWrap.appendChild(searchInput);
+    pop.appendChild(searchWrap);
+
+    const list = document.createElement('div');
+    list.className = 'cselect-list';
+    pop.appendChild(list);
+
+    document.body.appendChild(pop);
+
+    if (!window.__cselectStates) window.__cselectStates = new Map();
+    const state = { id: uid, selectEl, btn, label, pop, list, searchInput, optionNodes: [], activeIndex: -1 };
+    window.__cselectStates.set(uid, state);
+
+    buildCSelectOptions(state);
     syncCSelectFromNative(state);
-  });
-}
 
-function enhanceSelect(selectEl) {
-  selectEl.dataset.cselectEnhanced = "1";
-  selectEl.classList.add('cselect-native');
+    selectEl.addEventListener('change', () => syncCSelectFromNative(state));
 
-  const uid = selectEl.id || ('cselect_' + Math.random().toString(16).slice(2));
-  selectEl.dataset.cselectId = uid;
+    btn.addEventListener('click', () => {
+      if (state.pop.classList.contains('open')) closeCSelect(state);
+      else openCSelect(state);
+    });
 
-  const wrap = selectEl.closest('.select-wrap');
-  
-  // Button container (stays in layout)
-  const root = document.createElement('div');
-  root.className = 'cselect';
-  
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'cselect-btn';
-  
-  const label = document.createElement('div');
-  label.className = 'cselect-label';
-  
-  const arrow = document.createElement('div');
-  arrow.className = 'cselect-arrow';
+    searchInput.addEventListener('input', () => buildCSelectOptions(state, { keepFilter: true }));
 
-  btn.appendChild(label);
-  btn.appendChild(arrow);
-  root.appendChild(btn);
-  wrap.appendChild(root);
-
-  // Popover (mounted to Body)
-  const pop = document.createElement('div');
-  pop.className = 'cselect-pop';
-  pop.id = `pop_${uid}`;
-
-  // Search
-  const searchWrap = document.createElement('div');
-  searchWrap.className = 'cselect-search';
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.autocomplete = 'off';
-  searchInput.spellcheck = false;
-  searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
-  searchWrap.appendChild(searchInput);
-  pop.appendChild(searchWrap);
-
-  // List
-  const list = document.createElement('div');
-  list.className = 'cselect-list';
-  pop.appendChild(list);
-
-  document.body.appendChild(pop); // 关键：挂载到 Body
-
-  // State
-  if (!window.__cselectStates) window.__cselectStates = new Map();
-  const state = {
-    id: uid, selectEl, btn, label, pop, list, searchInput,
-    optionNodes: [], activeIndex: -1
-  };
-  window.__cselectStates.set(uid, state);
-
-  // Init
-  buildCSelectOptions(state);
-  syncCSelectFromNative(state);
-
-  // Events
-  selectEl.addEventListener('change', () => syncCSelectFromNative(state));
-  
-  btn.addEventListener('click', () => {
-    if (state.pop.classList.contains('open')) closeCSelect(state);
-    else openCSelect(state);
-  });
-
-  searchInput.addEventListener('input', () => buildCSelectOptions(state, { keepFilter: true }));
-
-  // keyboard in popover (list navigation)
-  pop.addEventListener('keydown', (e) => {
-    if (!state.pop.classList.contains('open')) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(state, +1); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(state, -1); }
-    else if (e.key === 'Enter') { e.preventDefault(); selectActive(state); }
-    else if (e.key === 'Escape') { e.preventDefault(); closeCSelect(state); }
-  });
-}
-
-function buildCSelectOptions(state, opts = {}) {
-  const { selectEl, list, searchInput } = state;
-  const q = (searchInput.value || '').trim().toLowerCase();
-  
-  list.innerHTML = '';
-  state.optionNodes = [];
-
-  const options = Array.from(selectEl.options);
-  const visible = options.filter(o => {
-    const text = (o.textContent || '').toLowerCase();
-    return !q || text.includes(q);
-  });
-
-  if (visible.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'cselect-empty';
-    empty.innerText = (currentLang === 'cn') ? '没有结果' : 'No results';
-    list.appendChild(empty);
-    return;
+    pop.addEventListener('keydown', (e) => {
+      if (!state.pop.classList.contains('open')) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(state, +1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(state, -1); }
+      else if (e.key === 'Enter') { e.preventDefault(); selectActive(state); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeCSelect(state); }
+    });
   }
 
-  visible.forEach((opt, idx) => {
-    const row = document.createElement('div');
-    row.className = 'cselect-opt';
-    row.innerHTML = `<span>${opt.textContent}</span><div class="tick"></div>`;
-    
-    row.onclick = () => {
-      setNativeValue(state, opt.value);
-      closeCSelect(state);
-    };
-    
-    // Mouse hover highlight
-    row.onmouseenter = () => {
-      state.activeIndex = idx;
-      updateHighlight(state);
-    };
+  function buildCSelectOptions(state, opts = {}) {
+    const { selectEl, list, searchInput } = state;
+    const q = (searchInput.value || '').trim().toLowerCase();
 
-    list.appendChild(row);
-    state.optionNodes.push({ el: row, val: opt.value });
-  });
-  
-  syncCSelectFromNative(state); // re-apply selection visual
-}
+    list.innerHTML = '';
+    state.optionNodes = [];
 
-function syncCSelectFromNative(state) {
-  const { selectEl, label, optionNodes } = state;
-  const val = selectEl.value;
-  const opt = selectEl.selectedOptions[0];
-  
-  label.innerText = opt ? (opt.textContent || '') : '';
-  
-  optionNodes.forEach(node => {
-    if (node.val === val) node.el.setAttribute('aria-selected', 'true');
-    else node.el.removeAttribute('aria-selected');
-  });
+    const options = Array.from(selectEl.options);
+    const visible = options.filter(o => {
+      const text = (o.textContent || '').toLowerCase();
+      return !q || text.includes(q);
+    });
 
-  state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
-}
-
-function setNativeValue(state, val) {
-  if (state.selectEl.value === val) return;
-  state.selectEl.value = val;
-  state.selectEl.dispatchEvent(new Event('change'));
-  syncCSelectFromNative(state);
-}
-
-function openCSelect(state) {
-  if (__cselectOpenState && __cselectOpenState !== state) closeCSelect(__cselectOpenState);
-  __cselectOpenState = state;
-
-  state.btn.classList.add('cselect-open');
-  state.pop.style.display = 'flex'; // make visible to calculate dim
-  
-  updatePopoverPosition(); // Calculate position immediately
-
-  requestAnimationFrame(() => {
-    state.pop.classList.add('open');
-    state.searchInput.focus();
-  });
-}
-
-function closeCSelect(state) {
-  state.pop.classList.remove('open');
-  state.btn.classList.remove('cselect-open');
-  
-  // Wait for transition
-  setTimeout(() => {
-    if (!state.pop.classList.contains('open')) {
-      state.pop.style.display = 'none';
+    if (visible.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'cselect-empty';
+      empty.innerText = (currentLang === 'cn') ? '没有结果' : 'No results';
+      list.appendChild(empty);
+      return;
     }
-  }, 150);
-  
-  if (__cselectOpenState === state) __cselectOpenState = null;
-}
 
-function updateHighlight(state) {
-  state.optionNodes.forEach((n, i) => {
-    if (i === state.activeIndex) n.el.classList.add('highlighted');
-    else n.el.classList.remove('highlighted');
-  });
-}
+    visible.forEach((opt, idx) => {
+      const row = document.createElement('div');
+      row.className = 'cselect-opt';
+      row.setAttribute('data-value', opt.value);
+      row.innerHTML = `<span>${escapeHtml(opt.textContent || "")}</span><div class="tick"></div>`;
 
-function moveActive(state, delta) {
-  if (!state.optionNodes.length) return;
-  let i = state.activeIndex;
-  i = (i < 0) ? 0 : i + delta;
-  if (i < 0) i = 0;
-  if (i >= state.optionNodes.length) i = state.optionNodes.length - 1;
-  state.activeIndex = i;
+      row.onclick = () => {
+        setNativeValue(state, opt.value);
+        closeCSelect(state);
+      };
 
-  const node = state.optionNodes[i];
-  node.scrollIntoView({ block: 'nearest' });
-  // visual focus
-  state.optionNodes.forEach(n => n.style.outline = 'none');
-  node.style.outline = '2px solid rgba(244,192,75,0.5)';
-}
+      row.onmouseenter = () => {
+        state.activeIndex = idx;
+        updateHighlight(state);
+      };
 
-function selectActive(state) {
-  const i = state.activeIndex;
-  if (i < 0 || i >= state.optionNodes.length) return;
-  const node = state.optionNodes[i];
-  const v = node.getAttribute('data-value');
-  setNativeValue(state, v);
-  closeCSelect(state);
-  state.btn.focus();
-}
+      list.appendChild(row);
+      state.optionNodes.push({ el: row, val: opt.value });
+    });
 
-function focusFirstOption(state) {
-  if (!state.optionNodes.length) return;
-  state.activeIndex = 0;
-  state.optionNodes[0].scrollIntoView({ block: 'nearest' });
-}
+    syncCSelectFromNative(state);
+  }
 
-function focusLastOption(state) {
-  if (!state.optionNodes.length) return;
-  state.activeIndex = state.optionNodes.length - 1;
-  state.optionNodes[state.activeIndex].scrollIntoView({ block: 'nearest' });
-}
+  function syncCSelectFromNative(state) {
+    const { selectEl, label, optionNodes } = state;
+    const val = selectEl.value;
+    const opt = selectEl.selectedOptions[0];
+    label.innerText = opt ? (opt.textContent || '') : '';
+    optionNodes.forEach(node => {
+      if (node.val === val) node.el.setAttribute('aria-selected', 'true');
+      else node.el.removeAttribute('aria-selected');
+    });
+    state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
+  }
 
-  // Default lang
-  setAdminLang('cn');
+  function setNativeValue(state, val) {
+    if (state.selectEl.value === val) return;
+    state.selectEl.value = val;
+    state.selectEl.dispatchEvent(new Event('change'));
+    syncCSelectFromNative(state);
+  }
+
+  function openCSelect(state) {
+    if (__cselectOpenState && __cselectOpenState !== state) closeCSelect(__cselectOpenState);
+    __cselectOpenState = state;
+
+    state.btn.classList.add('cselect-open');
+    state.pop.style.display = 'flex';
+    updatePopoverPosition();
+
+    requestAnimationFrame(() => {
+      state.pop.classList.add('open');
+      state.searchInput.focus();
+    });
+  }
+
+  function closeCSelect(state) {
+    state.pop.classList.remove('open');
+    state.btn.classList.remove('cselect-open');
+    setTimeout(() => {
+      if (!state.pop.classList.contains('open')) state.pop.style.display = 'none';
+    }, 150);
+    if (__cselectOpenState === state) __cselectOpenState = null;
+  }
+
+  function updateHighlight(state) {
+    state.optionNodes.forEach((n, i) => {
+      if (i === state.activeIndex) n.el.classList.add('highlighted');
+      else n.el.classList.remove('highlighted');
+    });
+  }
+
+  function moveActive(state, delta) {
+    if (!state.optionNodes.length) return;
+    let i = state.activeIndex;
+    i = (i < 0) ? 0 : i + delta;
+    if (i < 0) i = 0;
+    if (i >= state.optionNodes.length) i = state.optionNodes.length - 1;
+    state.activeIndex = i;
+    updateHighlight(state);
+    state.optionNodes[i].el.scrollIntoView({ block: 'nearest' });
+  }
+
+  function selectActive(state) {
+    const i = state.activeIndex;
+    if (i < 0 || i >= state.optionNodes.length) return;
+    const v = state.optionNodes[i].val;
+    setNativeValue(state, v);
+    closeCSelect(state);
+    state.btn.focus();
+  }
+
+  // =========================
+  // Boot
+  // =========================
+  function init(){
+    initCustomSelects();
+    setAdminLang('cn');
+    updateAdminUI();
+
+    const key = getKey();
+    if (!key){
+      openModal('loginModal');
+    } else {
+      S('loginModal').classList.remove('open');
+      unlockBodyScrollIfNoModal();
+      loadAll();
+    }
+  }
+ setAdminLang('cn');
   init();
 </script>
 </body>
