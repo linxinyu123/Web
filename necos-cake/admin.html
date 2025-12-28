@@ -532,7 +532,7 @@
   #editorPanel .panel-body {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
-   .item-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 56px; }
+   .item-list { padding-bottom: 56px; }
   }
 
   /* 左侧产品列表面板：全屏 */
@@ -734,6 +734,8 @@ border-bottom: 2px solid var(--border);
           <button class="btn btn-danger btn-full" id="btnDeleteBottom" onclick="deleteProduct()" disabled data-i18n="deleteProduct">
             Delete Product
           </button>
+
+          <div style="height:30px;"></div>
         </div>
       </div>
     </div>
