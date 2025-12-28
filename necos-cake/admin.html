@@ -860,7 +860,7 @@
 </div>
 
 <!-- Login Modal -->
-<div class="modal-overlay open" id="loginModal" style="background:var(--primary);" onclick="event.stopPropagation()">
+<div class="modal-overlay" id="loginModal" style="background:var(--primary);" onclick="event.stopPropagation()">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-scroll" style="text-align:center; padding-top:24px;">
       <img src="https://lestoy.com/necos/logo.png" style="height:60px; margin-bottom:20px;">
@@ -901,33 +901,80 @@
 let __closingFromPopstate = false;
 let __editorHistoryPushed = false;
 
-window.addEventListener('popstate', () => {
-  const h = location.hash;
+// =========================
+// No-Hash History (Mobile Back Close)
+// =========================
+function __sameUrl() {
+  return window.location.pathname + window.location.search;
+}
+function __pushUIState(payload) {
+  // ✅ URL 不变，不会出现 #xxx
+  history.pushState({ __necoUI: true, ...payload }, "", __sameUrl());
+}
+function __replaceUIState(payload) {
+  history.replaceState({ __necoUI: true, ...payload }, "", __sameUrl());
+}
+function __isUIState(st) {
+  return !!(st && st.__necoUI === true);
+}
 
-  // 1) 如果正在开着分类编辑，但 hash 已经不是 #category_edit，才关编辑
-  if (S('categoryEditModal').classList.contains('open') && h !== "#category_edit") {
-    __closingFromPopstate = true;
-    closeCategoryEdit();
-    __closingFromPopstate = false;
-    return;
+// 关闭：内部实现（不碰 history）
+function __closeModalInternal(id) {
+  const m = S(id);
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(() => unlockBodyScrollIfNoModal(), 220);
+}
+
+// 分类编辑：内部关闭（会刷新）
+function __closeCategoryEditInternal() {
+  __closeModalInternal('categoryEditModal');
+  editingCategoryId = null;
+  setTimeout(() => loadAll(), 10);
+}
+
+// 产品编辑面板：内部关闭（不 back）
+function __closeEditorInternal() {
+  S('editorPanel').classList.remove('open');
+  selectedProduct = null;
+  renderList();
+  S('btnSave').disabled = true;
+  S('btnDeleteBottom').disabled = true;
+  S('editorEmpty').style.display = 'block';
+  S('editorForm').style.display = 'none';
+}
+
+// 找到“当前最上层打开的 UI”
+function __getTopOpenUI() {
+  // 你这里可以按“覆盖层从上到下”排序
+  const modalOrder = ['categoryEditModal', 'categoryModal', 'newProductModal', 'variantModal'];
+  for (const id of modalOrder) {
+    const el = S(id);
+    if (el && el.classList.contains('open')) return { type: 'modal', id };
+  }
+  // editorPanel 是面板，不是 overlay
+  if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open')) {
+    return { type: 'editor' };
+  }
+  return null;
+}
+
+// ✅ 返回键：关闭最上层 UI（完全不需要 hash）
+window.addEventListener('popstate', (e) => {
+  if (__closingFromPopstate) return;
+  __closingFromPopstate = true;
+
+  const top = __getTopOpenUI();
+  if (top) {
+    if (top.type === 'modal') {
+      if (top.id === 'categoryEditModal') __closeCategoryEditInternal();
+      else __closeModalInternal(top.id);
+    } else if (top.type === 'editor') {
+      __closeEditorInternal();
+    }
   }
 
-  // 2) ✅ 关键：只有当 hash 不是 #categories 也不是 #category_edit 时，才关闭分类管理
-  //    否则从编辑回到分类管理时，不要把分类管理也关掉
-  if (S('categoryModal').classList.contains('open') && h !== "#categories" && h !== "#category_edit") {
-    __closingFromPopstate = true;
-    closeModal('categoryModal');
-    __closingFromPopstate = false;
-    return;
-  }
-
-  // 3) 你原来的产品编辑返回逻辑（可保留）
-  if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open') && h !== "#editor") {
-    __closingFromPopstate = true;
-    __editorHistoryPushed = false;
-    closeEditorMobile();
-    __closingFromPopstate = false;
-  }
+  __closingFromPopstate = false;
 });
 
 // --- I18n Texts ---
@@ -1298,47 +1345,46 @@ window.addEventListener('popstate', () => {
     document.body.style.top = '';
     window.scrollTo(0, __lockedScrollY);
   }
-  function openModal(id){
-    const m = S(id);
-    lockBodyScroll();
-    m.classList.add('open');
-    updateAdminUI();
-    refreshCustomSelectLabels();
-  }
-function closeModal(id){
+
+function openModal(id){
   const m = S(id);
-  if (!m) return;
+  lockBodyScroll();
+  m.classList.add('open');
+  updateAdminUI();
+  refreshCustomSelectLabels();
 
-  // 触发关闭动画
-  m.classList.remove('open');
-
-  // 等动画结束再解锁滚动（和 pointer-events）
-  setTimeout(() => {
-    unlockBodyScrollIfNoModal();
-  }, 220); // 要 >= CSS transition 时间
+  // ✅ 只有手机端、非 login 才压入历史
+  if (window.innerWidth <= 900 && id !== 'loginModal' && !__closingFromPopstate) {
+    __pushUIState({ type: 'modal', id });
+  }
 }
 
+
+function closeModal(id){
+  if (!S(id)) return;
+
+  // ✅ 手机端：如果是用户主动关闭，让返回栈退一步，由 popstate 来关（统一入口）
+  if (window.innerWidth <= 900 && id !== 'loginModal' && !__closingFromPopstate && __isUIState(history.state)) {
+    history.back();
+    return;
+  }
+
+  // 桌面端 / 或者没有 history 状态：直接关
+  __closeModalInternal(id);
+}
+
+
  // 修改 Overlay 点击逻辑，确保点击背景关闭时也刷新列表
-// 请替换原有的 closeModalByOverlay 函数
 function closeModalByOverlay(e){
   if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
     const id = e.target.id;
     if (id === 'loginModal') return;
-    
-    // 如果是关闭分类编辑，走专用通道
-    if (id === 'categoryEditModal') {
-      closeCategoryEdit();
-    } else {
-      closeModal(id);
-      // 处理普通弹窗的返回键逻辑
-      if (window.innerWidth <= 900 && !__closingFromPopstate) {
-         // 简单处理：如果是 listPanel 或者是其他压入栈的，最好这里也 back 一下
-         // 为了保险起见，这里仅对 categoryModal 做特殊处理
-         if (id === 'categoryModal' && location.hash === "#categories") history.back();
-      }
-    }
+
+    if (id === 'categoryEditModal') closeCategoryEdit();
+    else closeModal(id);
   }
 }
+
 
   // =========================
   // Auth + API
@@ -1360,21 +1406,33 @@ function closeModalByOverlay(e){
       if (!r.ok || !data || data.ok !== true) throw new Error((data && data.error) || r.statusText);
       return data;
     }).catch(e => {
-      showToast("Error: " + e.message);
-      if (String(e.message).includes('403')) S('loginModal').classList.add('open');
+      if (String(e.message).includes('403')) {
+  // ✅ token 失效：静默回到登录
+  S('loginModal').classList.add('open');
+} else {
+  showToast("Error: " + e.message);
+}
+throw e;
+
       throw e;
     });
   }
 
-  function doLogin(){
-    const k = S('adminKeyInput').value.trim();
-    if (!k) return alert(t('errFillAll'));
-    sessionStorage.setItem(CFG.key, k);
-    localStorage.setItem(CFG.api, "https://necosapi.lestoy.com");
-    S('loginModal').classList.remove('open');
-    unlockBodyScrollIfNoModal();
-    loadAll();
-  }
+async function doLogin(){
+  const k = S('adminKeyInput').value.trim();
+  if (!k) return alert(t('errFillAll'));
+
+  sessionStorage.setItem(CFG.key, k);
+  localStorage.setItem(CFG.api, "https://necosapi.lestoy.com");
+
+  // 先关登录弹窗（你原本就这样，OK）
+  S('loginModal').classList.remove('open');
+  unlockBodyScrollIfNoModal();
+
+  // ✅ 等数据加载完，避免并发/竞态
+  await loadAll();
+}
+
 
   // =========================
   // Remember last category
@@ -1583,11 +1641,11 @@ async function loadAll(){
   if (!panel.classList.contains('open')) {
     panel.classList.add('open');
     // 第一次打开：压一条历史记录，返回键会触发 popstate
-    history.pushState({ necoEditor: true, pid: String(p.id) }, "", "#editor");
+__pushUIState({ type: 'editor', pid: String(p.id) });
     __editorHistoryPushed = true;
   } else {
     // 已经在编辑页内切换产品：不要再压历史，改为替换即可
-    history.replaceState({ necoEditor: true, pid: String(p.id) }, "", "#editor");
+   __replaceUIState({ type: 'editor', pid: String(p.id) });
   }
 }
 
@@ -1626,15 +1684,12 @@ async function loadAll(){
     S('editorEmpty').style.display = 'block';
     S('editorForm').style.display = 'none';
 
-    if (window.innerWidth <= 900 && __editorHistoryPushed && !__closingFromPopstate) {
+if (window.innerWidth <= 900 && __editorHistoryPushed && !__closingFromPopstate && __isUIState(history.state)) {
     __editorHistoryPushed = false;
     history.back();
+    return;
   }
-
-  // 顺手清一下 hash（可选）
-  if (!__closingFromPopstate && location.hash === "#editor") {
-    // history.back() 会自然回去；这里不用强行改
-  }
+  __closeEditorInternal();
   }
 
   async function openNewProductModal(){
@@ -1844,12 +1899,6 @@ async function loadAll(){
   // =========================
 function openCategoryManager(){
   renderCategoryList();
-  
-  // 手机端压入历史记录
-  if (window.innerWidth <= 900) {
-    history.pushState({ modal: 'categoryModal' }, "", "#categories");
-  }
-  
   openModal('categoryModal');
 }
 
@@ -1929,11 +1978,6 @@ const sorted = categories.slice().sort((a,b) => {
 
   // --- 编辑模式 (以下保持原逻辑，只是加入了手机历史记录支持) ---
   editingCategoryId = String(catId);
-  
-  // 手机端压入历史记录
-  if (window.innerWidth <= 900) {
-    history.pushState({ modal: 'categoryEdit' }, "", "#category_edit");
-  }
 
   const c = getCategoryById(editingCategoryId);
 
@@ -1963,18 +2007,13 @@ const sorted = categories.slice().sort((a,b) => {
 // ✅ 新增：专门用于关闭分类编辑的函数
 // 无论保存、取消还是返回，都走这里，确保列表刷新
 async function closeCategoryEdit() {
-  closeModal('categoryEditModal');
-  editingCategoryId = null;
-
-  // ✅ UI 主动关闭：从 #category_edit 回到 #categories，但不触发 popstate
-  if (window.innerWidth <= 900 && !__closingFromPopstate && location.hash === "#category_edit") {
-    history.replaceState({ modal: 'categoryModal' }, "", "#categories");
+  // ✅ 手机端：交给 history.back + popstate 统一关闭（并刷新）
+  if (window.innerWidth <= 900 && !__closingFromPopstate && __isUIState(history.state)) {
+    history.back();
+    return;
   }
-
-  // ✅ 动画结束后刷新，保证新建空分类能出现在列表里
-  setTimeout(async () => {
-    await loadAll();
-  }, 10);
+  // 桌面端：直接关并刷新
+  __closeCategoryEditInternal();
 }
 
 // 保存分类
@@ -2319,21 +2358,35 @@ async function deleteCategory(){
   // =========================
   // Boot
   // =========================
-  function init(){
-    initCustomSelects();
-    setAdminLang('cn');
-    updateAdminUI();
+ async function init(){
+  initCustomSelects();
+  setAdminLang('cn');
+  updateAdminUI();
 
-    const key = getKey();
-    if (!key){
-      openModal('loginModal');
-    } else {
-      S('loginModal').classList.remove('open');
-      unlockBodyScrollIfNoModal();
-      loadAll();
-    }
+  const key = getKey();
+
+  if (!key) {
+    // ✅ 没有 key：直接显示登录（不用 openModal，避免 pushState/scroll lock）
+    S('loginModal').classList.add('open');
+    return;
   }
- setAdminLang('cn');
+
+  // ✅ 有 key：先确保登录弹窗不显示
+  S('loginModal').classList.remove('open');
+  unlockBodyScrollIfNoModal();
+
+  // ✅ 可选：为了彻底避免“有 key 但其实过期”导致闪一下后又弹登录
+  // 我们先快速探测一次权限；失败再弹登录
+  try {
+    await apiCall('/categories'); // 轻量探测（也可以用 /products）
+    // 探测成功：真正加载数据（你也可以在上面探测的结果里直接赋值，省一次请求）
+    await loadAll();
+  } catch(e) {
+    // apiCall 里如果 403 会自动 add open，这里兜底确保显示
+    S('loginModal').classList.add('open');
+  }
+}
+
   init();
 </script>
 </body>
