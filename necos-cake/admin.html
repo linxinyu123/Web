@@ -66,7 +66,7 @@
   /* --- Layout --- */
   .container {
     max-width: 1200px; margin: 0 auto; padding: 20px;
-    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
   }
   .grid-layout {
     display: grid; grid-template-columns: 380px 1fr; gap: 20px;
@@ -86,7 +86,9 @@
     background: rgba(255,255,255,0.98); z-index: 10;
   }
   .panel-title { font-size: 18px; font-weight: 900; }
-  .panel-body { padding: 20px; padding-top: 10px; overflow-y: auto; flex: 1; position: relative; }
+  .panel-body { padding: 20px; padding-top: 10px; overflow-y: auto; flex: 1; position: relative;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+ }
 
   /* Mobile: editor slides */
   .back-btn {
@@ -111,11 +113,14 @@
     .editor-panel.open { transform: translateX(0); }
     .back-btn { display: flex; }
     .smart-header { z-index: 900; }
+    #listPanel {
+    bottom: env(safe-area-inset-bottom, 0px);
+  }
   }
 
   /* --- List Items --- */
   .search-box { padding: 0 0 15px 0; border-bottom: 2px solid var(--border); margin-bottom: 15px; }
-  .item-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+  .item-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 26px; }
   .list-item {
     display: flex; align-items: center; gap: 15px;
     padding: 12px; border-radius: 16px; border: 2px solid var(--border);
@@ -522,7 +527,12 @@
 @media (max-width: 900px) {
   .container {
     padding: 0; /* 全屏直铺 */
-    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
+    #listPanel .panel-body,
+  #editorPanel .panel-body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+   .item-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 56px; }
   }
 
   /* 左侧产品列表面板：全屏 */
@@ -724,8 +734,6 @@ border-bottom: 2px solid var(--border);
           <button class="btn btn-danger btn-full" id="btnDeleteBottom" onclick="deleteProduct()" disabled data-i18n="deleteProduct">
             Delete Product
           </button>
-
-          <div style="height:30px;"></div>
         </div>
       </div>
     </div>
