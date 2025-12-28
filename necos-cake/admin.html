@@ -261,41 +261,71 @@
   }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-  /* --- Modal --- */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(16,41,64,0.6); backdrop-filter: blur(2px);
-    display: none; justify-content: center; align-items: center; z-index: 2000;
-      opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-  }
-  
-  .modal-overlay.open { display: flex; opacity: 1;
-  pointer-events: auto;}
+  /* --- Modal (Fix iOS Flicker) --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16,41,64,0.6);
 
-  .modal-card{
-    background: var(--white);
-    width: 90%;
-    max-width: 520px;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    animation: slideUp 0.3s ease;
-    position: relative;
-    max-height: min(86vh, 760px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-    transform: translateY(16px) scale(0.98);
+  /* ✅ 永远保持 flex，不再 display:none <-> flex */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 2000;
+
+  /* ✅ 用 opacity + visibility 控制显示 */
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ✅ iOS 上 backdrop-filter 很容易闪烁：移动端直接禁用 */
+@media (max-width: 900px) {
+  .modal-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--white);
+  width: 90%;
+  max-width: 520px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  position: relative;
+  max-height: min(86vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+
+  /* ✅ 删掉 animation: slideUp; 只用 transition（更稳） */
+  transform: translate3d(0, 16px, 0) scale(0.98);
+  opacity: 0;
+
+  will-change: transform, opacity;
   transition:
     transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.18s ease;
-  }
-  .modal-overlay.open .modal-card {
-  transform: translateY(0) scale(1);
+}
+
+.modal-overlay.open .modal-card {
+  transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
 }
+
   .modal-close-btn{
     position: absolute; top: 15px; right: 15px;
     background: rgba(255,255,255,0.9);
@@ -868,24 +898,31 @@
 
   let editingCategoryId = null;
   let currentLang = 'cn';
+let __closingFromPopstate = false;
+let __editorHistoryPushed = false;
 
-window.addEventListener('popstate', (e) => {
-  // 1. 如果分类编辑弹窗开着
-  if (S('categoryEditModal').classList.contains('open')) {
+window.addEventListener('popstate', () => {
+  const h = location.hash;
+
+  // 1) 如果正在开着分类编辑，但 hash 已经不是 #category_edit，才关编辑
+  if (S('categoryEditModal').classList.contains('open') && h !== "#category_edit") {
     __closingFromPopstate = true;
-    closeCategoryEdit(); // 使用专用关闭函数
+    closeCategoryEdit();
     __closingFromPopstate = false;
     return;
   }
-  // 2. 如果分类管理弹窗开着
-  if (S('categoryModal').classList.contains('open')) {
+
+  // 2) ✅ 关键：只有当 hash 不是 #categories 也不是 #category_edit 时，才关闭分类管理
+  //    否则从编辑回到分类管理时，不要把分类管理也关掉
+  if (S('categoryModal').classList.contains('open') && h !== "#categories" && h !== "#category_edit") {
     __closingFromPopstate = true;
     closeModal('categoryModal');
     __closingFromPopstate = false;
     return;
   }
-  // 3. 如果产品编辑面板开着 (原有逻辑)
-  if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open')) {
+
+  // 3) 你原来的产品编辑返回逻辑（可保留）
+  if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open') && h !== "#editor") {
     __closingFromPopstate = true;
     __editorHistoryPushed = false;
     closeEditorMobile();
@@ -1434,7 +1471,7 @@ const sorted = categories.slice().sort((a,b) => {
   // =========================
   // Load all
   // =========================
-  async function loadAll(){
+async function loadAll(){
     try{
       const [cRes, pRes] = await Promise.all([
         apiCall('/categories'),
@@ -1442,9 +1479,17 @@ const sorted = categories.slice().sort((a,b) => {
       ]);
       categories = cRes.categories || [];
       products = pRes.products || [];
+      
+      // 1. 刷新所有下拉菜单和主产品列表
       renderCategorySelects();
       renderList();
-      // keep selection
+
+      // 2. ✅ 关键：如果“分类管理”窗口开着，立刻刷新里面的列表 DOM
+      if (S('categoryModal').classList.contains('open')) {
+        renderCategoryList();
+      }
+
+      // 3. 保持产品编辑状态
       if (selectedProduct){
         const fresh = products.find(x => String(x.id) === String(selectedProduct.id));
         if (fresh){
@@ -1847,57 +1892,55 @@ const sorted = categories.slice().sort((a,b) => {
 }
 
  async function openCategoryEdit(catId){
-  // 1. 新建分类逻辑
+  // --- 新建模式 ---
   if (!catId){
-    // 后台静默创建
     const payload = {
       is_active: false,
       sort_order: 0,
-      title: { en:"", pt:"", cn:"" },
-      description: { en:"", pt:"", cn:"" }
+      title: { en: "", pt: "", cn: "" },
+      description: { en: "", pt: "", cn: "" }
     };
-    
-    // 显示简单的加载提示（可选）
-    // showToast("Creating..."); 
-    
+
     try {
+      // 1. 后台静默创建 ID
       const res = await apiCall('/categories', 'POST', payload);
       const newId = String(res.id);
-      
-      // ✅ 关键优化：不调用 loadAll()，而是手动在本地加一条数据，避免闪烁
-      // 这样列表不会刷新，用户感觉不到后台发生了什么，直接进入编辑
-      const newCatStub = { 
-        id: newId, 
-        is_active: false, 
+
+      // 2. ✅ 核心：不在此时刷新列表，而是手动在本地伪造一条数据
+      // 这样界面完全不会闪烁，感觉不到网络请求
+      const newStub = {
+        id: newId,
+        is_active: false,
         sort_order: 0,
         title: { en:"", pt:"", cn:"" },
-        description: { en:"", pt:"", cn:"" },
+        desc: { en:"", pt:"", cn:"" },
         img: ""
       };
-      categories.push(newCatStub); // 暂时加到本地数组
-      
-      // 立即打开编辑
+      categories.push(newStub); 
+
+      // 3. 递归调用自己，进入编辑模式
       return openCategoryEdit(newId);
-      
+
     } catch(e) {
       alert(e.message);
-      return;
-    }
+    } 
+    return;
   }
 
-  // 2. 编辑逻辑
+  // --- 编辑模式 (以下保持原逻辑，只是加入了手机历史记录支持) ---
   editingCategoryId = String(catId);
-  const c = getCategoryById(editingCategoryId);
   
   // 手机端压入历史记录
   if (window.innerWidth <= 900) {
     history.pushState({ modal: 'categoryEdit' }, "", "#category_edit");
   }
 
+  const c = getCategoryById(editingCategoryId);
+
+  // 填充表单...
   S('btnDeleteCategory').disabled = false;
   S('cId').disabled = true;
   S('cId').value = String(editingCategoryId);
-
   S('cSort').value = c ? (c.sort_order ?? 0) : 0;
   S('cActive').value = c ? (c.is_active ? "1" : "0") : "0";
 
@@ -1917,26 +1960,21 @@ const sorted = categories.slice().sort((a,b) => {
   openModal('categoryEditModal');
 }
 
-
 // ✅ 新增：专门用于关闭分类编辑的函数
 // 无论保存、取消还是返回，都走这里，确保列表刷新
 async function closeCategoryEdit() {
   closeModal('categoryEditModal');
   editingCategoryId = null;
 
-  // 处理手机返回键历史
+  // ✅ UI 主动关闭：从 #category_edit 回到 #categories，但不触发 popstate
   if (window.innerWidth <= 900 && !__closingFromPopstate && location.hash === "#category_edit") {
-    history.back();
+    history.replaceState({ modal: 'categoryModal' }, "", "#categories");
   }
 
-  // ✅ 核心：关闭窗口后，静默刷新一下列表
-  // 这样之前新建的那个空分类，就会正式显示在管理列表中了
-  await loadAll(); 
-  
-  // 如果分类管理弹窗还开着，就刷新它的列表 DOM
-  if (S('categoryModal').classList.contains('open')) {
-    renderCategoryList();
-  }
+  // ✅ 动画结束后刷新，保证新建空分类能出现在列表里
+  setTimeout(async () => {
+    await loadAll();
+  }, 10);
 }
 
 // 保存分类
