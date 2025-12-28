@@ -269,6 +269,7 @@
   pointer-events: none;
   transition: opacity 0.18s ease;
   }
+  
   .modal-overlay.open { display: flex; opacity: 1;
   pointer-events: auto;}
 
@@ -741,7 +742,7 @@
 <!-- Category Edit Modal -->
 <div class="modal-overlay" id="categoryEditModal" onclick="closeModalByOverlay(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
-    <button class="modal-close-btn" onclick="closeModal('categoryEditModal')" aria-label="Close">✕</button>
+<button class="modal-close-btn" onclick="closeCategoryEdit()" aria-label="Close">✕</button>
 
     <div class="modal-scroll">
       <div class="panel-title" style="margin-bottom:20px;" data-i18n="editCategory">Edit Category</div>
@@ -822,7 +823,7 @@
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('categoryEditModal')" data-i18n="cancel">Cancel</button>
+<button class="btn btn-ghost" onclick="closeCategoryEdit()" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" onclick="saveCategory()" data-i18n="save">Save</button>
     </div>
   </div>
@@ -868,12 +869,26 @@
   let editingCategoryId = null;
   let currentLang = 'cn';
 
-window.addEventListener('popstate', () => {
-  // 只管手机端编辑面板
+window.addEventListener('popstate', (e) => {
+  // 1. 如果分类编辑弹窗开着
+  if (S('categoryEditModal').classList.contains('open')) {
+    __closingFromPopstate = true;
+    closeCategoryEdit(); // 使用专用关闭函数
+    __closingFromPopstate = false;
+    return;
+  }
+  // 2. 如果分类管理弹窗开着
+  if (S('categoryModal').classList.contains('open')) {
+    __closingFromPopstate = true;
+    closeModal('categoryModal');
+    __closingFromPopstate = false;
+    return;
+  }
+  // 3. 如果产品编辑面板开着 (原有逻辑)
   if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open')) {
     __closingFromPopstate = true;
     __editorHistoryPushed = false;
-    closeEditorMobile(); // 触发你现有的关闭逻辑
+    closeEditorMobile();
     __closingFromPopstate = false;
   }
 });
@@ -1266,12 +1281,27 @@ function closeModal(id){
   }, 220); // 要 >= CSS transition 时间
 }
 
-  function closeModalByOverlay(e){
-    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
-      if (e.target.id === 'loginModal') return;
-      closeModal(e.target.id);
+ // 修改 Overlay 点击逻辑，确保点击背景关闭时也刷新列表
+// 请替换原有的 closeModalByOverlay 函数
+function closeModalByOverlay(e){
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
+    const id = e.target.id;
+    if (id === 'loginModal') return;
+    
+    // 如果是关闭分类编辑，走专用通道
+    if (id === 'categoryEditModal') {
+      closeCategoryEdit();
+    } else {
+      closeModal(id);
+      // 处理普通弹窗的返回键逻辑
+      if (window.innerWidth <= 900 && !__closingFromPopstate) {
+         // 简单处理：如果是 listPanel 或者是其他压入栈的，最好这里也 back 一下
+         // 为了保险起见，这里仅对 categoryModal 做特殊处理
+         if (id === 'categoryModal' && location.hash === "#categories") history.back();
+      }
     }
   }
+}
 
   // =========================
   // Auth + API
@@ -1326,16 +1356,39 @@ function getCategoryById(id){
   const key = String(id);
   return categories.find(c => String(c.id) === key) || null;
 }
+
 function getLocalizedCategoryName(id){
-  const c = getCategoryById(id);
-  if (!c) return String(id || "");
-  const title = c.title || {};
-  return title[currentLang] || title.en || title.cn || title.pt || String(c.id);
-}
+    const c = getCategoryById(id);
+    // 如果找不到分类对象（可能是刚创建还没刷新或者是空ID），直接返回ID或空
+    if (!c) return String(id || "");
+    
+    const title = c.title || {};
+    // 优先取当前语言，没有则降级到英文
+    const name = title[currentLang] || title.en || title.cn || title.pt;
+    
+    // 如果所有语言都没有名字，则显示“未命名分类 #ID”
+    if (!name) {
+      const placeholder = {
+        en: "Untitled",
+        pt: "Sem título",
+        cn: "未命名"
+      };
+      // 如果是在下拉框里（通常我们希望下拉框里只显示名字，不带#ID，除非是为了调试），
+      // 但为了统一，这里也带上ID，或者你可以去掉 `#${c.id}`
+      return `${placeholder[currentLang] || "Untitled"} #${c.id}`;
+    }
+    
+    return name;
+  }
 
   // Fill selects with categories, then refresh cselect UI
 function renderCategorySelects(){
-  const sorted = categories.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  // ✅ 优化：先按 sort_order 小到大（前台顺序），权重一样时按 ID 大到小（新创建的排前面，方便找）
+const sorted = categories.slice().sort((a,b) => {
+  const diff = (a.sort_order || 0) - (b.sort_order || 0);
+  if (diff !== 0) return diff;
+  return Number(b.id) - Number(a.id); 
+});
 
   // filter
   const f = S('catFilter');
@@ -1406,10 +1459,23 @@ function renderCategorySelects(){
   // =========================
   // Products
   // =========================
-  function getLocalizedTitle(p){
+ function getLocalizedTitle(p){
     if (!p) return "";
     const tt = p.title || {};
-    return tt[currentLang] || tt.en || tt.cn || tt.pt || p.id;
+    // 优先取当前语言，没有则降级到英文，再没有则降级到其他语言
+    const name = tt[currentLang] || tt.en || tt.cn || tt.pt;
+    
+    // 如果所有语言都没有名字，则显示“未命名 #ID”
+    if (!name) {
+      const placeholder = {
+        en: "Untitled",
+        pt: "Sem título",
+        cn: "未命名"
+      };
+      return `${placeholder[currentLang] || "Untitled"} #${p.id}`;
+    }
+    
+    return name;
   }
 
   function renderList(){
@@ -1422,7 +1488,7 @@ function renderCategorySelects(){
       if (cat && p.category !== cat) return false;
       const titleStr = JSON.stringify(p.title || {}).toLowerCase();
       return String(p.id).toLowerCase().includes(q) || titleStr.includes(q);
-    });
+    }).sort((a, b) => Number(b.id) - Number(a.id));
 
     filtered.forEach(p => {
       const div = document.createElement('div');
@@ -1731,15 +1797,26 @@ function renderCategorySelects(){
   // =========================
   // Categories Manager
   // =========================
-  function openCategoryManager(){
-    renderCategoryList();
-    openModal('categoryModal');
+function openCategoryManager(){
+  renderCategoryList();
+  
+  // 手机端压入历史记录
+  if (window.innerWidth <= 900) {
+    history.pushState({ modal: 'categoryModal' }, "", "#categories");
   }
+  
+  openModal('categoryModal');
+}
 
 function renderCategoryList(){
   const list = S('categoryList');
   list.innerHTML = '';
-  const sorted = categories.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  // ✅ 优化：先按 sort_order 小到大（前台顺序），权重一样时按 ID 大到小（新创建的排前面，方便找）
+const sorted = categories.slice().sort((a,b) => {
+  const diff = (a.sort_order || 0) - (b.sort_order || 0);
+  if (diff !== 0) return diff;
+  return Number(b.id) - Number(a.id); 
+});
   if (sorted.length === 0){
     list.innerHTML = `<div class="empty-state">—</div>`;
     return;
@@ -1770,30 +1847,54 @@ function renderCategoryList(){
 }
 
  async function openCategoryEdit(catId){
-  // catId 是字符串数字，或 null
+  // 1. 新建分类逻辑
   if (!catId){
-    // ✅ 先创建一条空分类，拿到自增 id
+    // 后台静默创建
     const payload = {
       is_active: false,
       sort_order: 0,
-      title: { en: "", pt: "", cn: "" },
-      description: { en: "", pt: "", cn: "" }
+      title: { en:"", pt:"", cn:"" },
+      description: { en:"", pt:"", cn:"" }
     };
-    const res = await apiCall('/categories', 'POST', payload);
-
-    // ✅ 刷新数据，让列表/下拉框立刻出现新分类
-    await loadAll();
-
-    // ✅ 直接进入编辑态（此时有 id 了）
-    return openCategoryEdit(String(res.id));
+    
+    // 显示简单的加载提示（可选）
+    // showToast("Creating..."); 
+    
+    try {
+      const res = await apiCall('/categories', 'POST', payload);
+      const newId = String(res.id);
+      
+      // ✅ 关键优化：不调用 loadAll()，而是手动在本地加一条数据，避免闪烁
+      // 这样列表不会刷新，用户感觉不到后台发生了什么，直接进入编辑
+      const newCatStub = { 
+        id: newId, 
+        is_active: false, 
+        sort_order: 0,
+        title: { en:"", pt:"", cn:"" },
+        description: { en:"", pt:"", cn:"" },
+        img: ""
+      };
+      categories.push(newCatStub); // 暂时加到本地数组
+      
+      // 立即打开编辑
+      return openCategoryEdit(newId);
+      
+    } catch(e) {
+      alert(e.message);
+      return;
+    }
   }
 
+  // 2. 编辑逻辑
   editingCategoryId = String(catId);
-  const isEdit = true;
-  const c = getCategoryById(editingCategoryId); // loadAll 后应能拿到
+  const c = getCategoryById(editingCategoryId);
+  
+  // 手机端压入历史记录
+  if (window.innerWidth <= 900) {
+    history.pushState({ modal: 'categoryEdit' }, "", "#category_edit");
+  }
 
   S('btnDeleteCategory').disabled = false;
-
   S('cId').disabled = true;
   S('cId').value = String(editingCategoryId);
 
@@ -1802,20 +1903,13 @@ function renderCategoryList(){
 
   const tt = (c && c.title) ? c.title : {};
   const dd = (c && c.desc) ? c.desc : {};
-  S('cTEN').value = tt.en || "";
-  S('cTPT').value = tt.pt || "";
-  S('cTCN').value = tt.cn || "";
-  S('cDEN').value = dd.en || "";
-  S('cDPT').value = dd.pt || "";
-  S('cDCN').value = dd.cn || "";
+  S('cTEN').value = tt.en || ""; S('cTPT').value = tt.pt || ""; S('cTCN').value = tt.cn || "";
+  S('cDEN').value = dd.en || ""; S('cDPT').value = dd.pt || ""; S('cDCN').value = dd.cn || "";
 
   if (c && c.img){
-    S('cImgPreview').src = c.img;
-    S('cImgPreview').style.display = 'block';
-    S('cImgEmpty').style.display = 'none';
+    S('cImgPreview').src = c.img; S('cImgPreview').style.display = 'block'; S('cImgEmpty').style.display = 'none';
   } else {
-    S('cImgPreview').style.display = 'none';
-    S('cImgEmpty').style.display = 'flex';
+    S('cImgPreview').style.display = 'none'; S('cImgEmpty').style.display = 'flex';
   }
   S('cImgFile').value = "";
 
@@ -1824,6 +1918,28 @@ function renderCategoryList(){
 }
 
 
+// ✅ 新增：专门用于关闭分类编辑的函数
+// 无论保存、取消还是返回，都走这里，确保列表刷新
+async function closeCategoryEdit() {
+  closeModal('categoryEditModal');
+  editingCategoryId = null;
+
+  // 处理手机返回键历史
+  if (window.innerWidth <= 900 && !__closingFromPopstate && location.hash === "#category_edit") {
+    history.back();
+  }
+
+  // ✅ 核心：关闭窗口后，静默刷新一下列表
+  // 这样之前新建的那个空分类，就会正式显示在管理列表中了
+  await loadAll(); 
+  
+  // 如果分类管理弹窗还开着，就刷新它的列表 DOM
+  if (S('categoryModal').classList.contains('open')) {
+    renderCategoryList();
+  }
+}
+
+// 保存分类
 async function saveCategory(){
   const payload = {
     is_active: S('cActive').value === "1",
@@ -1833,20 +1949,18 @@ async function saveCategory(){
   };
 
   try{
-    if (!editingCategoryId){
-      const res = await apiCall('/categories', 'POST', payload);
-      editingCategoryId = String(res.id);       // ✅ 拿到新 id
-      S('cId').value = editingCategoryId;       // 显示出来
-    } else {
+    if (editingCategoryId) {
       await apiCall(`/categories/${encodeURIComponent(editingCategoryId)}`, 'PUT', payload);
     }
     showToast(t('saved'));
-    closeModal('categoryEditModal');
-    await loadAll();
-    renderCategoryList();
-  }catch(e){}
+    
+    // 保存成功后，调用统一关闭函数（它会自动刷新列表）
+    closeCategoryEdit(); 
+    
+  }catch(e){
+    alert(e.message);
+  }
 }
-
 async function uploadCategoryImage(){
   // ✅ 必须先保存分类拿到 id 才能上传
   const catId = editingCategoryId;
@@ -1883,6 +1997,7 @@ if (!catId) return showToast(t('errFillAll')); // 或者专门加一个 i18n key
   }
 }
 
+// 删除分类
 async function deleteCategory(){
   if (!editingCategoryId) return;
   if (!confirm(t('confirmDeleteCategory'))) return;
@@ -1890,12 +2005,14 @@ async function deleteCategory(){
   try{
     await apiCall(`/categories/${encodeURIComponent(editingCategoryId)}`, 'DELETE');
     showToast(t('deleted'));
-    closeModal('categoryEditModal');
-    editingCategoryId = null;
-    await loadAll();
-    renderCategoryList();
+    
+    // 删除后也调用统一关闭，刷新列表
+    closeCategoryEdit();
+    
   }catch(e){}
 }
+
+
 
   // =========================
   // Utils
