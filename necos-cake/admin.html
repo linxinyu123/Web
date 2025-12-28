@@ -350,6 +350,7 @@
     pointer-events: none !important;
   }
   .cselect { position: relative; width: 100%; }
+ /* --- 找到这一块并替换 --- */
   .cselect-btn {
     width: 100%;
     border: 2px solid var(--border-strong);
@@ -365,10 +366,19 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: border 0.2s, background 0.2s; /* 移除了 box-shadow 动画，更稳 */
     min-height: 48px;
+    user-select: none;         /* ✅ 新增：防止文字被选中 */
+    -webkit-user-select: none; /* ✅ 新增：兼容手机 */
+    -webkit-tap-highlight-color: transparent;
   }
-  .cselect-btn:active { transform: scale(0.995); }
+  
+  .cselect-btn:active {
+    /* transform: scale(0.995); ❌ 删除这一行，消除布局抖动 */
+    background: #eaeaea;      /* ✅ 改为变色反馈，布局不会动 */
+    border-color: var(--accent);
+  }
+
   .cselect-btn:focus,
   .cselect-btn.cselect-open {
     border-color: var(--accent);
@@ -395,6 +405,7 @@
   }
   .cselect-btn.cselect-open .cselect-arrow { transform: translateY(-50%) rotate(180deg); }
 
+  /* --- 找到这一块并完全替换 --- */
   .cselect-pop {
     position: fixed;
     background: var(--white);
@@ -403,17 +414,27 @@
     box-shadow: 0 10px 40px rgba(16, 41, 64, 0.15);
     z-index: 9999;
     overflow: hidden;
-    display: none;
-    opacity: 0;
+    
+    /* ✅ 关键修改： */
+    display: flex;             /* 始终保持 flex 布局，不再切换 display */
+    flex-direction: column;
+    visibility: hidden;        /* 默认不可见 */
+    opacity: 0;                /* 透明 */
+    pointer-events: none;      /* 不可见时无法点击 */
+    
     transform: translateY(-8px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    /* 增加 visibility 的过渡，防止动画没播完就突然消失 */
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
     box-sizing: border-box;
   }
+
   .cselect-pop.open {
-    display: flex;
-    flex-direction: column;
+    visibility: visible;       /* 打开时可见 */
     opacity: 1;
+    pointer-events: auto;      /* 打开时可点击 */
     transform: translateY(0);
+    /* 打开时不需要延迟 visibility */
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
   .cselect-search {
     padding: 10px;
@@ -2077,6 +2098,7 @@ async function deleteCategory(){
     syncCSelectFromNative(state);
   }
 
+  // --- 1. 打开菜单：禁止自动聚焦，防止键盘乱弹 ---
   function openCSelect(state) {
     if (__cselectOpenState && __cselectOpenState !== state) closeCSelect(__cselectOpenState);
     __cselectOpenState = state;
@@ -2087,18 +2109,27 @@ async function deleteCategory(){
 
     requestAnimationFrame(() => {
       state.pop.classList.add('open');
-      state.searchInput.focus();
+      // state.searchInput.focus(); // ❌ 已注释：彻底禁止自动弹出键盘
     });
   }
 
+  // --- 2. 关闭菜单：强制失焦，防止布局回弹 ---
   function closeCSelect(state) {
+    // ✅ 关键：如果搜索框正处于输入状态，强制让它失焦，
+    // 这样键盘会立即平滑收起，而不是等菜单消失后突然跳动
+    if (state.searchInput) state.searchInput.blur();
+
     state.pop.classList.remove('open');
     state.btn.classList.remove('cselect-open');
+    
     setTimeout(() => {
       if (!state.pop.classList.contains('open')) state.pop.style.display = 'none';
     }, 150);
+    
     if (__cselectOpenState === state) __cselectOpenState = null;
   }
+
+
 
   function updateHighlight(state) {
     state.optionNodes.forEach((n, i) => {
@@ -2118,13 +2149,16 @@ async function deleteCategory(){
     state.optionNodes[i].el.scrollIntoView({ block: 'nearest' });
   }
 
+  // --- 3. 选中选项：禁止按钮聚焦，防止页面滚动 ---
   function selectActive(state) {
     const i = state.activeIndex;
     if (i < 0 || i >= state.optionNodes.length) return;
     const v = state.optionNodes[i].val;
+    
     setNativeValue(state, v);
     closeCSelect(state);
-    state.btn.focus();
+    
+    // state.btn.focus(); // ❌ 已注释：选中后不要聚焦按钮，避免手机页面为了对齐焦点而发生跳动
   }
 
   // =========================
