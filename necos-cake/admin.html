@@ -406,7 +406,7 @@
 
   /* Toast */
   #toast {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
     background: rgba(16,41,64,0.9); color: #fff; padding: 12px 24px;
     border-radius: 50px; font-weight: 800; z-index: 3000;
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
@@ -517,12 +517,12 @@
   }
   .cselect-search {
     padding: 10px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     background: #FAFAFA;
   }
   .cselect-search input {
     width: 100%;
-    border: 1px solid #E5E7EB;
+    border: 2px solid #E5E7EB;
     border-radius: 10px;
     padding: 12px 12px;
     font-size: 14.5px;
@@ -566,6 +566,12 @@
   .cselect-opt[aria-selected="true"] .tick { opacity: 1; }
   .cselect-empty { padding: 16px; font-size: 13px; color: #999; text-align: center; }
   @media (max-width: 600px) { .cselect-list { max-height: 320px; margin-top: 7.5px;} }
+
+  .btn-danger-solid{
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
 </style>
 </head>
 
@@ -958,6 +964,33 @@
   </div>
 </div>
 
+<!-- Confirm Delete Modal (Fixed Header) -->
+<div class="modal-overlay" id="confirmModal" onclick="closeModalByOverlay(event)">
+  <div class="modal-card has-fixed-head" onclick="event.stopPropagation()">
+
+    <div class="modal-head">
+      <div class="modal-title" id="confirmTitle" data-i18n="confirmTitle">Confirm</div>
+      <div class="modal-actions">
+        <button class="modal-close-btn" onclick="confirmCancel()" aria-label="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="modal-scroll">
+      <div id="confirmMessage" style="font-weight:800; line-height:1.4; color: var(--primary);"></div>
+      <div id="confirmHint" class="muted" style="margin-top:10px; display:none;"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="confirmCancel()" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-danger-solid" id="confirmOkBtn" onclick="confirmOk()">
+        <span data-i18n="confirm">Confirm</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
 <div id="toast">Msg</div>
 
 <script>
@@ -1000,6 +1033,7 @@ function __isUIState(st) {
 
 // 关闭：内部实现（不碰 history）
 function __closeModalInternal(id) {
+  if (id === 'confirmModal') __resolveConfirm(false);
   const m = S(id);
   if (!m) return;
   m.classList.remove('open');
@@ -1027,7 +1061,8 @@ function __closeEditorInternal() {
 // 找到“当前最上层打开的 UI”
 function __getTopOpenUI() {
   // 你这里可以按“覆盖层从上到下”排序
-  const modalOrder = ['categoryEditModal', 'categoryModal', 'newProductModal', 'variantModal'];
+const modalOrder = ['confirmModal','categoryEditModal', 'categoryModal', 'newProductModal', 'variantModal'];
+
   for (const id of modalOrder) {
     const el = S(id);
     if (el && el.classList.contains('open')) return { type: 'modal', id };
@@ -1087,7 +1122,8 @@ window.addEventListener('popstate', (e) => {
       uploadBtn: "Upload & Replace",
       imgNote: "New image replaces old one automatically.",
       noImage: "No image",
-
+confirmTitle: "Confirm",
+confirm: "Confirm",
       // categories (dynamic text mostly, but labels for form)
       editCategory: "Edit Category",
       catId: "Category ID",
@@ -1142,7 +1178,7 @@ window.addEventListener('popstate', (e) => {
 
       // delete product
       deleteProduct: "Delete Product",
-      confirmDeleteProduct: "Irreversible! Delete this product and ALL its images?",
+      confirmDeleteProduct: "Irreversible, Delete this product?",
       confirmDeleteVariant: "Delete variant?",
 
       // login modal
@@ -1190,6 +1226,8 @@ window.addEventListener('popstate', (e) => {
       uploadBtn: "Carregar e Substituir",
       imgNote: "Nova imagem substitui a antiga automaticamente.",
       noImage: "Sem imagem",
+confirmTitle: "Confirmar",
+confirm: "Confirmar",
 
       editCategory: "Editar Categoria",
       catId: "ID da Categoria",
@@ -1237,7 +1275,7 @@ window.addEventListener('popstate', (e) => {
       ph_newId: "ex.: classic_cheese_cake",
 
       deleteProduct: "Apagar Produto",
-      confirmDeleteProduct: "Irreversível! Apagar este produto e TODAS as imagens?",
+      confirmDeleteProduct: "Irreversível, Apagar este produto?",
       confirmDeleteVariant: "Apagar variante?",
 
       adminAccess: "Acesso Admin",
@@ -1269,6 +1307,8 @@ window.addEventListener('popstate', (e) => {
       close: "关闭",
       create: "创建",
       login: "登录",
+confirmTitle: "确认操作",
+confirm: "确定",
 
       id: "ID",
       idUnique: "ID（唯一）",
@@ -1330,7 +1370,7 @@ window.addEventListener('popstate', (e) => {
       ph_newId: "例如：classic_cheese_cake",
 
       deleteProduct: "删除产品",
-      confirmDeleteProduct: "不可撤销！确定删除该产品及其所有图片吗？",
+      confirmDeleteProduct: "不可撤销，确定删除该产品吗？",
       confirmDeleteVariant: "确定删除该规格吗？",
 
       adminAccess: "管理登录",
@@ -1412,6 +1452,58 @@ window.addEventListener('popstate', (e) => {
   // =========================
   // Modal (class open)
   // =========================
+
+  // =========================
+// Confirm Modal (replace native confirm())
+// =========================
+let __confirmResolve = null;
+
+function __resolveConfirm(val){
+  if (__confirmResolve){
+    const r = __confirmResolve;
+    __confirmResolve = null;
+    r(val);
+  }
+}
+
+function openConfirmModal(message, opts = {}){
+  const title = opts.title || t('confirmTitle');
+  const hint  = opts.hint || "";
+  const okText = opts.okText || t('confirm');
+  const isDanger = (opts.danger !== false); // 默认危险风格（删除）
+
+  S('confirmTitle').innerText = title;
+  S('confirmMessage').innerText = message || "";
+  const hintEl = S('confirmHint');
+  if (hint){
+    hintEl.style.display = 'block';
+    hintEl.innerText = hint;
+  } else {
+    hintEl.style.display = 'none';
+    hintEl.innerText = '';
+  }
+
+  const okBtn = S('confirmOkBtn');
+  okBtn.classList.toggle('btn-danger-solid', isDanger);
+  okBtn.classList.toggle('btn-primary', !isDanger);
+  okBtn.querySelector('[data-i18n="confirm"]')?.replaceWith(); // 防御：避免重复
+  okBtn.innerHTML = `<span>${escapeHtml(okText)}</span>`;
+
+  return new Promise(resolve => {
+    __confirmResolve = resolve;
+    openModal('confirmModal');
+  });
+}
+
+function confirmOk(){
+  __resolveConfirm(true);
+  closeModal('confirmModal');
+}
+function confirmCancel(){
+  __resolveConfirm(false);
+  closeModal('confirmModal');
+}
+
   let __lockedScrollY = 0;
   function lockBodyScroll(){
     if (document.body.classList.contains('modal-open')) return;
@@ -1459,7 +1551,7 @@ function closeModalByOverlay(e){
   if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
     const id = e.target.id;
     if (id === 'loginModal') return;
-
+    if (id === 'confirmModal') { confirmCancel(); return; }  
     if (id === 'categoryEditModal') closeCategoryEdit();
     else closeModal(id);
   }
@@ -1820,7 +1912,12 @@ if (window.innerWidth <= 900 && __editorHistoryPushed && !__closingFromPopstate 
 
   async function deleteProduct(){
     if (!selectedProduct) return;
-    if (!confirm(t('confirmDeleteProduct'))) return;
+    const ok = await openConfirmModal(t('confirmDeleteProduct'), {
+    title: t('confirmTitle'),
+    okText: t('delete'),
+    danger: true
+  });
+  if (!ok) return;
 
     try{
       await apiCall(`/products/${selectedProduct.id}`, 'DELETE');
@@ -1964,7 +2061,13 @@ if (window.innerWidth <= 900 && __editorHistoryPushed && !__closingFromPopstate 
   }
 
   async function deleteVariant(vid){
-    if (!confirm(t('confirmDeleteVariant'))) return;
+     const ok = await openConfirmModal(t('confirmDeleteVariant'), {
+    title: t('confirmTitle'),
+    okText: t('delete'),
+    danger: true
+  });
+  if (!ok) return;
+
     try{
       await apiCall(`/variants/${vid}`, 'DELETE');
       showToast(t('deleted'));
@@ -2157,7 +2260,12 @@ if (!catId) return showToast(t('errFillAll')); // 或者专门加一个 i18n key
 // 删除分类
 async function deleteCategory(){
   if (!editingCategoryId) return;
-  if (!confirm(t('confirmDeleteCategory'))) return;
+  const ok = await openConfirmModal(t('confirmDeleteCategory'), {
+    title: t('confirmTitle'),
+    okText: t('delete'),
+    danger: true
+  });
+  if (!ok) return;
 
   try{
     await apiCall(`/categories/${encodeURIComponent(editingCategoryId)}`, 'DELETE');
@@ -2168,6 +2276,7 @@ async function deleteCategory(){
     
   }catch(e){}
 }
+
 
 
 
