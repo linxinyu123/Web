@@ -46,7 +46,6 @@
     width:100%;
   }
 
-  
   /* --- Header --- */
   .smart-header {
     position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
@@ -55,14 +54,10 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px;
     border-bottom: 2px solid var(--border);
-    align-items: center;
   }
-  
-  .header-left{ justify-self: start; display:flex; align-items:center; gap:15px; }
-.header-center{ justify-self: center; }
-.header-right{ justify-self: end; display:flex; align-items:center; }
+  .header-left { display: flex; align-items: center; gap: 15px; }
   .logo-img { height: 44px; width: auto; }
-  .header-title { font-weight: 900; font-size: 18px;   text-align: center;}
+  .header-title { font-weight: 900; font-size: 18px; }
 
   /* Lang Switcher */
   .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; margin-right: 0px; }
@@ -584,13 +579,10 @@
 <header class="smart-header">
   <div class="header-left">
     <img class="logo-img" src="https://lestoy.com/necos/logo.png" alt="logo" onerror="this.style.display='none'">
-  </div>
-
-  <div class="header-center">
     <div class="header-title" data-i18n="adminTitle">Admin</div>
   </div>
 
-  <div class="header-right">
+  <div class="header-actions">
     <div class="lang-switch" aria-label="Language Switcher">
       <button class="lang-btn" onclick="setAdminLang('en')">EN</button>
       <button class="lang-btn" onclick="setAdminLang('pt')">PT</button>
@@ -598,7 +590,6 @@
     </div>
   </div>
 </header>
-
 
 <div class="container">
   <div class="grid-layout">
