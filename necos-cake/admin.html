@@ -518,7 +518,7 @@
   .cselect-search {
     padding: 10px;
     border-bottom: 2px solid var(--border);
-    background: #FAFAFA;
+    background: #F5f5f7;
   }
   .cselect-search input {
     width: 100%;
@@ -528,10 +528,10 @@
     font-size: 14.5px;
     font-weight: 700;
     color: var(--primary);
-    background: #FFF;
+    background: var(--field-bg);
     outline: none;
   }
-  .cselect-search input:focus { border-color: var(--accent); }
+  .cselect-search input:focus { border-color: var(--accent);  background: var(--field-bg-focus); }
   .cselect-list {
     max-height: 260px;
     overflow-y: auto;
@@ -553,7 +553,7 @@
     transition: background 0.1s;
   }
   .cselect-opt:hover, .cselect-opt.highlighted { background: #F3F4F6; }
-  .cselect-opt[aria-selected="true"] { background: rgba(244,192,75,0.15); color: #D97706; }
+  .cselect-opt[aria-selected="true"] { background: rgba(244,192,75,0.15); color: var(--accent); }
   .cselect-opt .tick {
     width: 16px; height: 16px;
     background-color: currentColor;
