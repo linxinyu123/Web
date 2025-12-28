@@ -207,7 +207,7 @@
   .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
   .btn-full { width: 100%; }
   .btn-small { padding: 8px 14px; font-size: 13.5px; }
-
+ .btn-cat { padding: 10px 16px; font-size: 13.5px; }
   /* --- Variant Cards --- */
   .variant-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .v-card {
@@ -831,7 +831,7 @@
       <div class="modal-title" data-i18n="manageCats">Categories</div>
 
       <div class="modal-actions">
-        <button class="btn btn-primary btn-primary" onclick="openCategoryEdit(null)">
+        <button class="btn btn-primary btn-cat" onclick="openCategoryEdit(null)">
           + <span data-i18n="new">New</span>
         </button>
         <button class="modal-close-btn" onclick="closeModal('categoryModal')" aria-label="Close">✕</button>
