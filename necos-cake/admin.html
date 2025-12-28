@@ -351,12 +351,11 @@
   .muted { font-size: 12px; color: #888; line-height: 1.2; }
   .empty-state { font-size: 13px; color:#999; padding: 10px; text-align:center; }
 
-  /* =========================
-   Custom Select (cselect)
-   - progressive enhancement over native <select>
+/* =========================
+   Custom Select (cselect) - Enterprise Grade
    ========================= */
 
-/* hide native select but keep it in DOM for value + form + existing JS */
+/* Hide native select but keep accessible */
 .select-wrap select.select-native.cselect-native {
   position: absolute !important;
   left: -9999px !important;
@@ -366,7 +365,7 @@
   pointer-events: none !important;
 }
 
-/* the visible control */
+/* The visible control (Button) */
 .cselect {
   position: relative;
   width: 100%;
@@ -376,7 +375,7 @@
   width: 100%;
   border: 2px solid var(--border-strong);
   border-radius: var(--radius-input);
-  padding: 12px 44px 12px 14px;
+  padding: 12px 40px 12px 14px;
   font-size: 15px;
   font-weight: 700;
   color: var(--primary);
@@ -387,10 +386,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  transition: border 0.2s, background 0.2s, box-shadow 0.2s, transform 0.1s;
+  transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+  min-height: 48px; /* Ensure touch target */
 }
 
-.cselect-btn:active { transform: scale(0.99); }
+.cselect-btn:active { transform: scale(0.995); }
 .cselect-btn:focus,
 .cselect-btn.cselect-open {
   border-color: var(--accent);
@@ -398,104 +398,115 @@
 }
 
 .cselect-label {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  text-align: left;
   flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cselect-arrow {
-  width: 18px;
-  height: 18px;
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px;
   background-color: var(--primary);
   -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
   -webkit-mask-size: contain;
   mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
   mask-size: contain;
-  opacity: 0.9;
-  flex-shrink: 0;
+  opacity: 0.8;
   transition: transform 0.2s ease;
+  pointer-events: none;
 }
-.cselect-btn.cselect-open .cselect-arrow { transform: rotate(180deg); }
+.cselect-btn.cselect-open .cselect-arrow { transform: translateY(-50%) rotate(180deg); }
 
-/* dropdown panel */
+/* 
+   Popover Panel (Attached to BODY) 
+   This ensures it floats above everything, including modals.
+*/
 .cselect-pop {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(100% + 8px);
+  position: fixed; /* Fixed relative to viewport */
   background: var(--white);
   border: 2px solid var(--border-strong);
   border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
-  z-index: 2500;
+  box-shadow: 0 10px 40px rgba(16, 41, 64, 0.15);
+  z-index: 9999; /* Highest priority */
   overflow: hidden;
   display: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-sizing: border-box;
 }
 
-.cselect-pop.open { display: block; }
+.cselect-pop.open {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .cselect-search {
-  padding: 12px;
-  border-bottom: 2px solid var(--border);
-  background: rgba(255,255,255,0.98);
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  background: #FAFAFA;
 }
 .cselect-search input {
   width: 100%;
-  border: 2px solid var(--border-strong);
-  border-radius: 14px;
-  padding: 10px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 8px 12px;
   font-size: 13px;
   font-weight: 700;
   color: var(--primary);
-  background: var(--field-bg);
+  background: #FFF;
   outline: none;
 }
 .cselect-search input:focus {
   border-color: var(--accent);
-  background: var(--field-bg-focus);
 }
 
 .cselect-list {
   max-height: 260px;
-  overflow: auto;
+  overflow-y: auto;
   padding: 6px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cselect-opt {
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 800;
-  font-size: 13px;
+  font-weight: 700;
+  font-size: 14px;
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  transition: background 0.1s;
 }
-.cselect-opt:hover { background: #F3F4F6; }
+
+.cselect-opt:hover, .cselect-opt.highlighted {
+  background: #F3F4F6;
+}
 .cselect-opt[aria-selected="true"] {
-  background: rgba(244,192,75,0.25);
+  background: rgba(244,192,75,0.15);
+  color: #D97706;
 }
+
 .cselect-opt .tick {
-  width: 18px;
-  height: 18px;
-  background-color: var(--primary);
+  width: 16px; height: 16px;
+  background-color: currentColor;
   -webkit-mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
   -webkit-mask-size: contain;
   mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
   mask-size: contain;
   opacity: 0;
-  flex-shrink: 0;
 }
-.cselect-opt[aria-selected="true"] .tick { opacity: 0.95; }
+.cselect-opt[aria-selected="true"] .tick { opacity: 1; }
 
 .cselect-empty {
-  padding: 12px;
+  padding: 16px;
   font-size: 13px;
-  font-weight: 800;
   color: #999;
   text-align: center;
 }
@@ -784,11 +795,6 @@ border-bottom: 2px solid var(--border);
       <div class="panel-title" style="margin-bottom:20px;" data-i18n="newProduct">New Product</div>
 
       <div class="form-group">
-        <label data-i18n="idUnique">ID (Unique)</label>
-        <input id="newId" placeholder="">
-      </div>
-
-      <div class="form-group">
         <label data-i18n="category">Category</label>
         <div class="select-wrap">
           <select id="newCategory" class="select-native">
@@ -796,31 +802,6 @@ border-bottom: 2px solid var(--border);
             <option value="layer" data-i18n="cat_layer">Layer</option>
             <option value="seasonal" data-i18n="cat_seasonal">Seasonal</option>
           </select>
-        </div>
-      </div>
-
-      <!-- Multi-language names for new product -->
-      <div class="lang-group" style="margin-bottom: 14px;">
-        <div class="lang-label"><span class="lang-pill">EN</span> <span data-i18n="lang_en">English</span></div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label data-i18n="productName">Product Name</label>
-          <input id="newNameEN" placeholder="">
-        </div>
-      </div>
-
-      <div class="lang-group" style="margin-bottom: 14px;">
-        <div class="lang-label"><span class="lang-pill">PT</span> <span data-i18n="lang_pt">Portuguese</span></div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label data-i18n="productName">Product Name</label>
-          <input id="newNamePT" placeholder="">
-        </div>
-      </div>
-
-      <div class="lang-group" style="margin-bottom: 0;">
-        <div class="lang-label"><span class="lang-pill">CN</span> <span data-i18n="lang_cn">Chinese</span></div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label data-i18n="productName">Product Name</label>
-          <input id="newNameCN" placeholder="">
         </div>
       </div>
     </div>
@@ -866,8 +847,9 @@ border-bottom: 2px solid var(--border);
   let products = [];
   let selectedProduct = null;
   let editingVariantId = null;
-  let currentLang = 'en';
+  let currentLang = 'cn';
 
+  
   // --- I18n Texts ---
   const TEXTS = {
     en: {
@@ -930,9 +912,9 @@ border-bottom: 2px solid var(--border);
       delete: "Delete",
       noVariants: "No variants added yet.",
       priceEuro: "Price (€)",
-      variantNameEN: "Name (EN)",
-      variantNamePT: "Name (PT)",
-      variantNameCN: "Name (CN)",
+      variantNameEN: "Size (EN)",
+      variantNamePT: "Size (PT)",
+      variantNameCN: "Size (CN)",
       ph_price: "e.g. 42 (means €42.00)",
       ph_vname_en: "e.g. 6 inch",
       ph_vname_pt: "e.g. 15 cm",
@@ -1018,9 +1000,9 @@ border-bottom: 2px solid var(--border);
       delete: "Apagar",
       noVariants: "Ainda não há variantes.",
       priceEuro: "Preço (€)",
-      variantNameEN: "Nome (EN)",
-      variantNamePT: "Nome (PT)",
-      variantNameCN: "Nome (CN)",
+      variantNameEN: "Tamanho (EN)",
+      variantNamePT: "Tamanho (PT)",
+      variantNameCN: "Tamanho (CN)",
       ph_price: "ex.: 42 (significa €42,00)",
       ph_vname_en: "ex.: 6 inch",
       ph_vname_pt: "ex.: 15 cm",
@@ -1102,9 +1084,9 @@ border-bottom: 2px solid var(--border);
       delete: "删除",
       noVariants: "暂无规格。",
       priceEuro: "价格 (€)",
-      variantNameEN: "名称（EN）",
-      variantNamePT: "名称（PT）",
-      variantNameCN: "名称（CN）",
+      variantNameEN: "尺寸（EN）",
+      variantNamePT: "尺寸（PT）",
+      variantNameCN: "尺寸（CN）",
       ph_price: "例如：42（表示 €42.00）",
       ph_vname_en: "例如：6 inch",
       ph_vname_pt: "例如：15 cm",
@@ -1355,7 +1337,318 @@ border-bottom: 2px solid var(--border);
     S('pId').value = p.id;
     S('pCategory').value = p.category;
     S('pSort').value = p.sort_order ?? 0;
-    S('pActive').value = p.is_active ? "1" : "0";
+    S('pActive').value = (p.is_active == 1) ? "1" : "0";
+
+    // 2. 强制刷新自定义下拉框 (cselect) 的显示文本
+    ['pCategory', 'pActive'].forEach(id => {
+        const el = S(id);
+        if (el && el.dataset.cselectId && window.__cselectStates) {
+            const state = window.__cselectStates.get(el.dataset.cselectId);
+            if (state) syncCSelectFromNative(state);
+        }
+    });
+
+    const title = p.title || {};
+    const desc = p.description || {};
+    S('tEN').value = title.en || "";
+    S('tPT').value = title.pt || "";
+    S('tCN').value = title.cn || "";
+    S('dEN').value = desc.en || "";
+    S('dPT').value = desc.pt || "";
+    S('dCN').value = desc.cn || "";
+
+    refreshImagePreviewFromSelected();
+    renderVariants();
+  }
+
+  function refreshImagePreviewFromSelected() {
+    if (!selectedProduct) return;
+    const img = (selectedProduct.images || []).find(i => i.is_primary) || (selectedProduct.images || [])[0];
+    const preview = S('pImgPreview');
+    const emptyTxt = S('pImgEmpty');
+
+    if (img && (img.public_url || img.url)) {
+      preview.src = img.public_url || img.url;
+      preview.style.display = 'block';
+      emptyTxt.style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      emptyTxt.style.display = 'flex';
+    }
+  }
+
+  function closeEditorMobile() {
+    S('editorPanel').classList.remove('open');
+    selectedProduct = null;
+    renderList();
+    S('btnSave').disabled = true;
+    S('btnDeleteBottom').disabled = true;
+    S('editorEmpty').style.display = 'block';
+    S('editorForm').style.display = 'none';
+  }
+
+  // --- Modal Helpers ---
+ let __lockedScrollY = 0;
+
+  function lockBodyScroll() {
+    if (document.body.classList.contains('modal-open')) return;
+    __lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.top = `-${__lockedScrollY}px`;
+    document.body.classList.add('modal-open');
+  }
+
+  function unlockBodyScrollIfNoModal() {
+    const anyOpen = document.querySelector('.modal-overlay.open');
+    if (anyOpen) return; // 如果还有其他弹窗开着，不解锁
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, __lockedScrollY);
+  }
+
+  // --- Modal Helpers ---
+  function openModal(id) {
+    const modal = S(id);
+    if (!modal) return;
+    
+    lockBodyScroll(); // 锁定背景滚动
+    
+    const shell = modal.querySelector('.modal-shell');
+    modal.style.display = 'flex';
+    
+    // 强制回流以触发 transition
+    requestAnimationFrame(() => {
+      modal.style.opacity = 1;
+      if(shell) shell.classList.add('open');
+    });
+    
+    // 如果是 variant modal，刷新多语言
+    if (id === 'variantModal' || id === 'newProductModal') {
+      updateAdminUI(); 
+    }
+  }
+
+  function closeModal(id) {
+    const modal = S(id);
+    if (!modal) return;
+    const shell = modal.querySelector('.modal-shell');
+    if(shell) shell.classList.remove('open');
+    modal.style.opacity = 0;
+    setTimeout(() => {
+      modal.style.display = 'none';
+      unlockBodyScrollIfNoModal(); // 确保在所有弹窗关闭后才解锁
+    }, 300);
+  }
+
+  function closeModalByOverlay(event) {
+    if (event.target && event.target.classList && event.target.classList.contains('modal-overlay')) {
+      // login 不允许点遮罩关闭
+      if (event.target.id === 'loginModal') return;
+      closeModal(event.target.id);
+    }
+  }
+
+  function openNewProductModal() {
+    // 重置为默认值，清空旧输入
+    S('newCategory').value = "classic";
+    
+    // 刷新 cselect（如果用了自定义下拉）
+    const sel = S('newCategory');
+    if (sel && sel.dataset.cselectId && window.__cselectStates) {
+      const state = window.__cselectStates.get(sel.dataset.cselectId);
+      if (state) syncCSelectFromNative(state);
+    }
+    
+    openModal('newProductModal');
+  }
+
+  // --- Auth & Init ---
+  function getApi() { return (localStorage.getItem(CFG.api) || "").replace(/\/+$/, ""); }
+  function getKey() { return sessionStorage.getItem(CFG.key) || ""; }
+
+  function init() {
+    if (window.innerWidth <= 900) S('editorPanel').style.transition = 'transform 0.3s';
+
+    const key = getKey();
+    if (!key) {
+      S('loginModal').classList.add('open');
+    } else {
+      loadProducts();
+    }
+    updateAdminUI();
+    initCustomSelects();
+  }
+
+  function doLogin() {
+    const k = S('adminKeyInput').value.trim();
+    const u = "https://necosapi.lestoy.com"; // 硬编码API地址
+    if (!k || !u) return alert(t('errFillAll'));
+
+    sessionStorage.setItem(CFG.key, k);
+    localStorage.setItem(CFG.api, u);
+    closeModal('loginModal');
+    loadProducts();
+  }
+
+  S('btnLogout').onclick = () => {
+    sessionStorage.removeItem(CFG.key);
+    window.location.reload();
+  };
+
+  // --- Language ---
+  function setAdminLang(l) {
+    currentLang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    const map = {en:0, pt:1, cn:2};
+    document.querySelectorAll('.lang-btn')[map[l]].classList.add('active');
+
+    updateAdminUI();
+
+    // 关键修复：切换语言即时刷新
+    renderList();
+    refreshEditorStaticTextOnly();
+    renderVariants(); // variants 名称立即按语言刷新
+    refreshOpenModalI18n(); // 如果 modal 开着，也立即刷新
+  }
+
+  function t(key) {
+    return (TEXTS[currentLang] && TEXTS[currentLang][key]) || (TEXTS.en[key] || key);
+  }
+
+  function updateAdminUI() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n');
+      if (t(k)) el.innerText = t(k);
+    });
+
+    // placeholders (products)
+    S('searchInput').placeholder = t('search');
+
+    // product edit placeholders
+    if (S('tEN')) S('tEN').placeholder = t('ph_productName_en');
+    if (S('tPT')) S('tPT').placeholder = t('ph_productName_pt');
+    if (S('tCN')) S('tCN').placeholder = t('ph_productName_cn');
+    if (S('dEN')) S('dEN').placeholder = t('ph_desc_en');
+    if (S('dPT')) S('dPT').placeholder = t('ph_desc_pt');
+    if (S('dCN')) S('dCN').placeholder = t('ph_desc_cn');
+
+    // variant modal placeholders
+    if (S('vPriceEuro')) S('vPriceEuro').placeholder = t('ph_price');
+    if (S('vNameEN')) S('vNameEN').placeholder = t('ph_vname_en');
+    if (S('vNamePT')) S('vNamePT').placeholder = t('ph_vname_pt');
+    if (S('vNameCN')) S('vNameCN').placeholder = t('ph_vname_cn');
+
+    // new product placeholders
+    if (S('newId')) S('newId').placeholder = t('ph_newId');
+    if (S('newNameEN')) S('newNameEN').placeholder = t('ph_productName_en');
+    if (S('newNamePT')) S('newNamePT').placeholder = t('ph_productName_pt');
+    if (S('newNameCN')) S('newNameCN').placeholder = t('ph_productName_cn');
+
+    // login placeholders
+    if (S('adminKeyInput')) S('adminKeyInput').placeholder = t('ph_adminKey');
+    refreshCustomSelectLabels(); // Ensure custom selects also update placeholders
+  }
+
+  // --- Product & List Logic ---
+  async function loadProducts() {
+    try {
+      const res = await apiCall('/products');
+      products = res.products || [];
+      renderList();
+    } catch(e) {}
+  }
+
+  function getLocalizedCategory(cat) {
+    if (cat === 'classic') return t('cat_classic');
+    if (cat === 'layer') return t('cat_layer');
+    if (cat === 'seasonal') return t('cat_seasonal');
+    return cat || '';
+  }
+
+  function getLocalizedTitle(p) {
+    if (!p) return "";
+    if (p.title) return p.title[currentLang] || p.title.en || p.title.cn || p.title.pt || p.id;
+    return p.id;
+  }
+
+  function renderList() {
+    const q = S('searchInput').value.toLowerCase();
+    const cat = S('catFilter').value;
+    const listEl = S('productList');
+    listEl.innerHTML = '';
+
+    const filtered = products.filter(p => {
+      if (cat && p.category !== cat) return false;
+      const titleStr = JSON.stringify(p.title || {}).toLowerCase();
+      return p.id.toLowerCase().includes(q) || titleStr.includes(q);
+    });
+
+    filtered.forEach(p => {
+      const div = document.createElement('div');
+      div.className = `list-item ${selectedProduct?.id === p.id ? 'active' : ''}`;
+      div.onclick = () => selectProduct(p);
+      
+      let imgUrl = "";
+      const primaryImg = (p.images || []).find(i => i.is_primary) || (p.images || [])[0];
+      if (primaryImg) imgUrl = primaryImg.public_url || primaryImg.url || "";
+
+      const title = getLocalizedTitle(p);
+      const statusClass = p.is_active ? 'active' : '';
+
+      const catLabel = `${t('metaCategoryPrefix')} ${getLocalizedCategory(p.category)}`;
+      const sortLabel = `${t('metaSortPrefix')} ${p.sort_order ?? 0}`;
+
+      div.innerHTML = `
+       <img
+  src="${imgUrl || 'https://lestoy.com/necos/noimg.png'}"
+  class="item-thumb"
+  onerror="this.onerror=null; this.src='https://lestoy.com/necos/noimg.png';"
+/>
+        <div class="item-info">
+          <div class="item-title">${escapeHtml(title)}</div>
+          <div class="item-meta">
+            <div class="status-dot ${statusClass}"></div>
+            <span>${escapeHtml(catLabel)}</span>
+            <span>•</span>
+            <span>${escapeHtml(sortLabel)}</span>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.innerText = '—';
+      listEl.appendChild(empty);
+    }
+  }
+
+  function selectProduct(p) {
+    selectedProduct = p;
+    renderList(); // highlight
+
+    if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
+
+    S('editorEmpty').style.display = 'none';
+    S('editorForm').style.display = 'block';
+    S('btnSave').disabled = false;
+    S('btnDeleteBottom').disabled = false;
+
+    // Fill Fields (these are actual values, ok to overwrite because user just selected a product)
+    S('pId').value = p.id;
+    S('pCategory').value = p.category;
+    S('pSort').value = p.sort_order ?? 0;
+    S('pActive').value = (p.is_active == 1) ? "1" : "0";
+
+    // 2. 强制刷新自定义下拉框 (cselect) 的显示文本
+    ['pCategory', 'pActive'].forEach(id => {
+        const el = S(id);
+        if (el && el.dataset.cselectId && window.__cselectStates) {
+            const state = window.__cselectStates.get(el.dataset.cselectId);
+            if (state) syncCSelectFromNative(state);
+        }
+    });
 
     const title = p.title || {};
     const desc = p.description || {};
@@ -1398,43 +1691,88 @@ border-bottom: 2px solid var(--border);
 
   // --- Modal Helpers ---
   function openNewProductModal() {
-    S('newId').value = "";
     S('newCategory').value = "classic";
-    S('newNameEN').value = "";
-    S('newNamePT').value = "";
-    S('newNameCN').value = "";
-    S('newProductModal').classList.add('open');
-    updateAdminUI(); // ensure placeholders are correct for current lang
+    
+    // 刷新 cselect（如果用了自定义下拉）
+    const sel = S('newCategory');
+    if (sel && sel.dataset.cselectId && window.__cselectStates) {
+      const state = window.__cselectStates.get(sel.dataset.cselectId);
+      if (state) syncCSelectFromNative(state);
+    }
+    
+    openModal('newProductModal');
   }
+
   function closeModal(id) {
-    S(id).classList.remove('open');
+    const modal = S(id);
+    if (!modal) return;
+    const shell = modal.querySelector('.modal-shell');
+    if(shell) shell.classList.remove('open');
+    modal.style.opacity = 0;
+    setTimeout(() => {
+      modal.style.display = 'none';
+      unlockBodyScrollIfNoModal();
+    }, 300);
+  }
+
+  function closeModalByOverlay(e){
+    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+      // login 不允许点遮罩关闭
+      if (e.target.id === 'loginModal') return;
+      closeModal(e.target.id);
+    }
+  }
+
+  function lockBodyScroll() {
+    if (document.body.classList.contains('modal-open')) return;
+    __lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.top = `-${__lockedScrollY}px`;
+    document.body.classList.add('modal-open');
+  }
+
+  function unlockBodyScrollIfNoModal() {
+    const anyOpen = document.querySelector('.modal-overlay.open');
+    if (anyOpen) return;
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, __lockedScrollY);
   }
 
   async function createNewProduct() {
-    const id = S('newId').value.trim();
     const cat = S('newCategory').value;
-    const nameEN = S('newNameEN').value.trim();
-    const namePT = S('newNamePT').value.trim();
-    const nameCN = S('newNameCN').value.trim();
+    // 获取当前弹窗内的创建按钮，防止重复点击
+    const btn = S('newProductModal').querySelector('.btn-primary');
+    
+    if (btn) btn.disabled = true;
 
-    if (!id || !nameEN) return alert(t('errIdNameRequired'));
-
+    // 后端只接收 category，其他字段（ID/Title/Status）会自动生成默认值
     const payload = {
-      id,
-      category: cat,
-      title: { en: nameEN, pt: namePT, cn: nameCN },
-      is_active: false,
-      sort_order: 0
+      category: cat
+      // 后端会自动设置: title={}, is_active=0, sort_order=0
     };
 
     try {
-      await apiCall('/products', 'POST', payload);
+      const res = await apiCall('/products', 'POST', payload);
+      
       closeModal('newProductModal');
       showToast(t('created'));
+
       await loadProducts();
-      const newP = products.find(x => x.id === id);
-      if (newP) selectProduct(newP);
-    } catch (e) {}
+      
+      // 选中新产品
+      if (res && res.id) {
+        const newP = products.find(x => String(x.id) === String(res.id));
+        if (newP) {
+          selectProduct(newP);
+          // 如果是手机端，可能需要这里触发面板打开
+          if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
+        }
+      }
+    } catch (e) {
+      console.error("Failed to create product:", e);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   async function saveProduct() {
@@ -1459,20 +1797,7 @@ border-bottom: 2px solid var(--border);
     try {
       await apiCall(`/products/${selectedProduct.id}`, 'PUT', payload);
       showToast(t('saved'));
-
-      // 关键修复：保存后立即拉新数据并更新 selectedProduct 引用 + 列表展示
       await loadProducts();
-      const fresh = products.find(x => x.id === selectedProduct.id);
-      if (fresh) {
-        selectedProduct = fresh;
-        // 同步部分字段（用户已保存，覆盖是合理的）
-        S('pCategory').value = fresh.category;
-        S('pSort').value = fresh.sort_order ?? 0;
-        S('pActive').value = fresh.is_active ? "1" : "0";
-        refreshImagePreviewFromSelected();
-        renderVariants();
-        renderList();
-      }
     } catch (e) {}
   }
 
@@ -1525,106 +1850,126 @@ border-bottom: 2px solid var(--border);
 
   // --- Variant Logic ---
   function renderVariants() {
-    const list = S('variantList');
-    list.innerHTML = '';
-
-    if (!selectedProduct) return;
-
-    const vars = (selectedProduct.variants || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
-    if (vars.length === 0) {
-      const d = document.createElement('div');
-      d.className = 'empty-state';
-      d.innerText = t('noVariants');
-      list.appendChild(d);
-      return;
-    }
-
-    vars.forEach(v => {
-      const div = document.createElement('div');
-      div.className = 'v-card';
-
-      const name = (v.name && (v.name[currentLang] || v.name.en || v.name.cn || v.name.pt)) || "—";
-      const price = ((v.price_cents || 0) / 100).toFixed(2);
-
-      div.innerHTML = `
-        <div class="v-info">
-          <div>${escapeHtml(name)}</div>
-          <div class="v-price">€ ${escapeHtml(price)}</div>
-        </div>
-        <div style="display:flex; gap:8px; flex-shrink:0;">
-          <button class="btn btn-ghost btn-small" onclick="openVariantModal('${v.id}')">${escapeHtml(t('edit'))}</button>
-          <button class="btn btn-danger btn-small" onclick="deleteVariant('${v.id}')">${escapeHtml(t('delete'))}</button>
-        </div>
-      `;
-      list.appendChild(div);
-    });
+      const list = S('variantList'); list.innerHTML = '';
+      if(!selectedProduct) return;
+      
+      // 确保 variants 是数组
+      const vars = (selectedProduct.variants || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+      
+      if(vars.length===0) {
+        list.innerHTML = `<div class="empty-state">${t('noVariants')}</div>`;
+        return;
+      }
+      
+      vars.forEach(v => {
+          // 获取当前语言名称
+          let name = "Variant";
+          if (v.name) {
+             name = v.name[currentLang] || v.name.en || v.name.cn || v.name.pt || "Variant";
+          }
+          
+          const div = document.createElement('div'); div.className='v-card';
+          // 注意：openVariantModal 的参数 v.id 需要加引号，防止数字被误解
+          div.innerHTML = `
+            <div class="v-info">
+              <div>${escapeHtml(name)}</div>
+              <div class="v-price">€ ${(v.price_cents/100).toFixed(2)}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button class="btn btn-ghost btn-small" onclick="openVariantModal('${v.id}')">${t('edit')}</button>
+              <button class="btn btn-danger btn-small" onclick="deleteVariant('${v.id}')">${t('delete')}</button>
+            </div>`;
+          list.appendChild(div);
+      });
   }
 
-  function openVariantModal(vid = null) {
-    editingVariantId = vid;
-    S('variantModal').classList.add('open');
-    updateAdminUI(); // refresh placeholders & labels
-
-    if (!selectedProduct) return;
-
-    if (vid) {
-      const v = selectedProduct.variants.find(x => x.id === vid);
-      S('vPriceEuro').value = (v.price_cents || 0) / 100;
-      S('vNameEN').value = (v.name && v.name.en) || "";
-      S('vNamePT').value = (v.name && v.name.pt) || "";
-      S('vNameCN').value = (v.name && v.name.cn) || "";
-      S('vSort').value = v.sort_order ?? 0;
-      S('vActive').value = v.is_active ? "1" : "0";
-    } else {
+function openVariantModal(vid = null) {
+      editingVariantId = vid; // vid 是字符串 (e.g. "45")
+      
+      // 清空/初始化表单
       S('vPriceEuro').value = "";
-      S('vNameEN').value = "";
-      S('vNamePT').value = "";
-      S('vNameCN').value = "";
-      S('vSort').value = 0;
-      S('vActive').value = "1";
-    }
+      S('vNameEN').value = ""; S('vNamePT').value = ""; S('vNameCN').value = "";
+      S('vSort').value = 0; S('vActive').value = "1";
+
+      if(vid && selectedProduct) {
+          // 这里的查找要小心类型转换，用 String() 包裹比较最稳
+          const v = selectedProduct.variants.find(x => String(x.id) === String(vid));
+          if (v) {
+              S('vPriceEuro').value = (v.price_cents / 100);
+              // v.name 可能是解析后的对象
+              const n = v.name || {};
+              S('vNameEN').value = n.en || "";
+              S('vNamePT').value = n.pt || "";
+              S('vNameCN').value = n.cn || "";
+              S('vSort').value = v.sort_order || 0;
+              S('vActive').value = v.is_active ? "1" : "0";
+          }
+      }
+      
+      // 刷新 UI 语言并打开
+      updateAdminUI();
+      // 这里也要刷新自定义下拉框（如果有）
+      const vActiveSel = S('vActive');
+      if (vActiveSel && vActiveSel.dataset.cselectId && window.__cselectStates) {
+          syncCSelectFromNative(window.__cselectStates.get(vActiveSel.dataset.cselectId));
+      }
+      
+      openModal('variantModal');
   }
 
   async function saveVariant() {
-    if (!selectedProduct) return;
+      if(!selectedProduct) return;
+      
+      const priceVal = parseFloat(S('vPriceEuro').value);
+      if (isNaN(priceVal) || priceVal <= 0) return alert(t('errPriceGt0'));
+      const priceCents = Math.round(priceVal * 100);
 
-    const rawPrice = Number(S('vPriceEuro').value);
-    const priceCents = Math.round(rawPrice * 100);
+      const payload = {
+          product_id: selectedProduct.id,
+          price_cents: priceCents,
+          name: { 
+              en: S('vNameEN').value.trim(), 
+              pt: S('vNamePT').value.trim(), 
+              cn: S('vNameCN').value.trim() 
+          },
+          sort_order: Number(S('vSort').value),
+          is_active: S('vActive').value === "1"
+      };
 
-    const payload = {
-      product_id: selectedProduct.id,
-      price_cents: priceCents,
-      name: {
-        en: S('vNameEN').value.trim(),
-        pt: S('vNamePT').value.trim(),
-        cn: S('vNameCN').value.trim()
-      },
-      sort_order: Number(S('vSort').value),
-      is_active: S('vActive').value === "1"
-    };
+      // 禁用按钮防止连点
+      const btn = S('variantModal').querySelector('.btn-primary');
+      if(btn) btn.disabled = true;
 
-    if (payload.price_cents <= 0) return alert(t('errPriceGt0'));
-
-    try {
-      if (editingVariantId) {
-        await apiCall(`/variants/${editingVariantId}`, 'PUT', payload);
-      } else {
-        await apiCall(`/variants`, 'POST', payload);
+      try {
+          const url = editingVariantId ? `/variants/${editingVariantId}` : '/variants';
+          const method = editingVariantId ? 'PUT' : 'POST';
+          
+          const res = await apiCall(url, method, payload);
+          
+          // 如果是新建，把新 ID 存起来
+          if (method === 'POST' && res.id) {
+            editingVariantId = String(res.id);
+          }
+          
+          closeModal('variantModal');
+          showToast(t('saved'));
+          
+          // 刷新数据
+          await loadProducts();
+          
+          // 重新定位 selectedProduct (因为 products 数组被替换了)
+          const fresh = products.find(p => String(p.id) === String(selectedProduct.id));
+          if(fresh) {
+              selectedProduct = fresh;
+              renderVariants();
+          }
+      } catch(e) {
+          console.error(e);
+          alert("Error: " + e.message);
+      } finally {
+          if(btn) btn.disabled = false;
       }
-      closeModal('variantModal');
-      showToast(t('saved'));
-
-      await loadProducts();
-      const fresh = products.find(x => x.id === selectedProduct.id);
-      if (fresh) {
-        selectedProduct = fresh;
-        renderVariants();
-        renderList();
-      }
-    } catch (e) {}
   }
-
   async function deleteVariant(vid) {
     if (!confirm(t('confirmDeleteVariant'))) return;
     try {
@@ -1658,41 +2003,66 @@ border-bottom: 2px solid var(--border);
   }
 
   function closeModalByOverlay(e){
-  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
-    // login 不允许点遮罩关闭
-    if (e.target.id === 'loginModal') return;
-    e.target.classList.remove('open');
+    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+      // login 不允许点遮罩关闭
+      if (e.target.id === 'loginModal') return;
+      closeModal(e.target.id);
+    }
   }
-}
   /* =========================
    Custom Select Enhancer
    - keep native <select> for value + existing code
    - render custom popover + searchable list + keyboard support
    ========================= */
 
-let __cselectOpen = null;
+let __cselectOpenState = null;
 
 function initCustomSelects() {
   document.querySelectorAll('.select-wrap select.select-native').forEach(sel => {
-    // avoid double enhance
     if (sel.dataset.cselectEnhanced === "1") return;
     enhanceSelect(sel);
   });
 
-  // click outside closes
+  // Global click listener to close
   document.addEventListener('mousedown', (e) => {
-    if (!__cselectOpen) return;
-    if (!__cselectOpen.root.contains(e.target)) closeCSelect(__cselectOpen);
+    if (!__cselectOpenState) return;
+    // If click is outside button AND outside popover
+    if (!__cselectOpenState.btn.contains(e.target) && !__cselectOpenState.pop.contains(e.target)) {
+      closeCSelect(__cselectOpenState);
+    }
   });
 
-  // esc closes
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && __cselectOpen) closeCSelect(__cselectOpen);
-  }, true);
+  // Global resize/scroll listener to update position
+  window.addEventListener('resize', updatePopoverPosition, { passive: true });
+  window.addEventListener('scroll', updatePopoverPosition, { passive: true, capture: true });
+}
+
+function updatePopoverPosition() {
+  if (!__cselectOpenState) return;
+  const { btn, pop } = __cselectOpenState;
+  
+  const rect = btn.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  
+  // Decide position: prefer bottom, flip to top if space insufficient
+  let top = rect.bottom + 6;
+  let maxHeight = 260;
+  let transformOrigin = 'top center';
+
+  // Simple flip logic
+  if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+    top = rect.top - pop.offsetHeight - 6;
+    transformOrigin = 'bottom center';
+  }
+
+  pop.style.top = `${top}px`;
+  pop.style.left = `${rect.left}px`;
+  pop.style.width = `${rect.width}px`;
+  pop.style.transformOrigin = transformOrigin;
 }
 
 function refreshCustomSelectLabels() {
-  // call this after i18n update to re-read option text
   document.querySelectorAll('.select-wrap select.select-native[data-cselect-id]').forEach(sel => {
     const id = sel.dataset.cselectId;
     const state = window.__cselectStates?.get(id);
@@ -1706,114 +2076,74 @@ function enhanceSelect(selectEl) {
   selectEl.dataset.cselectEnhanced = "1";
   selectEl.classList.add('cselect-native');
 
-  // unique id per select
   const uid = selectEl.id || ('cselect_' + Math.random().toString(16).slice(2));
-  if (!selectEl.id) selectEl.id = uid;
   selectEl.dataset.cselectId = uid;
 
-  // container
   const wrap = selectEl.closest('.select-wrap');
+  
+  // Button container (stays in layout)
   const root = document.createElement('div');
   root.className = 'cselect';
-  root.setAttribute('data-cselect-root', uid);
-
-  // button
+  
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'cselect-btn';
-  btn.setAttribute('aria-haspopup', 'listbox');
-  btn.setAttribute('aria-expanded', 'false');
-
+  
   const label = document.createElement('div');
   label.className = 'cselect-label';
-
+  
   const arrow = document.createElement('div');
   arrow.className = 'cselect-arrow';
 
   btn.appendChild(label);
   btn.appendChild(arrow);
+  root.appendChild(btn);
+  wrap.appendChild(root);
 
-  // popover
+  // Popover (mounted to Body)
   const pop = document.createElement('div');
   pop.className = 'cselect-pop';
-  pop.setAttribute('role', 'listbox');
+  pop.id = `pop_${uid}`;
 
-  // search
+  // Search
   const searchWrap = document.createElement('div');
   searchWrap.className = 'cselect-search';
   const searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.autocomplete = 'off';
   searchInput.spellcheck = false;
-  searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : (currentLang === 'pt' ? 'Pesquisar...' : 'Search...');
+  searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
   searchWrap.appendChild(searchInput);
+  pop.appendChild(searchWrap);
 
+  // List
   const list = document.createElement('div');
   list.className = 'cselect-list';
-
-  pop.appendChild(searchWrap);
   pop.appendChild(list);
 
-  // mount
-  root.appendChild(btn);
-  root.appendChild(pop);
-  wrap.appendChild(root); // keep native select in wrap; hide it via CSS
+  document.body.appendChild(pop); // 关键：挂载到 Body
 
-  // state store
+  // State
   if (!window.__cselectStates) window.__cselectStates = new Map();
   const state = {
-    id: uid,
-    selectEl,
-    root,
-    btn,
-    label,
-    pop,
-    list,
-    searchInput,
-    // for keyboard navigation
-    activeIndex: -1,
-    optionNodes: [],
+    id: uid, selectEl, btn, label, pop, list, searchInput,
+    optionNodes: [], activeIndex: -1
   };
   window.__cselectStates.set(uid, state);
 
-  // build options UI
+  // Init
   buildCSelectOptions(state);
-
-  // initial sync
   syncCSelectFromNative(state);
 
-  // native select changes (if your code sets value programmatically)
-  selectEl.addEventListener('change', () => {
-    syncCSelectFromNative(state);
-  });
-
-  // open/close
+  // Events
+  selectEl.addEventListener('change', () => syncCSelectFromNative(state));
+  
   btn.addEventListener('click', () => {
-    if (state.pop.classList.contains('open')) {
-      closeCSelect(state);
-    } else {
-      openCSelect(state);
-    }
+    if (state.pop.classList.contains('open')) closeCSelect(state);
+    else openCSelect(state);
   });
 
-  // keyboard on button
-  btn.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openCSelect(state);
-      focusFirstOption(state);
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      openCSelect(state);
-      focusLastOption(state);
-    }
-  });
-
-  // search filter
-  searchInput.addEventListener('input', () => {
-    buildCSelectOptions(state, { keepFilter: true });
-  });
+  searchInput.addEventListener('input', () => buildCSelectOptions(state, { keepFilter: true }));
 
   // keyboard in popover (list navigation)
   pop.addEventListener('keydown', (e) => {
@@ -1823,20 +2153,16 @@ function enhanceSelect(selectEl) {
     else if (e.key === 'Enter') { e.preventDefault(); selectActive(state); }
     else if (e.key === 'Escape') { e.preventDefault(); closeCSelect(state); }
   });
-
-  // Also update placeholder of search on language changes by hooking into updateAdminUI
-  // (we will call refreshCustomSelectLabels() inside updateAdminUI below)
 }
 
 function buildCSelectOptions(state, opts = {}) {
   const { selectEl, list, searchInput } = state;
   const q = (searchInput.value || '').trim().toLowerCase();
-
+  
   list.innerHTML = '';
   state.optionNodes = [];
-  state.activeIndex = -1;
 
-  const options = Array.from(selectEl.options || []);
+  const options = Array.from(selectEl.options);
   const visible = options.filter(o => {
     const text = (o.textContent || '').toLowerCase();
     return !q || text.includes(q);
@@ -1845,7 +2171,7 @@ function buildCSelectOptions(state, opts = {}) {
   if (visible.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'cselect-empty';
-    empty.innerText = (currentLang === 'cn') ? '没有结果' : (currentLang === 'pt' ? 'Sem resultados' : 'No results');
+    empty.innerText = (currentLang === 'cn') ? '没有结果' : 'No results';
     list.appendChild(empty);
     return;
   }
@@ -1853,100 +2179,82 @@ function buildCSelectOptions(state, opts = {}) {
   visible.forEach((opt, idx) => {
     const row = document.createElement('div');
     row.className = 'cselect-opt';
-    row.setAttribute('role', 'option');
-    row.setAttribute('data-value', opt.value);
-    row.setAttribute('tabindex', '-1');
-
-    const left = document.createElement('div');
-    left.style.minWidth = '0';
-    left.style.flex = '1';
-    left.style.overflow = 'hidden';
-    left.style.textOverflow = 'ellipsis';
-    left.style.whiteSpace = 'nowrap';
-    left.innerText = opt.textContent || '';
-
-    const tick = document.createElement('div');
-    tick.className = 'tick';
-
-    row.appendChild(left);
-    row.appendChild(tick);
-
-    row.addEventListener('click', () => {
+    row.innerHTML = `<span>${opt.textContent}</span><div class="tick"></div>`;
+    
+    row.onclick = () => {
       setNativeValue(state, opt.value);
       closeCSelect(state);
-      state.btn.focus();
-    });
-
-    row.addEventListener('mousemove', () => {
-      // hover updates active index for keyboard visual consistency
+    };
+    
+    // Mouse hover highlight
+    row.onmouseenter = () => {
       state.activeIndex = idx;
-    });
+      updateHighlight(state);
+    };
 
     list.appendChild(row);
-    state.optionNodes.push(row);
+    state.optionNodes.push({ el: row, val: opt.value });
   });
-
-  // keep selection highlight
-  syncCSelectFromNative(state);
-
-  // keep filter if requested; otherwise reset
-  if (!opts.keepFilter) searchInput.value = '';
+  
+  syncCSelectFromNative(state); // re-apply selection visual
 }
 
 function syncCSelectFromNative(state) {
-  const { selectEl, label } = state;
-  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0] ? selectEl.selectedOptions[0] : null;
+  const { selectEl, label, optionNodes } = state;
+  const val = selectEl.value;
+  const opt = selectEl.selectedOptions[0];
+  
   label.innerText = opt ? (opt.textContent || '') : '';
-
-  // highlight
-  state.optionNodes.forEach(node => {
-    const v = node.getAttribute('data-value');
-    const sel = (v === selectEl.value);
-    node.setAttribute('aria-selected', sel ? 'true' : 'false');
+  
+  optionNodes.forEach(node => {
+    if (node.val === val) node.el.setAttribute('aria-selected', 'true');
+    else node.el.removeAttribute('aria-selected');
   });
 
-  // update search placeholder language (small but nice)
-  state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : (currentLang === 'pt' ? 'Pesquisar...' : 'Search...');
+  state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
 }
 
-function setNativeValue(state, value) {
-  const { selectEl } = state;
-  if (selectEl.value === value) return;
-
-  selectEl.value = value;
-
-  // trigger native change so your existing onchange handlers still work
-  const evt = new Event('change', { bubbles: true });
-  selectEl.dispatchEvent(evt);
-
+function setNativeValue(state, val) {
+  if (state.selectEl.value === val) return;
+  state.selectEl.value = val;
+  state.selectEl.dispatchEvent(new Event('change'));
   syncCSelectFromNative(state);
 }
 
 function openCSelect(state) {
-  // close previous
-  if (__cselectOpen && __cselectOpen !== state) closeCSelect(__cselectOpen);
-  __cselectOpen = state;
+  if (__cselectOpenState && __cselectOpenState !== state) closeCSelect(__cselectOpenState);
+  __cselectOpenState = state;
 
-  state.pop.classList.add('open');
   state.btn.classList.add('cselect-open');
-  state.btn.setAttribute('aria-expanded', 'true');
+  state.pop.style.display = 'flex'; // make visible to calculate dim
+  
+  updatePopoverPosition(); // Calculate position immediately
 
-  // reset active index
-  state.activeIndex = -1;
-
-  // focus search on open (mobile friendly)
-  setTimeout(() => {
-    state.searchInput.focus({ preventScroll: true });
-    state.searchInput.select();
-  }, 0);
+  requestAnimationFrame(() => {
+    state.pop.classList.add('open');
+    state.searchInput.focus();
+  });
 }
 
 function closeCSelect(state) {
   state.pop.classList.remove('open');
   state.btn.classList.remove('cselect-open');
-  state.btn.setAttribute('aria-expanded', 'false');
+  
+  // Wait for transition
+  setTimeout(() => {
+    if (!state.pop.classList.contains('open')) {
+      state.pop.style.display = 'none';
+    }
+  }, 150);
+  
+  if (__cselectOpenState === state) __cselectOpenState = null;
+}
 
-  if (__cselectOpen === state) __cselectOpen = null;
+function updateHighlight(state) {
+  state.optionNodes.forEach((n, i) => {
+    if (i === state.activeIndex) n.el.classList.add('highlighted');
+    else n.el.classList.remove('highlighted');
+  });
 }
 
 function moveActive(state, delta) {
