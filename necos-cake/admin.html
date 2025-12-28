@@ -265,8 +265,12 @@
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(16,41,64,0.6); backdrop-filter: blur(2px);
     display: none; justify-content: center; align-items: center; z-index: 2000;
+      opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
   }
-  .modal-overlay.open { display: flex; }
+  .modal-overlay.open { display: flex; opacity: 1;
+  pointer-events: auto;}
 
   .modal-card{
     background: var(--white);
@@ -281,7 +285,16 @@
     flex-direction: column;
     overflow: hidden;
     padding: 0;
+    transform: translateY(16px) scale(0.98);
+  opacity: 0;
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.18s ease;
   }
+  .modal-overlay.open .modal-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
   .modal-close-btn{
     position: absolute; top: 15px; right: 15px;
     background: rgba(255,255,255,0.9);
@@ -834,6 +847,15 @@
   let editingCategoryId = null;
   let currentLang = 'cn';
 
+window.addEventListener('popstate', () => {
+  // 只管手机端编辑面板
+  if (window.innerWidth <= 900 && S('editorPanel').classList.contains('open')) {
+    __closingFromPopstate = true;
+    __editorHistoryPushed = false;
+    closeEditorMobile(); // 触发你现有的关闭逻辑
+    __closingFromPopstate = false;
+  }
+});
 
 // --- I18n Texts ---
   const TEXTS = {
@@ -1210,11 +1232,19 @@
     updateAdminUI();
     refreshCustomSelectLabels();
   }
-  function closeModal(id){
-    const m = S(id);
-    m.classList.remove('open');
+function closeModal(id){
+  const m = S(id);
+  if (!m) return;
+
+  // 触发关闭动画
+  m.classList.remove('open');
+
+  // 等动画结束再解锁滚动（和 pointer-events）
+  setTimeout(() => {
     unlockBodyScrollIfNoModal();
-  }
+  }, 220); // 要 >= CSS transition 时间
+}
+
   function closeModalByOverlay(e){
     if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')){
       if (e.target.id === 'loginModal') return;
@@ -1415,7 +1445,20 @@ function renderCategorySelects(){
     selectedProduct = p;
     renderList();
 
-    if (window.innerWidth <= 900) S('editorPanel').classList.add('open');
+   if (window.innerWidth <= 900) {
+  const panel = S('editorPanel');
+
+  if (!panel.classList.contains('open')) {
+    panel.classList.add('open');
+    // 第一次打开：压一条历史记录，返回键会触发 popstate
+    history.pushState({ necoEditor: true, pid: String(p.id) }, "", "#editor");
+    __editorHistoryPushed = true;
+  } else {
+    // 已经在编辑页内切换产品：不要再压历史，改为替换即可
+    history.replaceState({ necoEditor: true, pid: String(p.id) }, "", "#editor");
+  }
+}
+
 
     S('editorEmpty').style.display = 'none';
     S('editorForm').style.display = 'block';
@@ -1450,6 +1493,16 @@ function renderCategorySelects(){
     S('btnDeleteBottom').disabled = true;
     S('editorEmpty').style.display = 'block';
     S('editorForm').style.display = 'none';
+
+    if (window.innerWidth <= 900 && __editorHistoryPushed && !__closingFromPopstate) {
+    __editorHistoryPushed = false;
+    history.back();
+  }
+
+  // 顺手清一下 hash（可选）
+  if (!__closingFromPopstate && location.hash === "#editor") {
+    // history.back() 会自然回去；这里不用强行改
+  }
   }
 
   async function openNewProductModal(){
