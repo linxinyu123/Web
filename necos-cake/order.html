@@ -219,7 +219,7 @@
 </div>
 
 <script>
-    const BASE_API = 'https://restaurant-test.local/wp-json/cake-shop/v1';
+    const BASE_API = 'https://necosapi.lestoy.com/necos/v1';
     let allOrders = [];
     let currentTab = 'paid';
     // 新增：自动刷新定时器变量
@@ -258,7 +258,7 @@
         
         // 🟢 新增：每 5 秒自动刷新一次数据
         if (refreshInterval) clearInterval(refreshInterval);
-        refreshInterval = setInterval(loadOrders, 3000);
+        refreshInterval = setInterval(loadOrders, 10000);
     }
 
     function logout() {

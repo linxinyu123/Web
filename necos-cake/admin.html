@@ -1569,8 +1569,8 @@ function closeModalByOverlay(e){
   function apiCall(endpoint, method='GET', body=null){
     const headers = { 'Authorization': `Bearer ${getKey()}` };
     if (!(body instanceof FormData)) headers['Content-Type'] = 'application/json';
-
-    return fetch(`${getApi()}/cake-shop/v1/admin${endpoint}`, {
+    const API_PREFIX = "/necos/v1";
+    return fetch(`${getApi()}${API_PREFIX}/admin${endpoint}`, {
       method,
       headers,
       body: (body instanceof FormData) ? body : (body ? JSON.stringify(body) : null)

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout - Neco's Custom Cake</title>
+    <link rel="icon" type="image/png" href="https://lestoy.com/necos/f.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="products.js"></script> 
+    <style>
+/* ====================
+           1. Design System
+           ==================== */
+        :root {
+            --primary: #102940;
+            --accent: #F4C04B; /* Neco Yellow */
+            --bg: #F5F5F7;
+            --white: #FFFFFF;
+            --text-gray: #666666;
+            --radius: 16px;
+            --header-h: 70px;
+            /* 阴影：保留给卡片容器 */
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0; padding-top: var(--header-h); min-height: 100vh;
+        }
+
+        /* Header */
+        .smart-header {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+            background: var(--white); z-index: 900;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+        }
+        .header-left, .header-right { flex: 1; display: flex; align-items: center; }
+        .header-right { justify-content: flex-end; }
+
+        .btn-back {
+            background: transparent; border: 1px solid #E5E7EB;
+            padding: 8px 16px; border-radius: 50px;
+            display: inline-flex; align-items: center; gap: 8px;
+            font-weight: 800; font-size: 14px; color: var(--primary); cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { background: #F3F4F6; }
+        .back-icon {
+            width: 16px; height: 16px; background-color: currentColor;
+            mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center/contain;
+            -webkit-mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center/contain;
+        }
+
+        .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; }
+        .lang-btn {
+            border: none; background: transparent; padding: 6px 10px;
+            border-radius: 16px; font-size: 12px; font-weight: 800; color: #999;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Layout */
+        .main-container {
+            max-width: 1100px; margin: 0 auto; padding: 40px 20px;
+            display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .main-container.visible { opacity: 1; transform: translateY(0); }
+        
+        /* 📱 响应式布局核心修改 */
+        @media (max-width: 900px) {
+            .main-container { 
+                grid-template-columns: 1fr; 
+                gap: 30px; 
+                padding: 20px;
+            }
+        }
+
+        /* Typography & Forms */
+        h1 { font-size: 22px; font-weight: 900; margin: 0 0 20px 0; color: var(--primary); }
+        h2 { font-size: 16px; font-weight: 800; margin: 0 0 15px 5px; color: var(--primary); text-transform: uppercase; opacity: 0.8; }
+        
+        .section-group { margin-bottom: 0px; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; margin-left: 5px; }
+        
+        /* 🎨 输入框样式 */
+        input, textarea {
+            width: 100%; padding: 16px 20px;
+            border: 2px solid #E5E7EB; /* 默认浅灰 */
+            border-radius: var(--radius);
+            font-size: 16px; background: var(--white); color: var(--primary);
+            font-family: 'Nunito', sans-serif; font-weight: 700;
+            box-shadow: none; /* 去除阴影 */
+            transition: all 0.2s; appearance: none;
+        }
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 0px rgba(244, 192, 75, 0.15); 
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        
+        .form-row { display: flex; gap: 15px; margin-bottom: 10px; }
+        .form-group { flex: 1; margin-bottom: 10px; }
+
+        /* Order List Box */
+        .order-summary-box {
+            background: #fff; border-radius: var(--radius); padding: 0 20px;
+            box-shadow: var(--shadow-card); margin-bottom: 35px; overflow: hidden;
+        }
+        .os-item { display: flex; gap: 15px; padding: 20px 0; border-bottom: 1px dashed #eee; }
+        .os-item:last-child { border-bottom: none; }
+        .os-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #f0f0f0; }
+        .os-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .os-title { font-weight: 800; font-size: 15px; line-height: 1.3; }
+        .os-variant { font-size: 13px; color: #888; margin-top: 4px; }
+        .os-price { font-weight: 900; font-size: 15px; }
+
+        /* Summary Card */
+        .summary-card {
+            background: var(--white); border-radius: var(--radius); padding: 30px;
+            box-shadow: var(--shadow-card); position: sticky; top: 100px;
+        }
+        .summary-header { font-size: 20px; font-weight: 900; margin-bottom: 20px; }
+        .feature-list { list-style: none; padding: 0; margin: 0 0 25px 0; }
+        .feature-list li { display: flex; gap: 10px; margin-bottom: 10px; font-size: 14px; color: #666; font-weight: 700; }
+        .icon-check { color: var(--accent); font-weight: 900; }
+        .price-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 12px; color: #666; font-weight: 700; }
+        .total-row { display: flex; justify-content: space-between; font-size: 24px; font-weight: 900; color: var(--primary); margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+
+        /* Pay Button */
+        #pay-submit {
+            width: 100%; 
+            background: var(--accent); /* Yellow */
+            color: var(--primary);     /* Dark Blue Text */
+            border: none;
+            padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 800;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(244, 192, 75, 0.3);
+            transition: transform 0.1s, opacity 0.2s; margin-top: 25px;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        #pay-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244, 192, 75, 0.4); }
+        #pay-submit:active { transform: scale(0.98); }
+        #pay-submit:disabled { opacity: 0.6; cursor: not-allowed; background: #e0e0e0; color:#999; box-shadow:none; }
+
+        /* Loading & Success */
+        #loading-screen { position: fixed; top: var(--header-h); left: 0; width: 100%; height: calc(100% - var(--header-h)); background: var(--bg); z-index: 800; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(16, 41, 64, 0.1); border-radius: 50%; border-top-color: var(--accent); animation: spin 0.8s ease-in-out infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+      #success-view { 
+            display: none; 
+            min-height: 60vh;
+            display: flex; /* 默认隐藏，JS会改成 flex */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .success-card {
+            background: var(--white);
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(16, 41, 64, 0.08);
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            animation: slideUpFade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .success-icon-box {
+            width: 80px; height: 80px;
+            background: #EAFDF2; 
+            color: #10B981;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; margin: 0 auto 25px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s backwards;
+        }
+
+        .success-title {
+            font-size: 24px; font-weight: 900; 
+            color: var(--primary); margin: 0 0 12px;
+        }
+
+        .success-msg {
+            font-size: 15px; color: #666; font-weight: 600;
+            line-height: 1.6; margin: 0 0 30px;
+        }
+
+        .btn-home {
+            background: var(--accent); color: var(--primary);
+            border: none; padding: 14px 30px; border-radius: 50px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(244, 192, 75, 0.3);
+            transition: transform 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-decoration: none; /* 防止作为a标签时有下划线 */
+        }
+        .btn-home:active { transform: scale(0.96); }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #error-message { color: #DC2626; margin-top: 15px; font-weight: 800; font-size: 14px; text-align: center; display: none; }
+        
+        #payment-element { min-height: 200px; }
+
+        /* ============================
+           Date Picker Styles (Fixed & Polished)
+           ============================ */
+        .date-input-wrapper {
+            position: relative;
+            cursor: pointer;
+            z-index: 1; 
+        }
+        .date-input-wrapper input {
+            cursor: pointer;
+            background-color: var(--white);
+            padding-right: 45px;
+            caret-color: transparent; /* 隐藏光标 */
+            user-select: none;
+        }
+        .calendar-icon {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            width: 22px; height: 22px;
+            background-color: var(--primary);
+            -webkit-mask: url("https://lestoy.com/love/icones/calendar.svg") no-repeat center/contain;
+            mask: url("https://lestoy.com/love/icones/calendar.svg") no-repeat center/contain;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* 弹窗遮罩 */
+        .picker-overlay {
+            position: fixed; inset: 0; 
+            background: rgba(16, 41, 64, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 9999;
+            display: none; /* JS 控制 flex */
+            justify-content: center; 
+            align-items: flex-end; /* 手机默认底部 */
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        
+        @media(min-width: 768px) {
+            .picker-overlay { align-items: center; } /* 电脑端居中 */
+        }
+
+        .picker-overlay.open { opacity: 1; }
+
+        /* 弹窗主体 */
+        .picker-shell {
+            background: var(--white); width: 100%; 
+            border-radius: 24px 24px 0 0; 
+            display: flex; flex-direction: column;
+            max-height: 80vh; 
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.15);
+            /* 关键修复：确保圆角裁切，防止footer遮挡 */
+            overflow: hidden; 
+        }
+        
+        @media(min-width: 768px) {
+            .picker-shell { 
+                max-width: 450px; 
+                border-radius: 24px; /* 四周圆角 */
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+
+        .picker-shell.open { 
+            transform: translateY(0); 
+        }
+        @media(min-width: 768px) {
+            .picker-shell.open { transform: translateY(0) scale(1); }
+        }
+
+        /* 头部 */
+        .picker-header {
+            padding: 18px 24px; 
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0; /* 防止头部被压缩 */
+        }
+        .picker-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+        
+        .picker-close {
+            width: 32px; height: 32px; background: #F3F4F6; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 18px; color: #666; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .picker-close:active { background: #e5e7eb; }
+
+        /* 内容滚动区 */
+        .picker-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            flex: 1; /* 撑满剩余空间 */
+        }
+
+        .picker-section-title {
+            font-size: 14px; font-weight: 800; color: #999; margin-bottom: 12px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* 日期列表 - 横向滚动条 */
+        .date-scroll-wrap {
+            display: flex; gap: 10px; overflow-x: auto; 
+            /* 关键优化：给 padding-top 留出空间，防止卡片变大时被切掉头部 */
+            padding: 5px 24px 20px 24px; 
+            margin: 0 -24px; /* 抵消父级padding，让滚动条通栏 */
+            scrollbar-width: none; 
+        }
+        .date-scroll-wrap::-webkit-scrollbar { display: none; }
+
+        .date-card {
+            flex: 0 0 auto; width: 72px; height: 80px;
+            background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 14px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 6px; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .date-card-wd { font-size: 12px; font-weight: 700; color: #888; }
+        .date-card-day { font-size: 20px; font-weight: 900; color: var(--primary); line-height: 1; }
+
+        .date-card.active {
+            background: #FFF9E6; border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(244, 192, 75, 0.25); 
+            /* 优化：只稍微上浮一点点，或者干脆不动，只变色，防止布局抖动 */
+            transform: translateY(-2px); 
+        }
+        .date-card.active .date-card-wd { color: #D97706; }
+
+        /* 时间网格 */
+        .time-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            padding-bottom: 10px; /* 防止底部贴边 */
+        }
+        .time-chip {
+            padding: 12px 0; text-align: center;
+            background: var(--white); border: 2px solid #E5E7EB; border-radius: 50px;
+            font-weight: 800; font-size: 15px; color: var(--primary);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .time-chip:active { transform: scale(0.96); }
+        
+        .time-chip.active {
+            background: var(--accent); color: var(--primary); border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(244, 192, 75, 0.3);
+        }
+
+        /* 底部按钮 */
+        .picker-footer {
+            padding: 20px 24px 30px; 
+            border-top: 1px solid var(--border);
+            background: var(--white);
+            flex-shrink: 0; /* 防止被压缩 */
+        }
+        .btn-confirm-picker {
+            width: 100%; background: var(--accent); color: var(--primary);
+            border: none; padding: 16px; border-radius: 16px;
+            font-size: 16px; font-weight: 900; cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .btn-confirm-picker:disabled {
+            opacity: 0.5; cursor: not-allowed; background: #E5E7EB; color: #999;
+        }
+/* Toast (Standard Style) */
+    .toast {
+        position: fixed; 
+        bottom: 100px; /* 稍微靠上一点，避开底部栏 */
+        left: 50%; 
+        transform: translateX(-50%);
+        background: rgba(16, 41, 64, 0.9); /* 深蓝半透明 */
+        color: #fff; 
+        padding: 12px 24px;
+        border-radius: 50px; /* 大圆角 */
+        z-index: 10000; 
+        opacity: 0; 
+        pointer-events: none;
+        transition: opacity 0.3s; 
+        font-weight: 700;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    </style>
+</head>
+<body>
+
+<div class="smart-header">
+    <div class="header-left">
+        <button class="btn-back" onclick="history.back()">
+            <span class="back-icon"></span>
+            <span id="txt-back">Back</span>
+        </button>
+    </div>
+    <div class="header-right">
+        <div class="lang-switch">
+            <button class="lang-btn" onclick="setLang('en', true)">EN</button>
+            <button class="lang-btn" onclick="setLang('pt', true)">PT</button>
+            <button class="lang-btn" onclick="setLang('cn', true)">CN</button>
+        </div>
+    </div>
+</div>
+
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-txt">INITIALIZING...</div>
+</div>
+
+<div id="success-view" style="display: none;"> <!-- 初始必须 hidden -->
+    <div class="success-card">
+        <div class="success-icon-box">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h1 class="success-title" id="txt-success-title">Order Confirmed!</h1>
+        <p class="success-msg" id="txt-success-msg">Thank you. Your order has been received.</p>
+        
+        <button class="btn-home" onclick="location.href='index.html'">
+            <span id="txt-return-home">Return to Home</span>
+        </button>
+    </div>
+</div>
+
+<div class="main-container" id="main-layout">
+    <div class="form-col">
+        <h1 id="txt-items-title">Order Items</h1>
+        <div class="order-summary-box" id="order-items-container"></div>
+
+        <h1 id="txt-details-title">Details</h1>
+        <form id="payment-form">
+            <div class="section-group">
+                <h2 id="txt-contact-title">Contact Info</h2>
+                <div class="form-group">
+                    <label id="lbl-email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="lbl-name">Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="lbl-phone">Phone</label>
+                        <input type="text" id="phone" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-group">
+                <h2 id="txt-pref-title">Preferences</h2>
+                <div class="form-row">
+                   <!-- 找到 Preferences 下面的 Date 输入框，替换为这个 -->
+<div class="form-group">
+    <label id="lbl-date">Pickup Time</label>
+    <!-- 使用 readonly 防止手机弹出键盘，点击触发自定义弹窗 -->
+    <div class="date-input-wrapper" onclick="openDatePicker()">
+        <input type="text" id="date-display" placeholder="Select Date & Time" readonly>
+        <span class="calendar-icon"></span>
+    </div>
+    <!-- 隐藏域，用于存储提交给后端的真实值 -->
+    <input type="hidden" id="date" required> 
+</div>
+                </div>
+                <div class="form-group">
+                    <label id="lbl-msg">Message</label>
+                    <textarea id="message"></textarea>
+                </div>
+            </div>
+
+            <div class="section-group">
+                <h2 id="txt-payment-title">Payment</h2>
+                <div id="payment-element"></div>
+            </div>
+            <div id="error-message"></div>
+        </form>
+    </div>
+
+    <div class="summary-col">
+        <div class="summary-card">
+            <div class="summary-header" id="txt-summary-title">Total Summary</div>
+            <ul class="feature-list">
+                <li><span class="icon-check">✓</span> <span id="feat-secure">Secure Payment</span></li>
+                <li><span class="icon-check">✓</span> <span id="feat-instant">Instant Confirmation</span></li>
+            </ul>
+            <div class="price-row"><span id="txt-subtotal">Items Total</span><span id="summary-subtotal">€0.00</span></div>
+            <div class="total-row"><span id="txt-total">Total</span><span id="summary-total">€0.00</span></div>
+
+            <button id="pay-submit" type="submit" form="payment-form">
+  <span id="button-text">Pay</span>
+</button>
+        </div>
+    </div>
+</div>
+
+
+<div class="picker-overlay" id="picker-overlay" onclick="closePickerByOverlay(event)">
+    <div class="picker-shell" id="picker-shell" onclick="event.stopPropagation()">
+        
+        <div class="picker-header">
+            <div class="picker-title" id="txt-picker-title">Select Pickup Time</div>
+            <div class="picker-close" onclick="closePicker()">✕</div>
+        </div>
+        
+        <div class="picker-body">
+            <!-- 1. 日期 (横向滚动) -->
+            <div class="picker-section-title" id="txt-picker-date">Date</div>
+            <div class="date-scroll-wrap" id="date-scroll-container">
+                <!-- JS 会填充这里 -->
+            </div>
+
+            <!-- 2. 时间 (网格) -->
+            <div class="picker-section-title" id="txt-picker-time" style="margin-top:10px;">Time</div>
+            <div class="time-grid" id="time-grid-container">
+                <!-- JS 会填充这里 -->
+            </div>
+        </div>
+
+        <div class="picker-footer">
+            <button class="btn-confirm-picker" id="btn-picker-confirm" onclick="confirmPickerSelection()" disabled>
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_API = 'https://necosapi.lestoy.com/necos/v1';
+    const STRIPE_KEY = 'pk_test_51ShFSFDMBa8CUwtYHBBZtzkG1RpHQwAnSMzvEPXJ2cFG53PsIimbieyysenm0Fep159qY3GXXSaLPcYUGG55irjz00RXG0hP8o'; 
+
+    const texts = {
+        cn: {
+            lblDate: "取货时间",
+// ... 其他 ...
+pickerTitle: "选择取货时间",
+pickerDate: "选择日期",
+pickerTime: "选择时间段",
+confirm: "确认选择",
+pickerPlaceholder: "请选择日期和时间",
+            pageTitle: "订单结算", back: "返回",
+            itemsTitle: "订单内容", detailsTitle: "详细信息", contactTitle: "联系方式", prefTitle: "偏好设置", paymentTitle: "支付",
+            lblEmail: "电子邮箱", lblName: "您的姓名", lblPhone: "电话号码", lblDate: "日期", lblMsg: "留言备注 (过敏/口味等)",
+            summaryTitle: "订单汇总", featSecure: "安全支付", featInstant: "即时确认", subtotal: "商品总计", total: "合计",
+            payBtn: "立即支付", processing: "处理中...",
+            phEmail: "example@email.com", phName: "输入姓名", phPhone: "输入电话", phMsg: "例如：我对花生过敏...",
+            initTxt: "正在创建安全订单...",
+            successTitle: "订单已确认!", successMsg: "感谢您的购买，我们已收到您的订单。", returnHome: "返回首页",
+            emptyCart: "购物车为空，正在返回首页..."
+        },
+        en: {
+            lblDate: "Pickup Time", // 替换旧的 "Date"
+// ... 其他 ...
+pickerTitle: "Select Pickup Time",
+pickerDate: "Select Date",
+pickerTime: "Select Time",
+confirm: "Confirm",
+pickerPlaceholder: "Select Date & Time",
+            pageTitle: "Checkout", back: "Back",
+            itemsTitle: "Order Items", detailsTitle: "Details", contactTitle: "Contact Info", prefTitle: "Preferences", paymentTitle: "Payment",
+            lblEmail: "Email", lblName: "Full Name", lblPhone: "Phone", lblDate: "Date", lblMsg: "Message / Request",
+            summaryTitle: "Total Summary", featSecure: "Secure Payment", featInstant: "Instant Confirmation", subtotal: "Items Total", total: "Total",
+            payBtn: "Pay Now", processing: "Processing...",
+            phEmail: "example@email.com", phName: "Your Name", phPhone: "910 000 000", phMsg: "Allergies, wishes...",
+            initTxt: "CREATING SECURE ORDER...",
+            successTitle: "Order Confirmed!", successMsg: "Thank you. Your order has been received.", returnHome: "Return to Home",
+            emptyCart: "Cart is empty. Returning to home..."
+        },
+        pt: {
+            lblDate: "Hora de Recolha",
+// ... 其他 ...
+pickerTitle: "Selecione a Hora",
+pickerDate: "Selecione a Data",
+pickerTime: "Selecione a Hora",
+confirm: "Confirmar",
+pickerPlaceholder: "Selecione Data e Hora",
+            pageTitle: "Finalizar Compra", back: "Voltar",
+            itemsTitle: "Artigos", detailsTitle: "Detalhes", contactTitle: "Contactos", prefTitle: "Preferências", paymentTitle: "Pagamento",
+            lblEmail: "Email", lblName: "Nome Completo", lblPhone: "Telefone", lblDate: "Data", lblMsg: "Mensagem / Pedidos",
+            summaryTitle: "Resumo", featSecure: "Pagamento Seguro", featInstant: "Confirmação Imediata", subtotal: "Total Artigos", total: "Total",
+            payBtn: "Finalizar Pedido", processing: "A processar...",
+            phEmail: "exemplo@email.com", phName: "O seu nome", phPhone: "910 000 000", phMsg: "Alergias, desejos...",
+            initTxt: "A CRIAR PEDIDO SEGURO...",
+            successTitle: "Pedido Confirmado!", successMsg: "Obrigado. O seu pedido foi recebido.", returnHome: "Voltar ao Início",
+            emptyCart: "Carrinho vazio. A voltar ao início..."
+        }
+    };
+
+    let state = { lang: 'en', finalAmount: 0 };
+    const stripe = Stripe(STRIPE_KEY);
+    let elements, currentOrderToken;
+let DB_READY = typeof NECO_DB !== 'undefined';
+
+window.addEventListener("NECO_DB_READY", () => {
+  DB_READY = true;
+  renderCartItems(); // 数据就绪后立刻重画一次
+});
+
+    // --- Core: Multi-Language & Data Rendering ---
+    function setLang(l, userChosen) {
+        if (!['en','pt','cn'].includes(l)) l = 'en';
+        state.lang = l;
+        if(userChosen) localStorage.setItem('neco_lang_v1', l);
+
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === l));
+
+        const t = texts[l];
+        const ids = {
+            'txt-items-title': t.itemsTitle, 'txt-details-title': t.detailsTitle,
+            'txt-contact-title': t.contactTitle, 'txt-pref-title': t.prefTitle, 'txt-payment-title': t.paymentTitle,
+            'lbl-email': t.lblEmail, 'lbl-name': t.lblName, 'lbl-phone': t.lblPhone,
+            'lbl-date': t.lblDate, 'lbl-msg': t.lblMsg,
+            'txt-summary-title': t.summaryTitle, 'feat-secure': t.featSecure, 'feat-instant': t.featInstant,
+            'txt-subtotal': t.subtotal, 'txt-total': t.total,
+            'loading-txt': t.initTxt, 'txt-success-title': t.successTitle, 'txt-success-msg': t.successMsg, 'txt-return-home': t.returnHome,
+             'lbl-date': t.lblDate,
+    'txt-picker-title': t.pickerTitle,
+    'txt-picker-date': t.pickerDate,
+    'txt-picker-time': t.pickerTime,
+    'txt-picker-confirm': t.confirm
+        };
+        for(let id in ids) { const el = document.getElementById(id); if(el) el.innerText = ids[id]; }
+
+        document.getElementById('email').placeholder = t.phEmail;
+        document.getElementById('name').placeholder = t.phName;
+        document.getElementById('phone').placeholder = t.phPhone;
+        document.getElementById('message').placeholder = t.phMsg;
+
+        // 更新购物车显示
+        if (DB_READY) renderCartItems();
+
+        updatePayButton();
+         document.getElementById('date-display').placeholder = t.pickerPlaceholder;
+        // 🎨 核心：动态更新 Stripe 组件语言，无需刷新页面
+        if(elements) {
+            elements.update({ locale: state.lang === 'cn' ? 'zh' : state.lang });
+        }
+    }
+
+    function renderCartItems() {
+        const rawCart = localStorage.getItem('neco_checkout_cart');
+        if(!rawCart) return;
+        
+        const cartItems = JSON.parse(rawCart);
+        const container = document.getElementById('order-items-container');
+        let html = '';
+        
+        cartItems.forEach(ci => {
+            const product = findProductById(ci.productId);
+            // 动态获取多语言变体名
+            let variantName = ci.variantName; 
+            if (product && product.variants) {
+                const variant = product.variants.find(v => v.id === ci.variantId);
+                if (variant && variant.names) {
+                    variantName = variant.names[state.lang] || variant.names['en'];
+                }
+            }
+
+            const title = product ? (product.title[state.lang] || product.title['en']) : "Unknown Item";
+            const displayTotal = (ci.price * ci.qty).toFixed(2);
+
+            html += `
+                <div class="os-item">
+                    <img src="${ci.img}" class="os-img">
+                    <div class="os-info">
+                        <div class="os-title">${title}</div>
+                        <div class="os-variant">${variantName} x ${ci.qty}</div>
+                    </div>
+                    <div class="os-price">€${displayTotal}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function updatePayButton() {
+        const btn = document.getElementById('button-text');
+        if(state.finalAmount > 0) {
+            btn.innerText = `${texts[state.lang].payBtn}`;
+        } else {
+            btn.innerText = texts[state.lang].payBtn;
+        }
+    }
+
+    // --- Init ---
+    async function initialize() {
+        const savedLang = localStorage.getItem('neco_lang_v1') || 'en';
+        setLang(savedLang, false);
+
+const params = new URLSearchParams(location.search);
+const cs = params.get("payment_intent_client_secret");
+if (cs) {
+  try {
+    const { paymentIntent } = await stripe.retrievePaymentIntent(cs);
+
+    if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
+      localStorage.removeItem('neco_checkout_cart');
+      localStorage.removeItem('neco_cart_v2');
+      document.getElementById('main-layout').style.display = 'none';
+      document.getElementById('success-view').style.display = 'flex';
+      window.scrollTo(0, 0);
+    } else {
+      const errDiv = document.getElementById('error-message');
+      errDiv.innerText = "Payment not completed: " + (paymentIntent?.status || "unknown");
+      errDiv.style.display = 'block';
+    }
+
+    history.replaceState({}, "", window.location.pathname);
+    return;
+  } catch (e) {
+    console.error("retrievePaymentIntent failed", e);
+    // 不 return，继续走正常创建 intent 的流程
+  }
+}
+
+        const rawCart = localStorage.getItem('neco_checkout_cart');
+        if (!rawCart) { alert(texts[state.lang].emptyCart); window.location.href = 'index.html'; return; }
+        
+        if (!DB_READY) {
+  await new Promise(res => window.addEventListener("NECO_DB_READY", res, { once: true }));
+}
+renderCartItems();
+
+
+        try {
+            const cartItems = JSON.parse(rawCart);
+            const payload = {
+                items: cartItems.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    qty: item.qty,
+                    title: item.title, 
+                    variantName: item.variantName,
+                    approxPrice: item.price
+                }))
+            };
+
+            const res = await fetch(`${BASE_API}/create-intent`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            
+            if(!json.success) throw new Error(json.error || 'Init Failed');
+            
+            const { clientSecret, orderToken, amount } = json.data;
+            currentOrderToken = orderToken;
+            
+            state.finalAmount = (Number(amount) / 100).toFixed(2);
+            document.getElementById('summary-total').innerText = `€${state.finalAmount}`;
+            document.getElementById('summary-subtotal').innerText = `€${state.finalAmount}`;
+            updatePayButton();
+
+            // 🎨 Stripe UI 定制：无阴影 + 黄色边框
+           const appearance = {
+                theme: 'stripe',
+                variables: {
+                    fontFamily: '"Nunito", sans-serif',
+                    colorPrimary: '#F4C04B', // Focus color
+                    colorBackground: '#ffffff',
+                    colorText: '#102940',
+                    borderRadius: '16px',
+                    colorDanger: '#DC2626',
+                    focusBoxShadow: 'none', // 🚨 核心：禁用默认聚焦阴影
+                },
+                rules: {
+                    '.Input': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        padding: '16px 20px'
+                    },
+                    '.Input:focus': {
+                        border: '2px solid #F4C04B', // 聚焦时纯边框
+                        boxShadow: 'none' // 极淡的黄色光晕
+                    },
+                    '.Input--invalid': {
+                        border: '2px solid #DC2626',
+                        boxShadow: 'none'
+                    },
+                    '.Tab': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        backgroundColor: '#ffffff',
+                        color: '#666'
+                    },
+                    '.Tab:hover': {
+                        color: 'none'
+                    },
+                    '.Tab--selected': {
+                        border: '2px solid #F4C04B', /* 选中时的黄色边框 */
+                        color: '#102940',
+                        boxShadow: 'none'
+                    },
+                    '.Tab--selected:focus': {
+                        boxShadow: 'none', /* 去除选中后的黑框 */
+                        border: '2px solid #F4C04B'
+                    },
+                    '.Tab--selected:hover': {
+                        color: '#102940'
+                    },
+                    '.Tab:focus': {
+                        boxShadow: 'none',
+                        border: '2px solid #F4C04B'
+                    },
+                    '.TabIcon': {
+                        color: 'inherit' // 未选中时的颜色
+                    },
+                    '.TabIcon--selected': {
+                        color: '#102940', // 选中时的颜色 (对应 fill)
+                        fill: '#102940'   // 双重保险
+                    }
+                }
+            };
+
+            const fontLoader = {
+                cssSrc: 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap'
+            };
+            elements = stripe.elements({ 
+                clientSecret: clientSecret,
+                appearance, locale: state.lang === 'cn' ? 'zh' : state.lang,
+                fonts: [fontLoader]
+            });
+            const paymentElement = elements.create("payment", { layout: "tabs" });
+            paymentElement.mount("#payment-element");
+
+            paymentElement.on('ready', () => {
+                const loader = document.getElementById('loading-screen');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; document.getElementById('main-layout').classList.add('visible'); }, 400);
+            });
+
+        } catch (e) { console.error(e); alert("System Error: " + e.message); }
+    }
+
+// --- Submit (先打开弹窗，后提示) ---
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. 获取日期值
+        const dateVal = document.getElementById('date').value;
+        
+        // 2. 校验逻辑
+        if (!dateVal) {
+            // A. 先打开日期选择器
+            openDatePicker();
+
+            // B. 延迟 400ms (等弹窗动画播完) 后显示提示
+            setTimeout(() => {
+                const msg = {
+                    en: "Please select a pickup time.",
+                    pt: "Por favor selecione a hora de recolha.",
+                    cn: "请选择取货时间。"
+                };
+                showToast(msg[state.lang] || "Please select a pickup time.");
+            }, 250);
+            
+            return; // 阻止后续提交
+        }
+
+        setLoading(true);
+
+        const data = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            date: dateVal,
+            message: document.getElementById('message').value
+        };
+
+        try {
+            await fetch(`${BASE_API}/update-order-info`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Order-Token': currentOrderToken }, body: JSON.stringify(data)
+            });
+            const { error, paymentIntent } = await stripe.confirmPayment({
+              elements,
+              confirmParams: {
+                return_url: window.location.origin + window.location.pathname,
+                payment_method_data: { billing_details: { name: data.name, email: data.email, phone: data.phone } }
+              },
+              redirect: "if_required"
+            });
+            
+            if (error) {
+                const errDiv = document.getElementById('error-message');
+                errDiv.innerText = error.message; errDiv.style.display = 'block';
+                showToast(error.message); // 出错也用 Toast 提示
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                localStorage.removeItem('neco_checkout_cart');
+                localStorage.removeItem('neco_cart_v2'); 
+                document.getElementById('main-layout').style.display = 'none';
+                document.getElementById('success-view').style.display = 'flex';
+                window.scrollTo(0, 0);
+            }
+        } catch (err) { 
+            showToast("Error: " + err.message);
+        } finally { 
+            setLoading(false); 
+        }
+    });
+
+   // --- Toast Helper ---
+    function showToast(msg) {
+        let t = document.getElementById('toast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'toast';
+            t.className = 'toast';
+            document.body.appendChild(t);
+        }
+        
+        t.innerText = msg;
+        t.style.opacity = 1;
+        
+        if (t.hideTimer) clearTimeout(t.hideTimer);
+        t.hideTimer = setTimeout(() => {
+            t.style.opacity = 0;
+        }, 2000);
+    }
+    function setLoading(isLoading) {
+        const btn = document.querySelector("#pay-submit");
+        btn.disabled = isLoading;
+        const txt = document.getElementById("button-text");
+        if(isLoading) txt.innerText = texts[state.lang].processing;
+        else updatePayButton();
+    }
+
+    function findProductById(pid) {
+        if (typeof NECO_DB === 'undefined') return null;
+        for (const cat in NECO_DB.items) {
+            const found = NECO_DB.items[cat].find(p => p.id === pid);
+            if (found) return found;
+        }
+        return null;
+    }
+
+   // ==========================================
+    // NEW Date & Time Picker Logic
+    // ==========================================
+    let pickerData = {
+        date: null, // YYYY-MM-DD
+        time: null, // HH:mm
+    };
+
+    // 打开弹窗
+    function openDatePicker() {
+        // 1. 初始化数据
+        renderPickerDates();
+        renderPickerTimes();
+        updateConfirmBtnState();
+
+        const overlay = document.getElementById('picker-overlay');
+        const shell = document.getElementById('picker-shell');
+        
+        // 2. 显示遮罩
+        overlay.style.display = 'flex';
+        // 3. 锁住背景滚动
+        document.body.classList.add('modal-open');
+
+        // 4. 动画进入
+        requestAnimationFrame(() => {
+            overlay.classList.add('open');
+            shell.classList.add('open');
+        });
+    }
+
+    // 关闭弹窗
+    function closePicker() {
+        const overlay = document.getElementById('picker-overlay');
+        const shell = document.getElementById('picker-shell');
+        
+        shell.classList.remove('open');
+        overlay.classList.remove('open');
+        
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }, 300);
+    }
+
+    function closePickerByOverlay(e) {
+        if (e.target.id === 'picker-overlay') closePicker();
+    }
+
+    // 1. 渲染日期 (含截单逻辑：18:00后只能选后天)
+    function renderPickerDates() {
+        const container = document.getElementById('date-scroll-container');
+        container.innerHTML = '';
+        
+        const today = new Date();
+        const portugalTime = new Date().toLocaleString("en-US", {timeZone: "Europe/Lisbon"});
+        const currentHour = new Date(portugalTime).getHours();
+        
+        // 🚨 截单逻辑：超过18点，只能选后天
+        let startDay = 1; // 默认明天
+        if (currentHour >= 18) {
+            startDay = 2; // 后天
+        }
+
+        const weekMap = {
+            en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            pt: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+            cn: ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+        };
+        const curLang = state.lang || 'en';
+
+        // 生成未来 14 天
+        for (let i = startDay; i <= startDay + 6; i++) {
+            const d = new Date();
+            d.setDate(today.getDate() + i);
+            
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateVal = `${y}-${m}-${day}`;
+            const weekDay = d.getDay();
+
+            const el = document.createElement('div');
+            el.className = `date-card ${pickerData.date === dateVal ? 'active' : ''}`;
+            el.innerHTML = `
+                <span class="date-card-wd">${weekMap[curLang][weekDay]}</span>
+                <span class="date-card-day">${day}</span>
+            `;
+            el.onclick = () => {
+                pickerData.date = dateVal;
+                document.querySelectorAll('.date-card').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                updateConfirmBtnState();
+            };
+            container.appendChild(el);
+        }
+    }
+
+    // 2. 渲染时间 (自定义时间点：11:30 - 19:00)
+    function renderPickerTimes() {
+        const container = document.getElementById('time-grid-container');
+        container.innerHTML = '';
+
+        // ✅ 自定义时间表
+        const timeSlots = [
+            "11:30", "12:00", "12:30",
+            "13:00", "13:30", "14:00",
+            "14:30", "15:00", "15:30",
+            "16:00", "16:30", "17:00",
+            "17:30", "18:00", "18:30"
+        ];
+
+        timeSlots.forEach(timeVal => {
+            createTimeChip(container, timeVal);
+        });
+    }
+
+    function createTimeChip(container, timeVal) {
+        const el = document.createElement('div');
+        el.className = `time-chip ${pickerData.time === timeVal ? 'active' : ''}`;
+        el.innerText = timeVal;
+        el.onclick = () => {
+            pickerData.time = timeVal;
+            document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            updateConfirmBtnState();
+        };
+        container.appendChild(el);
+    }
+
+    function updateConfirmBtnState() {
+        const btn = document.getElementById('btn-picker-confirm');
+        const t = texts[state.lang];
+        if (pickerData.date && pickerData.time) {
+            btn.disabled = false;
+            btn.innerText = t.confirm; // "Confirm"
+        } else {
+            btn.disabled = true;
+            btn.innerText = t.confirm;
+        }
+    }
+
+    // 点击确认
+    function confirmPickerSelection() {
+        if (!pickerData.date || !pickerData.time) return;
+        
+        const displayStr = `${pickerData.date}  ${pickerData.time}`;
+        
+        // 1. 填入隐藏 input (传给后端)
+        document.getElementById('date').value = displayStr;
+        
+        // 2. 填入显示 input (给用户看)
+        const displayInput = document.getElementById('date-display');
+        displayInput.value = displayStr;
+        
+        // 3. 激活样式 (黄色边框)
+        displayInput.style.borderColor = 'var(--accent)';
+        displayInput.style.backgroundColor = '#FFFDF5'; // 淡淡的黄色背景
+        
+        closePicker();
+    }
+    initialize();
+</script>
+</body>
+</html> 
