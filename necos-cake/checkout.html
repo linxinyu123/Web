@@ -102,8 +102,10 @@ body {
         .step-line-fill {
             position: absolute;
             top: 20px; left: 0;
+            transform: scaleX(0);
+  transform-origin: left;
             height: 3px; background: var(--accent); z-index: 0;
-            width: 0%; transition: width 0.4s ease;
+           width: auto; transition: width 0.4s ease;
         }
 .step-line-bg,
 .step-line-fill{
@@ -129,7 +131,9 @@ body {
             border: 4px solid var(--bg);
             margin-bottom: 8px;
         }
-        
+        .step-dot.clickable { cursor: pointer; }
+.step-dot { cursor: default; }
+
         .step-dot.active {
             background: var(--accent);
             color: var(--primary);
@@ -314,12 +318,13 @@ body {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid #eee;
         }
-        .popup-title { font-size: 18px; font-weight: 900; }
+        .popup-title { font-size: 20px; font-weight: 900; }
         .popup-close { font-weight: 800; cursor: pointer; width: 32px; height: 32px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; border-radius:50%; }
 
         .popup-body {
             padding: 20px;
             overflow-y: auto;
+            background: var(--bg);
         }
 
         /* Mobile Trigger Button (Dark Pill) */
@@ -347,7 +352,7 @@ body {
             color: var(--primary);
             height: 100%;
             width: 100%; /* 全宽 */
-            display: flex; align-items: center; justify-content: space-between;
+            display: flex; align-items: center; justify-content: center;
             padding: 0 20px;
             font-size: 16px;
             font-weight: 800;
@@ -402,13 +407,13 @@ body {
         textarea { resize: vertical; min-height: 100px; }
         .form-group { margin-bottom: 15px; }
 
-        .os-item { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px dashed #eee; }
+        .os-item { display: flex; gap: 15px; padding: 20px 0; border-bottom: 1px dashed #eee; }
         .os-item:last-child { border-bottom: none; }
-        .os-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; background: #f0f0f0; }
+        .os-img { width: 70px; height: 70px; border-radius: 10px; object-fit: cover; background: #f0f0f0; }
         .os-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .os-title { font-weight: 800; font-size: 14px; line-height: 1.3; }
-        .os-variant { font-size: 12px; color: #888; margin-top: 2px; }
-        .os-price { font-weight: 900; font-size: 14px; }
+        .os-title { font-weight: 800; font-size: 15px; line-height: 1.3; }
+        .os-variant { font-size: 13px; color: #888; margin-top: 2px; }
+        .os-price { font-weight: 900; font-size: 15px; align-self: center;}
 
         .icon-check { color: var(--accent); font-weight: 900; }
         .price-row { display: flex; justify-content: space-between; font-size: 15px; color: #666; font-weight: 700; }
@@ -416,10 +421,13 @@ body {
 
         /* Buttons Styling */
         .btn-nav {
-            padding: 14px 24px; border-radius: 12px; font-size: 17px; font-weight: 800;
+            padding: 14px 24px; border-radius: 12px; font-size: 18px;
             cursor: pointer; transition: all 0.2s; border: none;
             display: flex; align-items: center; justify-content: center;
             width: 100%;
+            font-family: 'Nunito', sans-serif;
+                font-weight: 900;
+                border-radius: 50px;
         }
         /* Mobile Footer Button specific */
         .wizard-footer .btn-nav { width: auto; min-width: 0px; }
@@ -494,6 +502,7 @@ body {
   display: none !important;
 }
 
+
 /* 仅手机端显示 + 右对齐布局 */
 @media (max-width: 767px){
   .wizard-footer.mobile-only{
@@ -511,6 +520,7 @@ body {
   #btn-wiz-next-mobile,
   #pay-submit-mobile{
     margin-left: auto !important;
+    border-radius: 50px;
   }
 }
     </style>
@@ -666,9 +676,7 @@ body {
     <div class="trigger-pill" onclick="toggleMobileCart(true)">
         <div style="display:flex; align-items:center; gap:8px;">
             <span id="txt-view-order">View Order</span> 
-            <span id="pill-total">€0.00</span>
         </div>
-        <span>^</span>
     </div>
 </div>
 
@@ -716,6 +724,7 @@ body {
     const KEY_USER_INFO = 'neco_user_draft_v1';
     const KEY_ACTIVE_ORDER = 'neco_active_intent_v2_persistent';
     const ORDER_TTL_MS = 23 * 60 * 60 * 1000;
+    let maxUnlockedStep = 1;
 
     const texts = {
         cn: {
@@ -728,7 +737,7 @@ body {
             phEmail: "example@email.com", phName: "输入姓名", phPhone: "输入电话", phMsg: "例如：我对花生过敏...",
             initTxt: "正在创建安全订单...", successTitle: "订单已确认!", successMsg: "感谢您的购买，我们已收到您的订单。", returnHome: "返回首页",
             emptyCart: "购物车为空，正在返回首页...", reqFields: "请填写所有必填项", reqDate: "请选择取货时间",
-            step1: "联系", step2: "日期", step3: "支付", viewOrder: "查看订单", popupTitle: "订单详情"
+            step1: "联系", step2: "日期", step3: "支付", viewOrder: "查看订单详情", popupTitle: "订单详情"
         },
         en: {
             lblDate: "Pickup Time", pickerTitle: "Select Pickup Time", pickerDate: "Select Date", pickerTime: "Select Time", confirm: "Confirm", pickerPlaceholder: "Select Date & Time",
@@ -740,7 +749,7 @@ body {
             phEmail: "example@email.com", phName: "Your Name", phPhone: "910 000 000", phMsg: "Allergies, wishes...",
             initTxt: "CREATING SECURE ORDER...", successTitle: "Order Confirmed!", successMsg: "Thank you. Your order has been received.", returnHome: "Return to Home",
             emptyCart: "Cart is empty. Returning to home...", reqFields: "Please fill all required fields", reqDate: "Please select a pickup time",
-            step1: "Contact", step2: "Date", step3: "Pay", viewOrder: "View Order", popupTitle: "Order Details"
+            step1: "Contact", step2: "Date", step3: "Pay", viewOrder: "View Order details", popupTitle: "Order Details"
         },
         pt: {
             lblDate: "Hora de Recolha", pickerTitle: "Selecione a Hora", pickerDate: "Selecione a Data", pickerTime: "Selecione a Hora", confirm: "Confirmar", pickerPlaceholder: "Selecione Data e Hora",
@@ -752,7 +761,7 @@ body {
             phEmail: "exemplo@email.com", phName: "O seu nome", phPhone: "910 000 000", phMsg: "Alergias, desejos...",
             initTxt: "A CRIAR PEDIDO SEGURO...", successTitle: "Pedido Confirmado!", successMsg: "Obrigado. O seu pedido foi recebido.", returnHome: "Voltar ao Início",
             emptyCart: "Carrinho vazio. A voltar ao início...", reqFields: "Por favor preencha os campos", reqDate: "Selecione a hora de recolha",
-            step1: "Contactos", step2: "Data", step3: "Pagamento", viewOrder: "Ver Pedido", popupTitle: "Detalhes do Pedido"
+            step1: "Contactos", step2: "Data", step3: "Pagamento", viewOrder: "Ver detalhes do pedido", popupTitle: "Detalhes do Pedido"
         }
     };
 
@@ -789,48 +798,64 @@ body {
     /* ==========================================
        Wizard Logic
        ========================================== */
-    function updateWizardView() {
-        for(let i=1; i<=totalSteps; i++) {
-            const stepEl = document.getElementById(`step-${i}`);
-            if(i === currentStep) stepEl.classList.add('active');
-            else stepEl.classList.remove('active');
+ function updateWizardView() {
+    // 1) 显示/隐藏每一步内容
+    for (let i = 1; i <= totalSteps; i++) {
+        const stepEl = document.getElementById(`step-${i}`);
+        if (!stepEl) continue;
+        if (i === currentStep) stepEl.classList.add('active');
+        else stepEl.classList.remove('active');
+    }
+
+    // 2) 进度条（✅用 scaleX，避免最后一步“超出”）
+    const ratio = (currentStep - 1) / (totalSteps - 1); // 0 ~ 1
+    const fill = document.getElementById('progress-fill');
+    if (fill) {
+        fill.style.width = 'auto'; // 可选：防止旧样式干扰
+        fill.style.transform = `scaleX(${ratio})`;
+        fill.style.transformOrigin = 'left';
+    }
+
+    // 3) 圆点/标签状态 + 可点击控制（关键：用 maxUnlockedStep）
+    for (let i = 1; i <= totalSteps; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        const item = document.getElementById(`step-item-${i}`);
+        if (!dot || !item) continue;
+
+        dot.classList.remove('active', 'completed', 'clickable');
+        item.classList.remove('active');
+
+        if (i === currentStep) {
+            dot.classList.add('active');
+            item.classList.add('active');
+        } else if (i < currentStep) {
+            dot.classList.add('completed');
+            item.classList.add('active');
         }
 
-        const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
-        document.getElementById('progress-fill').style.width = percent + '%';
-
-        for(let i=1; i<=totalSteps; i++) {
-            const dot = document.getElementById(`dot-${i}`);
-            const item = document.getElementById(`step-item-${i}`);
-            dot.classList.remove('active', 'completed');
-            item.classList.remove('active');
-            if(i === currentStep) {
-                dot.classList.add('active');
-                item.classList.add('active');
-            }
-            else if(i < currentStep) {
-                dot.classList.add('completed');
-                item.classList.add('active'); 
-            }
-        }
-
-        const nextBtnM = document.getElementById('btn-wiz-next-mobile');
-        const submitBtnM = document.getElementById('pay-submit-mobile');
-        const nextBtnD = document.getElementById('btn-wiz-next-desktop');
-        const submitBtnD = document.getElementById('pay-submit-desktop');
-
-        if(currentStep === totalSteps) {
-            nextBtnM.classList.add('hidden');
-            submitBtnM.classList.remove('hidden');
-            nextBtnD.classList.add('hidden');
-            submitBtnD.classList.remove('hidden');
-        } else {
-            nextBtnM.classList.remove('hidden');
-            submitBtnM.classList.add('hidden');
-            nextBtnD.classList.remove('hidden');
-            submitBtnD.classList.add('hidden');
+        if (i <= maxUnlockedStep) {
+            dot.classList.add('clickable');
         }
     }
+
+    // 4) Next/Pay 按钮切换
+    const nextBtnM = document.getElementById('btn-wiz-next-mobile');
+    const submitBtnM = document.getElementById('pay-submit-mobile');
+    const nextBtnD = document.getElementById('btn-wiz-next-desktop');
+    const submitBtnD = document.getElementById('pay-submit-desktop');
+
+    if (currentStep === totalSteps) {
+        if (nextBtnM) nextBtnM.classList.add('hidden');
+        if (submitBtnM) submitBtnM.classList.remove('hidden');
+        if (nextBtnD) nextBtnD.classList.add('hidden');
+        if (submitBtnD) submitBtnD.classList.remove('hidden');
+    } else {
+        if (nextBtnM) nextBtnM.classList.remove('hidden');
+        if (submitBtnM) submitBtnM.classList.add('hidden');
+        if (nextBtnD) nextBtnD.classList.remove('hidden');
+        if (submitBtnD) submitBtnD.classList.add('hidden');
+    }
+}
 
     function handleGlobalBack() {
         if (currentStep > 1) {
@@ -872,8 +897,9 @@ body {
         if(dir === 1) {
             if(!validateStep(currentStep)) return;
             if(currentStep < totalSteps) {
-                currentStep++;
-                updateWizardView();
+     currentStep++;
+    maxUnlockedStep = Math.max(maxUnlockedStep, currentStep);
+    updateWizardView();
             }
         } else {
             if(currentStep > 1) {
@@ -881,6 +907,7 @@ body {
                 updateWizardView();
             }
         }
+        toggleMobileCart(false);
     }
 
     /* ==========================================
@@ -975,7 +1002,7 @@ body {
         if(btnM) btnM.innerText = btnTxt;
         if(btnD) btnD.innerText = btnTxt;
         
-        const els = ['summary-subtotal', 'summary-total', 'mobile-summary-total', 'footer-total-amount', 'pill-total'];
+        const els = ['summary-subtotal', 'summary-total', 'mobile-summary-total', 'footer-total-amount'];
         els.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.innerText = `€${state.finalAmount}`;
@@ -1032,7 +1059,7 @@ body {
         setLang(savedLang, false);
         loadCachedUserInfo(); 
         updateWizardView(); 
-
+        initStepDotClicks();
         const params = new URLSearchParams(location.search);
         const cs = params.get("payment_intent_client_secret");
         if (cs) {
@@ -1095,6 +1122,24 @@ body {
 
         } catch (e) { console.error(e); alert("System Error: " + e.message); }
     }
+
+function handleStepDotClick(targetStep) {
+    if (targetStep > maxUnlockedStep) return; // 灰色不能点
+    currentStep = targetStep;
+    updateWizardView();
+    toggleMobileCart(false);
+}
+
+    function initStepDotClicks() {
+    for (let i = 1; i <= totalSteps; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (!dot) continue;
+
+        dot.addEventListener("click", () => {
+            handleStepDotClick(i);
+        });
+    }
+}
 
     function setupStripe(clientSecret, orderToken, amount) {
         currentOrderToken = orderToken;
@@ -1318,7 +1363,7 @@ body {
     function renderPickerTimes() {
         const container = document.getElementById('time-grid-container');
         container.innerHTML = '';
-        const timeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"];
+        const timeSlots = ["11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30"];
         timeSlots.forEach(timeVal => { createTimeChip(container, timeVal); });
     }
 
