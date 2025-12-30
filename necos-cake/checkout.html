@@ -457,6 +457,7 @@ body {
         .success-card { background: var(--white); padding: 40px 30px; border-radius: 24px; text-align: center; width: 100%; max-width: 400px; box-shadow: var(--shadow-card); }
         .success-icon-box { width: 70px; height: 70px; background: #EAFDF2; color: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 20px; }
         .btn-home { background: var(--accent); color: var(--primary); border: none; padding: 14px 30px; border-radius: 50px; font-size: 16px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; }
+         span { font-family: 'Nunito', sans-serif;}
 
         /* Date Picker Styles */
         .date-input-wrapper { position: relative; cursor: pointer; }
@@ -766,7 +767,7 @@ body {
             phEmail: "exemplo@email.com", phName: "O seu nome", phPhone: "910 000 000", phMsg: "Alergias, desejos...",
             initTxt: "A CRIAR PEDIDO SEGURO...", successTitle: "Pedido Confirmado!", successMsg: "Obrigado. O seu pedido foi recebido.", returnHome: "Voltar ao Início",
             emptyCart: "Carrinho vazio. A voltar ao início...", reqFields: "Por favor preencha os campos", reqDate: "Selecione a hora de recolha",
-            step1: "Contato", step2: "Data", step3: "Pagamento", viewOrder: "Ver detalhes do pedido", popupTitle: "Detalhes do Pedido"
+            step1: "Contacto", step2: "Data", step3: "Pagamento", viewOrder: "Ver detalhes do pedido", popupTitle: "Detalhes do Pedido"
         }
     };
 
@@ -1014,33 +1015,43 @@ body {
         });
     }
 
-    function loadCachedUserInfo() {
-        try {
-            const cached = JSON.parse(localStorage.getItem(KEY_USER_INFO));
-            if (cached) {
-                if(cached.name) document.getElementById('name').value = cached.name;
-                if(cached.email) document.getElementById('email').value = cached.email;
-                if(cached.phone) document.getElementById('phone').value = cached.phone;
-                if(cached.message) document.getElementById('message').value = cached.message;
-                
-                if(cached.date) {
-                    const datePart = cached.date.split(' ')[0];
-                    const today = new Date().toISOString().split('T')[0];
-                    if (datePart >= today) {
-                        document.getElementById('date').value = cached.date;
-                        document.getElementById('date-display').value = cached.date;
-                        const displayInput = document.getElementById('date-display');
-                        displayInput.style.borderColor = 'var(--accent)';
-                        displayInput.style.backgroundColor = '#FFFDF5';
-                    }
-                }
-            }
-        } catch(e) {}
-        
-        ['name', 'email', 'phone', 'message'].forEach(id => {
-            document.getElementById(id).addEventListener('input', saveUserInfo);
-        });
+   function loadCachedUserInfo() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(KEY_USER_INFO));
+    if (cached) {
+      if (cached.name) document.getElementById('name').value = cached.name;
+      if (cached.email) document.getElementById('email').value = cached.email;
+      if (cached.phone) document.getElementById('phone').value = cached.phone;
+      if (cached.message) document.getElementById('message').value = cached.message;
+
+      // ✅ 日期：不仅填 input，还要同步 pickerData（否则打开弹窗不会高亮）
+      if (cached.date) {
+        const dateStr = String(cached.date).trim();
+        const parts = dateStr.split(/\s+/); // "YYYY-MM-DD 12:00"
+        const datePart = parts[0] || "";
+        const timePart = parts[1] || "";
+        const today = new Date().toISOString().split('T')[0];
+
+        if (datePart >= today) {
+          document.getElementById('date').value = `${datePart}  ${timePart}`.trim();
+          document.getElementById('date-display').value = `${datePart}  ${timePart}`.trim();
+
+          pickerData.date = datePart || null;
+          pickerData.time = timePart || null;
+
+          const displayInput = document.getElementById('date-display');
+          displayInput.style.borderColor = 'var(--accent)';
+          displayInput.style.backgroundColor = '#FFFDF5';
+        }
+      }
     }
+  } catch (e) {}
+
+  ['name', 'email', 'phone', 'message', 'date'].forEach(id => {
+    document.getElementById(id).addEventListener('input', saveUserInfo);
+  });
+}
+
 
     function saveUserInfo() {
         const info = {
@@ -1052,6 +1063,30 @@ body {
         };
         localStorage.setItem(KEY_USER_INFO, JSON.stringify(info));
     }
+function clearSavedPickupTime() {
+    try {
+        const cached = JSON.parse(localStorage.getItem(KEY_USER_INFO)) || {};
+        delete cached.date; // ✅ 只删日期
+        localStorage.setItem(KEY_USER_INFO, JSON.stringify(cached));
+    } catch (e) {
+        // 如果坏了就直接删掉 date key
+        try { localStorage.removeItem(KEY_USER_INFO); } catch (_) {}
+    }
+
+    // 同步清空当前页面状态（避免不刷新还显示旧值）
+    const dateEl = document.getElementById('date');
+    const displayEl = document.getElementById('date-display');
+    if (dateEl) dateEl.value = '';
+    if (displayEl) {
+        displayEl.value = '';
+        displayEl.style.borderColor = '#E5E7EB';
+        displayEl.style.backgroundColor = '#FFFFFF';
+    }
+    if (typeof pickerData !== 'undefined') {
+        pickerData.date = null;
+        pickerData.time = null;
+    }
+}
 
     function getCartFingerprint(cartItems) {
         const totalQty = cartItems.reduce((acc, item) => acc + item.qty, 0);
@@ -1152,20 +1187,65 @@ function handleStepDotClick(targetStep) {
         
         updatePayButton();
 
-        const appearance = {
-            theme: 'stripe',
-            variables: {
-                fontFamily: '"Nunito", sans-serif', colorPrimary: '#F4C04B', colorBackground: '#ffffff',
-                colorText: '#102940', borderRadius: '16px', colorDanger: '#DC2626', focusBoxShadow: 'none',
-            },
-            rules: {
-                '.Input': { border: '2px solid #E5E7EB', boxShadow: 'none', padding: '16px 20px' },
-                '.Input:focus': { border: '2px solid #F4C04B', boxShadow: 'none' },
-                '.Input--invalid': { border: '2px solid #DC2626', boxShadow: 'none' },
-                '.Tab': { border: '2px solid #E5E7EB', boxShadow: 'none', backgroundColor: '#ffffff', color: '#666' },
-                '.Tab--selected': { border: '2px solid #F4C04B', color: '#102940', boxShadow: 'none' }
-            }
-        };
+           const appearance = {
+                theme: 'stripe',
+                variables: {
+                    fontFamily: '"Nunito", sans-serif',
+                    colorPrimary: '#F4C04B', // Focus color
+                    colorBackground: '#ffffff',
+                    colorText: '#102940',
+                    borderRadius: '16px',
+                    colorDanger: '#DC2626',
+                    focusBoxShadow: 'none', // 🚨 核心：禁用默认聚焦阴影
+                },
+                rules: {
+                    '.Input': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        padding: '16px 20px'
+                    },
+                    '.Input:focus': {
+                        border: '2px solid #F4C04B', // 聚焦时纯边框
+                        boxShadow: 'none' // 极淡的黄色光晕
+                    },
+                    '.Input--invalid': {
+                        border: '2px solid #DC2626',
+                        boxShadow: 'none'
+                    },
+                    '.Tab': {
+                        border: '2px solid #E5E7EB',
+                        boxShadow: 'none',
+                        backgroundColor: '#ffffff',
+                        color: '#666'
+                    },
+                    '.Tab:hover': {
+                        color: 'none'
+                    },
+                    '.Tab--selected': {
+                        border: '2px solid #F4C04B', /* 选中时的黄色边框 */
+                        color: '#102940',
+                        boxShadow: 'none'
+                    },
+                    '.Tab--selected:focus': {
+                        boxShadow: 'none', /* 去除选中后的黑框 */
+                        border: '2px solid #F4C04B'
+                    },
+                    '.Tab--selected:hover': {
+                        color: '#102940'
+                    },
+                    '.Tab:focus': {
+                        boxShadow: 'none',
+                        border: '2px solid #F4C04B'
+                    },
+                    '.TabIcon': {
+                        color: 'inherit' // 未选中时的颜色
+                    },
+                    '.TabIcon--selected': {
+                        color: '#102940', // 选中时的颜色 (对应 fill)
+                        fill: '#102940'   // 双重保险
+                    }
+                }
+            };
 
         const fontLoader = { cssSrc: 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap' };
         elements = stripe.elements({ clientSecret: clientSecret, appearance, locale: state.lang === 'cn' ? 'zh' : state.lang, fonts: [fontLoader] });
@@ -1179,6 +1259,46 @@ function handleStepDotClick(targetStep) {
         });
     }
 
+async function finalizeAndRedirect(paymentIntentId) {
+  // 1) 让后端立刻生成 order_no（不等 webhook 时序）
+  const r = await fetch(`${BASE_API}/finalize-order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Order-Token": currentOrderToken
+    },
+    body: JSON.stringify({ payment_intent_id: paymentIntentId || "" })
+  });
+  const j = await r.json();
+  if (!j?.success) throw new Error(j?.error || "Finalize failed");
+
+  const orderNo = j.data.order_no;
+const phone =
+  (j.data.phone && String(j.data.phone).trim()) ||
+  (document.getElementById('phone')?.value || '').trim();
+
+  // 2) 清理购物车 + 订单缓存
+  localStorage.removeItem('neco_checkout_cart');
+  localStorage.removeItem('neco_cart_v2');
+  localStorage.removeItem(KEY_ACTIVE_ORDER);
+
+  // ✅ 3) 只清掉日期，保留个人信息（企业级体验）
+  try {
+    const cached = JSON.parse(localStorage.getItem(KEY_USER_INFO) || "{}");
+    if (cached && typeof cached === "object") {
+      delete cached.date;
+      localStorage.setItem(KEY_USER_INFO, JSON.stringify(cached));
+    }
+  } catch {}
+
+  // 4) 跳转到用户订单页，并自动添加这个订单
+  const params = new URLSearchParams();
+  params.set("add", orderNo);
+  params.set("phone", phone);
+  window.location.href = `order.html?${params.toString()}`;
+}
+
+
     async function handlePaymentRedirect(cs) {
         document.getElementById('loading-screen').style.display = 'flex';
         try {
@@ -1189,14 +1309,16 @@ function handleStepDotClick(targetStep) {
                 localStorage.removeItem('neco_checkout_cart');
                 localStorage.removeItem('neco_cart_v2');
                 localStorage.removeItem(KEY_ACTIVE_ORDER); 
+                clearSavedPickupTime(); // ✅ 清掉日期，但保留个人信息
                 document.getElementById('loading-screen').style.display = 'none';
                 document.querySelector('.smart-header').style.display = 'none'; 
                 document.querySelector('.wizard-progress-header').style.display = 'none';
                 document.querySelector('.main-content-split').style.display = 'none';
                 document.querySelector('.wizard-footer').style.display = 'none';
                 document.querySelector('.mobile-cart-trigger').style.display = 'none';
-                document.getElementById('success-view').style.display = 'flex';
                 window.scrollTo(0, 0);
+                await finalizeAndRedirect(paymentIntent.id);
+  return;
             } else {
                 document.getElementById('loading-screen').style.display = 'none';
                 const errDiv = document.getElementById('error-message');
@@ -1252,13 +1374,14 @@ function handleStepDotClick(targetStep) {
                 localStorage.removeItem('neco_checkout_cart');
                 localStorage.removeItem('neco_cart_v2'); 
                 localStorage.removeItem(KEY_ACTIVE_ORDER);
-                
+                clearSavedPickupTime();
                 document.querySelector('.main-content-split').style.display = 'none';
                 document.querySelector('.wizard-footer').style.display = 'none';
                 document.querySelector('.wizard-progress-header').style.display = 'none';
                 document.querySelector('.mobile-cart-trigger').style.display = 'none';
-                document.getElementById('success-view').style.display = 'flex';
                 window.scrollTo(0, 0);
+                                await finalizeAndRedirect(paymentIntent.id);
+  return;
             }
         } catch (err) { 
             showToast("Error: " + err.message);
@@ -1308,15 +1431,25 @@ function handleStepDotClick(targetStep) {
 
     let pickerData = { date: null, time: null };
 
-    function openDatePicker() {
-        renderPickerDates();
-        renderPickerTimes();
-        updateConfirmBtnState();
-        const overlay = document.getElementById('picker-overlay');
-        const shell = document.getElementById('picker-shell');
-        overlay.style.display = 'flex';
-        requestAnimationFrame(() => { overlay.classList.add('open'); shell.classList.add('open'); });
+   function openDatePicker() {
+    // ✅ 兜底：从 input 里同步回 pickerData（避免状态不同步）
+    const cur = document.getElementById('date').value;
+    if (cur) {
+        const parts = String(cur).trim().split(/\s+/);
+        if (parts[0] && parts[1]) {
+            pickerData.date = parts[0];
+            pickerData.time = parts[1];
+        }
     }
+
+    renderPickerDates();
+    renderPickerTimes();
+    updateConfirmBtnState();
+    const overlay = document.getElementById('picker-overlay');
+    const shell = document.getElementById('picker-shell');
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => { overlay.classList.add('open'); shell.classList.add('open'); });
+}
 
     function closePicker() {
         const overlay = document.getElementById('picker-overlay');
@@ -1412,5 +1545,4 @@ function handleStepDotClick(targetStep) {
     initialize();
 </script>
 </body>
-
 </html>
