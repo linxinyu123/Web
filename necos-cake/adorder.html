@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Neco Admin · Orders</title>
+<link rel="icon" type="image/png" href="https://lestoy.com/necos/f.png" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<style>
+  /* =========================
+     Design System (match admin.html)
+     ========================= */
+  :root {
+    --primary: #102940;
+    --accent: #F4C04B;
+    --bg: #F5F5F7;
+    --white: #FFFFFF;
+    --text-gray: #666666;
+    --border: #F0F0F0;
+    --border-strong: #E5E7EB;
+    --radius-box: 20px;
+    --radius-btn: 50px;
+    --radius-input: 14px;
+    --shadow: 0 8px 24px rgba(16, 41, 64, 0.08);
+    --header-h: 70px;
+
+    --field-bg: #F9FAFB;
+    --field-bg-focus: #FFFFFF;
+    --muted: #999;
+    --danger: #EF4444;
+    --danger-bg: #FEE2E2;
+    --ok: #10B981;
+    --ok-bg: #E6F4EA;
+    --warn: #F59E0B;
+    --warn-bg: #FFF7E6;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body, button, input, select, textarea { font-family: 'Nunito', sans-serif; }
+
+  body {
+    background: var(--bg);
+    color: var(--primary);
+    margin: 0;
+    padding-top: var(--header-h);
+    overflow-x: hidden;
+  }
+  body.modal-open{
+    overflow:hidden;
+    position:fixed;
+    width:100%;
+  }
+
+  /* =========================
+     Header (match admin.html)
+     ========================= */
+  .smart-header {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+    background: var(--white); z-index: 900;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 2px solid var(--border);
+  }
+  .header-left { display: flex; align-items: center; gap: 15px; }
+  .logo-img { height: 44px; width: auto; }
+  .header-title { font-weight: 900; font-size: 18px; }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .lang-switch { display: flex; background: #F3F4F6; border-radius: 20px; padding: 3px; }
+  .lang-btn {
+    border: none; background: transparent; padding: 6px 10px;
+    border-radius: 16px; font-size: 12px; font-weight: 800; color: #999;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--accent); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+  .icon-btn{
+    border:none; background:#F3F4F6; color:var(--primary);
+    border-radius: 999px; padding: 10px 12px;
+    font-weight: 900; cursor: pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  .icon-btn:active{ transform: scale(0.98); }
+
+  /* Header menu */
+  .menu-wrap{ position: relative; }
+  .menu-pop{
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: 220px;
+    background: var(--white);
+    border: 2px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(16, 41, 64, 0.12);
+    overflow: hidden;
+    z-index: 1200;
+
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  }
+  .menu-pop.open{
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transform: translateY(0);
+  }
+  .menu-item{
+    padding: 12px 14px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 900;
+    border-bottom: 2px solid var(--border);
+    background: var(--white);
+  }
+  .menu-item:last-child{ border-bottom:none; }
+  .menu-item:hover{ background:#F3F4F6; }
+  .menu-item.danger{ color: var(--danger); }
+  .menu-sub{ font-size: 12px; font-weight: 800; color:#999; }
+
+  /* =========================
+     Layout (two-page logic like admin.html)
+     ========================= */
+  .container {
+    max-width: 1200px; margin: 0 auto; padding: 20px;
+    height: calc(100dvh - var(--header-h));
+  }
+  .grid-layout {
+    display: grid; grid-template-columns: 430px 1fr; gap: 20px;
+    height: 100%;
+  }
+
+  .panel {
+    background: var(--white);
+    border-radius: var(--radius-box);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+  }
+
+  .panel-head {
+    padding: 18px 20px;
+    border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.98);
+    z-index: 10;
+    flex-wrap: wrap;
+  }
+  .panel-title { font-size: 18px; font-weight: 900; }
+  .panel-body {
+    padding: 20px;
+    padding-top: 14px;
+    overflow-y: auto;
+    flex: 1;
+    position: relative;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Mobile: editor slides */
+  .back-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%; background: #F3F4F6;
+    margin-right: 10px; cursor: pointer; border:none;
+  }
+  .back-icon {
+    width: 18px; height: 18px; background-color: var(--primary);
+    -webkit-mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/back.svg") no-repeat center;
+    mask-size: contain; display: inline-block;
+  }
+
+  @media (max-width: 900px) {
+    .grid-layout { display: block; }
+    .container { padding: 0; height: calc(100dvh - var(--header-h)); }
+
+    #listPanel {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0; bottom: 0;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      z-index: 950;
+      display:flex;flex-direction:column;
+    }
+
+    .editor-panel {
+      position: fixed; inset: 0; top: 0; z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      border-radius: 0 !important;
+      height: 100vh;
+    }
+    .editor-panel.open { transform: translateX(0); }
+    .back-btn { display: flex; }
+    .panel-head { padding: 20px 20px 10px 20px; border-bottom: 0; }
+    .panel-body { padding-top: 10px; }
+  }
+
+  /* =========================
+     Buttons & fields
+     ========================= */
+  .btn {
+    border: none; border-radius: var(--radius-btn); padding: 12.5px 20px;
+    font-weight: 900; font-size: 14.5px; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .btn-primary { background: var(--accent); color: var(--primary); box-shadow: 0 4px 12px rgba(244,192,75,0.25); }
+  .btn-ghost { background: #F3F4F6; color: var(--primary); }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); }
+  .btn-danger-solid{ background: var(--danger); color:#fff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); }
+
+  label {
+    display:block; font-size: 13px; font-weight: 800; color:#999;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+
+  input, textarea, .select-native {
+    width: 100%;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-input);
+    padding: 12px 14px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+    transition: border 0.2s, background 0.2s;
+  }
+  input:focus, textarea:focus, .select-native:focus {
+    border-color: var(--accent);
+    background: var(--field-bg-focus);
+  }
+  textarea { min-height: 90px; resize: vertical; }
+
+  .row-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px){
+    .row-2,.row-3{ grid-template-columns: 1fr; }
+  }
+
+  .muted { font-size: 13px; color:#888; line-height: 1.3; font-weight: 800; }
+  .divider { border-top: 2px solid #eee; margin: 16px 0; }
+
+  /* =========================
+     Meta pills
+     ========================= */
+  .meta-bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .pill{
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #F3F4F6;
+    font-weight: 900;
+    font-size: 12px;
+    color: var(--primary);
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .pill.ok{ background: var(--ok-bg); color:#137333; }
+  .pill.warn{ background: #FEF2F2; color: var(--danger); }
+  .pill.accent{ background: var(--warn-bg); color:#8a5b00; }
+  .pill.dot::before{
+    content:"";
+    width:8px; height:8px; border-radius:99px;
+    background:#bbb;
+    display:inline-block;
+  }
+  .pill.dot.ok::before{ background: var(--ok); }
+  .pill.dot.warn::before{ background: var(--danger); }
+
+  /* =========================
+     Tabs (enterprise: one dimension only)
+     ========================= */
+  .tabs { display:flex; gap:10px; overflow:auto; padding: 12px 0; }
+  .tab {
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 900;
+    cursor: pointer;
+    background: transparent;
+    color: #999;
+    user-select:none;
+  }
+  .tab.active{
+    background: var(--accent);
+    color: var(--primary);
+    box-shadow: 0 4px 15px rgba(244, 192, 75, 0.2);
+  }
+
+  /* =========================
+     List items (lightweight)
+     ========================= */
+  .search-box { padding: 0 0 14px 0; border-bottom: 2px solid var(--border); margin-bottom: 14px; }
+  .item-list { display:flex; flex-direction:column; gap: 12px; padding-bottom: 26px; }
+  .list-item{
+    display:flex; gap: 12px; align-items:flex-start;
+    padding: 12px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .list-item:hover, .list-item.active{
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(244,192,75,0.15);
+  }
+
+  .li-main{ flex:1; min-width:0; }
+  .li-top{ display:flex; align-items:baseline; gap: 8px; flex-wrap:wrap; }
+  .li-order{ font-weight: 900; font-size: 16px; }
+  .li-sub{ font-size: 12px; color:#888; font-weight: 800; }
+  .li-mid{ margin-top: 6px; display:flex; gap: 8px; flex-wrap:wrap; align-items:center; }
+  .badge{
+    font-size: 12px;
+    font-weight: 900;
+    border-radius: 999px;
+    padding: 6px 10px;
+    background:#F3F4F6;
+    color:#666;
+  }
+  .badge.paid{ background: var(--ok-bg); color:#137333; }
+  .badge.refund{ background:#FEF2F2; color: var(--danger); }
+  .badge.warn{ background: var(--warn-bg); color:#8a5b00; }
+  .badge.neutral{ background:#EEF2F7; color: var(--primary); }
+
+  .li-right{
+    display:flex; flex-direction:column;
+    align-items:flex-end; gap: 6px;
+    min-width: 92px;
+  }
+  .li-amount{ font-weight: 900; font-size: 15px; }
+  .li-pickup{ font-weight: 900; font-size: 12px; color: var(--primary); background:#EEF2F7; padding:6px 10px; border-radius: 999px; }
+
+  mark.hl{ background: rgba(244,192,75,0.45); padding: 0 .18em; border-radius: 6px; }
+
+  .empty-state { font-size: 13px; color:#999; padding: 10px; text-align:center; font-weight: 800; }
+
+  /* =========================
+     Detail (enterprise sections)
+     ========================= */
+  .detail-title { font-size: 18px; font-weight: 900; }
+  .detail-sub { font-size: 12px; color:#888; font-weight: 800; }
+  .section {
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap: 10px; margin-bottom: 10px;
+  }
+  .section-title{ font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color:#999; }
+  .kv-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 520px){ .kv-grid{ grid-template-columns: 1fr 1fr; } }
+  .kv{
+    background: #F9FAFB;
+    border-radius: 14px;
+    padding: 10px 12px;
+    border: 2px solid #EEF2F7;
+  }
+  .kv .k{ font-size: 11px; color:#999; font-weight: 900; text-transform: uppercase; }
+  .kv .v{ font-weight: 900; margin-top: 2px; word-break: break-word; }
+
+  .items{ display:flex; flex-direction:column; gap: 10px; }
+  .it{
+    display:flex; gap: 12px; align-items:center;
+    background:#F9FAFB;
+    border-radius: 14px;
+    padding: 10px;
+    border: 2px solid #EEF2F7;
+  }
+  .it img{ width: 52px; height: 52px; border-radius: 12px; object-fit: cover; background:#eee; flex-shrink:0; }
+  .it .t{ font-weight: 900; }
+  .it .s{ font-size: 12px; color:#888; font-weight: 800; margin-top:2px; }
+  .it .r{ margin-left:auto; font-weight: 900; }
+
+  .note-box{
+    background:#F9FAFB;
+    border: 2px solid #EEF2F7;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 800;
+    color:#333;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .note-more{
+    margin-top: 8px;
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    cursor:pointer;
+    font-weight: 900;
+    color: var(--primary);
+    background: #F3F4F6;
+    border-radius: 999px;
+    padding: 8px 12px;
+    border: none;
+  }
+
+  .copy-row{
+    display:flex; gap: 8px; align-items:center; justify-content:space-between;
+    flex-wrap: wrap;
+  }
+  .copy-code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 900;
+    background:#EEF2F7;
+    border-radius: 12px;
+    padding: 8px 10px;
+    border: 2px solid #E5E7EB;
+    max-width: 100%;
+    overflow:auto;
+  }
+  .btn-mini{
+    border:none;
+    background:#F3F4F6;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  /* =========================
+     Danger zone (refund) - bottom
+     ========================= */
+  .danger-zone{
+    border: 2px solid rgba(239,68,68,0.35);
+    background: rgba(239,68,68,0.04);
+  }
+  .danger-zone .section-title{ color: var(--danger); }
+  .radio-row{ display:flex; gap: 12px; flex-wrap: wrap; }
+  .radio{
+    display:flex; gap: 8px; align-items:center;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 2px solid var(--border-strong);
+    background: #fff;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .radio input{ width:auto; }
+  .refund-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  @media (max-width: 520px){ .refund-grid{ grid-template-columns: 1fr; } }
+
+  /* =========================
+     Toast (match admin.html)
+     ========================= */
+  #toast {
+    position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
+    background: rgba(16,41,64,0.9); color: #fff; padding: 12px 24px;
+    border-radius: 50px; font-weight: 800; z-index: 3000;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+
+  /* =========================
+     Modal (confirm)
+     ========================= */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16,41,64,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+  }
+  .modal-overlay.open{
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .modal-card{
+    background: var(--white);
+    width: 90%;
+    max-width: 520px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    position: relative;
+    max-height: min(86vh, 760px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    transform: translate3d(0, 16px, 0) scale(0.98);
+    opacity: 0;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+  }
+  .modal-overlay.open .modal-card{
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  .modal-head{
+    padding: 16px 18px;
+    border-bottom: 2px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .modal-title{ font-size: 18px; font-weight: 900; margin:0; }
+  .modal-close-btn{
+    border:none;
+    background:#F3F4F6;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 900;
+    cursor:pointer;
+  }
+  .modal-body{ padding: 16px 18px; }
+  .modal-foot{
+    padding: 14px 18px;
+    display:flex; justify-content:flex-end; gap: 10px; flex-wrap: wrap;
+  }
+
+  /* =========================
+     Custom Select (cselect) - copied from admin.html
+     ========================= */
+  .select-wrap{ position: relative; width: 100%; }
+  .select-wrap select.select-native.cselect-native {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .cselect { position: relative; width: 100%; }
+  .cselect-btn {
+    width: 100%;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-input);
+    padding: 12px 40px 12px 14px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border 0.2s, background 0.2s;
+    min-height: 48px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cselect-btn:active {
+    background: #eaeaea;
+    border-color: var(--accent);
+  }
+  .cselect-btn:focus,
+  .cselect-btn.cselect-open {
+    border-color: var(--accent);
+    background: var(--field-bg-focus);
+  }
+  .cselect-label {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cselect-arrow {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px;
+    background-color: var(--primary);
+    -webkit-mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/down.svg") no-repeat center;
+    mask-size: contain;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+    pointer-events: none;
+  }
+  .cselect-btn.cselect-open .cselect-arrow { transform: translateY(-50%) rotate(180deg); }
+
+  .cselect-pop {
+    position: fixed;
+    background: var(--white);
+    border: 2px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(16, 41, 64, 0.15);
+    z-index: 9999;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    box-sizing: border-box;
+  }
+  .cselect-pop.open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .cselect-search {
+    padding: 10px;
+    border-bottom: 2px solid var(--border);
+    background: #F5f5f7;
+  }
+  .cselect-search input {
+    width: 100%;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 12px;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--primary);
+    background: var(--field-bg);
+    outline: none;
+  }
+  .cselect-search input:focus { border-color: var(--accent);  background: var(--field-bg-focus); }
+  .cselect-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 6px;
+    margin-top: 7.5px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cselect-opt {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 7.5px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 14.5px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.1s;
+  }
+  .cselect-opt:hover, .cselect-opt.highlighted { background: #F3F4F6; }
+  .cselect-opt[aria-selected="true"] { background: rgba(244,192,75,0.15); color: var(--accent); }
+  .cselect-opt .tick {
+    width: 16px; height: 16px;
+    background-color: currentColor;
+    -webkit-mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+    -webkit-mask-size: contain;
+    mask: url("https://lestoy.com/love/icones/check.svg") no-repeat center;
+    mask-size: contain;
+    opacity: 0;
+  }
+  .cselect-opt[aria-selected="true"] .tick { opacity: 1; }
+  .cselect-empty { padding: 16px; font-size: 13px; color: #999; text-align: center; font-weight: 800; }
+  @media (max-width: 600px) { .cselect-list { max-height: 320px; margin-top: 7.5px;} }
+</style>
+</head>
+
+<body>
+<header class="smart-header">
+  <div class="header-left">
+    <img class="logo-img" src="https://lestoy.com/necos/logo.png" alt="logo" onerror="this.style.display='none'">
+    <div class="header-title" data-i18n="title">Orders</div>
+  </div>
+
+  <div class="header-actions">
+    <div class="lang-switch" aria-label="Language Switcher">
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lang-pt" onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" id="lang-cn" onclick="setLang('cn')">CN</button>
+    </div>
+
+    <div class="menu-wrap">
+      <button class="icon-btn" id="menuBtn" aria-label="Menu" title="Menu">⋯</button>
+      <div class="menu-pop" id="menuPop">
+        <div class="menu-item" onclick="exportCSV()">
+          <div>
+            <div data-i18n="exportCsv">Export CSV</div>
+            <div class="menu-sub" data-i18n="exportCsvSub">Current view</div>
+          </div>
+          <div>⇩</div>
+        </div>
+        <div class="menu-item" onclick="manualRefresh()">
+          <div>
+            <div data-i18n="refreshNow">Refresh</div>
+            <div class="menu-sub" data-i18n="refreshNowSub">Retry fetch</div>
+          </div>
+          <div>⟳</div>
+        </div>
+        <div class="menu-item danger" onclick="logout()">
+          <div>
+            <div data-i18n="lock">Lock</div>
+            <div class="menu-sub" data-i18n="lockSub">Require key again</div>
+          </div>
+          <div>🔒</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid-layout">
+
+    <!-- Login panel -->
+    <div class="panel" id="loginPanel" style="grid-column: 1 / -1; max-width: 520px; margin: 0 auto; display:none;">
+      <div class="panel-head">
+        <div class="panel-title" data-i18n="adminAccess">Admin Access</div>
+      </div>
+      <div class="panel-body">
+        <form id="loginForm">
+          <label data-i18n="secureKey">Secure API Key</label>
+          <input id="adminKey" type="password" data-i18n-placeholder="enterKey" placeholder="Enter Secure API Key" />
+          <div style="height:12px"></div>
+          <button class="btn btn-primary" style="width:100%" type="submit" data-i18n="login">Login</button>
+        </form>
+        <div id="loginError" style="display:none; margin-top: 12px; color: var(--danger); font-weight: 900;">
+          Access Denied
+        </div>
+      </div>
+    </div>
+
+    <!-- LEFT: list panel -->
+    <div class="panel" id="listPanel">
+      <div class="panel-head">
+        <div style="display:flex; flex-direction:column; gap: 2px;">
+          <div class="panel-title" data-i18n="orderList">Order List</div>
+          <div class="muted" id="subtitleHint" data-i18n="subtitleHint">Work queue (pickup-time sorted)</div>
+        </div>
+
+        <div class="meta-bar">
+          <div class="pill accent" id="pillCount">0</div>
+          <div class="pill dot ok" id="pillUpdated">—</div>
+          <div class="pill" id="pillAuto">Auto: ON</div>
+          <button class="btn btn-ghost" id="btnAuto" onclick="toggleAuto()" data-i18n="pause">Pause</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="search-box">
+          <label data-i18n="search">Search</label>
+          <input id="q" data-i18n-placeholder="searchPh" placeholder="order / phone / name / item ..." />
+        </div>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div class="row-2" style="margin-top: 10px;">
+          <div>
+            <label data-i18n="pickupDateFrom">Pickup date from</label>
+            <input id="pickupFrom" type="date" />
+          </div>
+          <div>
+            <label data-i18n="pickupDateTo">Pickup date to</label>
+            <input id="pickupTo" type="date" />
+          </div>
+        </div>
+
+        <div class="row-2" style="margin-top: 10px;">
+          <div class="select-wrap">
+            <label data-i18n="paymentStatus">Payment</label>
+            <select id="payFilter" class="select-native">
+              <option value="" data-i18n="any">Any</option>
+              <option value="paid" data-i18n="paid">Paid</option>
+              <option value="pending" data-i18n="pending">Pending</option>
+              <option value="draft" data-i18n="draft">Draft</option>
+              <option value="failed" data-i18n="failed">Failed</option>
+              <option value="refunded" data-i18n="refunded">Refunded</option>
+            </select>
+          </div>
+
+          <div class="select-wrap">
+            <label data-i18n="refundStatus">Refund</label>
+            <select id="refundFilter" class="select-native">
+              <option value="" data-i18n="any">Any</option>
+              <option value="none" data-i18n="refundNone">No refund</option>
+              <option value="partial" data-i18n="refundPartial">Partial</option>
+              <option value="full" data-i18n="refundFull">Full</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button class="btn btn-ghost" id="moreBtn" style="width:100%;" onclick="toggleMore()" data-i18n="moreFilters">
+            More filters
+          </button>
+        </div>
+
+        <div id="moreBox" style="display:none; margin-top: 12px;">
+          <div class="row-2">
+            <div class="select-wrap">
+              <label data-i18n="orderStatus">Order status</label>
+              <select id="fulFilter" class="select-native">
+                <option value="" data-i18n="any">Any</option>
+                <option value="pending" data-i18n="fs_pending">Pending</option>
+                <option value="accepted" data-i18n="fs_accepted">Accepted</option>
+                <option value="baking" data-i18n="fs_baking">Baking</option>
+                <option value="ready" data-i18n="fs_ready">Ready</option>
+                <option value="uncollected" data-i18n="fs_uncollected">Uncollected</option>
+                <option value="completed" data-i18n="fs_completed">Completed</option>
+                <option value="cancelled" data-i18n="fs_cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div></div>
+          </div>
+
+          <div class="row-2" style="margin-top:10px;">
+            <div>
+              <label data-i18n="createdFrom">Created from</label>
+              <input id="createdFrom" type="date" />
+            </div>
+            <div>
+              <label data-i18n="createdTo">Created to</label>
+              <input id="createdTo" type="date" />
+            </div>
+          </div>
+
+          <div class="muted" style="margin-top: 10px;" data-i18n="moreHint">
+            Tip: pickup date is the default work axis. Created date is for tracing/audit.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="item-list" id="orderListView"></div>
+        <div class="empty-state" id="emptyList" style="display:none;" data-i18n="empty">No orders</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: detail panel -->
+    <div class="panel editor-panel" id="editorPanel">
+      <div class="panel-head">
+        <button class="back-btn" onclick="closeEditor()"><span class="back-icon"></span></button>
+        <div style="flex:1; min-width:0;">
+          <div class="detail-title" id="detailTitle" data-i18n="details">Details</div>
+          <div class="detail-sub" id="detailSub" data-i18n="selectHint">Select an order from the list</div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div id="detailEmpty" class="empty-state" style="margin-top: 30px;" data-i18n="selectHint">
+          Select an order from the list
+        </div>
+
+        <div id="detailBody" style="display:none;">
+          <!-- Overview -->
+          <div class="section">
+            <div class="section-head">
+              <div class="section-title" data-i18n="overview">Overview</div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button class="btn-mini" onclick="copyOrderNo()" data-i18n="copyOrderNo">Copy order no</button>
+                <button class="btn-mini" onclick="copyStripeIds()" data-i18n="copyStripeIds">Copy Stripe IDs</button>
+              </div>
+            </div>
+            <div class="kv-grid">
+              <div class="kv"><div class="k" data-i18n="orderNo">Order</div><div class="v" id="dOrderNo">—</div></div>
+              <div class="kv"><div class="k" data-i18n="paymentStatus">Payment</div><div class="v" id="dPay">—</div></div>
+              <div class="kv"><div class="k" data-i18n="orderStatus">Status</div><div class="v" id="dFul">—</div></div>
+
+              <div class="kv"><div class="k" data-i18n="total">Total</div><div class="v" id="dTotal">—</div></div>
+              <div class="kv"><div class="k" data-i18n="refundedAmt">Refunded</div><div class="v" id="dRefunded">—</div></div>
+              <div class="kv"><div class="k" data-i18n="remaining">Remaining</div><div class="v" id="dRemaining">—</div></div>
+              <div class="kv"><div class="k">Fee</div><div class="v" id="dFee">—</div></div>
+<div class="kv"><div class="k">Net</div><div class="v" id="dNet">—</div></div>
+
+            </div>
+          </div>
+
+          <!-- Customer & pickup -->
+          <div class="section">
+            <div class="section-head">
+              <div class="section-title" data-i18n="customer">Customer & Pickup</div>
+            </div>
+            <div class="kv-grid">
+              <div class="kv"><div class="k" data-i18n="customerName">Name</div><div class="v" id="dName">—</div></div>
+              <div class="kv"><div class="k" data-i18n="phone">Phone</div><div class="v" id="dPhone">—</div></div>
+              <div class="kv"><div class="k" data-i18n="email">Email</div><div class="v" id="dEmail">—</div></div>
+
+              <div class="kv"><div class="k" data-i18n="pickupTime">Pickup</div><div class="v" id="dPickup">—</div></div>
+              <div class="kv"><div class="k" data-i18n="rescheduledAt">Rescheduled</div><div class="v" id="dRescheduled">—</div></div>
+              <div class="kv"><div class="k" data-i18n="updatedAt">Updated</div><div class="v" id="dUpdated">—</div></div>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="section">
+            <div class="section-head">
+              <div class="section-title" data-i18n="items">Items</div>
+            </div>
+            <div class="items" id="dItems"></div>
+          </div>
+
+          <!-- Note -->
+          <div class="section" id="noteSection" style="display:none;">
+            <div class="section-head">
+              <div class="section-title" data-i18n="note">Note</div>
+            </div>
+            <div class="note-box" id="dNote"></div>
+            <button class="note-more" id="noteMoreBtn" style="display:none;" onclick="toggleNote()" data-i18n="showMore">
+              Show more
+            </button>
+          </div>
+
+          <!-- Reconcile -->
+          <div class="section">
+            <div class="section-head">
+              <div class="section-title" data-i18n="reconcile">Reconcile (Stripe)</div>
+            </div>
+
+            <div class="copy-row">
+              <div class="muted" data-i18n="intentId">Payment Intent ID</div>
+              <div class="copy-code" id="dIntent">—</div>
+              <button class="btn-mini" onclick="copyTextFrom('dIntent')" data-i18n="copy">Copy</button>
+            </div>
+            <div style="height:10px"></div>
+
+            <div class="copy-row">
+              <div class="muted" data-i18n="chargeId">Charge ID</div>
+              <div class="copy-code" id="dCharge">—</div>
+              <button class="btn-mini" onclick="copyTextFrom('dCharge')" data-i18n="copy">Copy</button>
+            </div>
+            <div style="height:10px"></div>
+
+            <div class="divider"></div>
+            <div class="copy-row">
+              <div class="muted" data-i18n="refundId">Refund ID</div>
+              <div class="copy-code" id="dRefundId">—</div>
+              <button class="btn-mini" onclick="copyTextFrom('dRefundId')" data-i18n="copy">Copy</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px;" data-i18n="reconcileHint">
+              Keep Stripe IDs here for audit. Business details stay above.
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="section">
+            <div class="section-head">
+              <div class="section-title" data-i18n="actions">Actions</div>
+            </div>
+
+            <div class="row-2">
+              <div class="select-wrap">
+                <label data-i18n="setStatus">Set status</label>
+                <select id="dStatus" class="select-native">
+                  <option value="pending" data-i18n="fs_pending">Pending</option>
+                  <option value="accepted" data-i18n="fs_accepted">Accepted</option>
+                  <option value="baking" data-i18n="fs_baking">Baking</option>
+                  <option value="ready" data-i18n="fs_ready">Ready</option>
+                  <option value="uncollected" data-i18n="fs_uncollected">Uncollected</option>
+                  <option value="completed" data-i18n="fs_completed">Completed</option>
+                  <option value="cancelled" data-i18n="fs_cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div style="display:flex; align-items:flex-end; gap: 10px; justify-content:flex-end;">
+                <button class="btn btn-primary" id="btnSaveStatus" onclick="saveStatus()" disabled data-i18n="saveStatus">Save status</button>
+              </div>
+            </div>
+
+            <div class="muted" style="margin-top: 10px;" id="statusHint" data-i18n="statusHint">
+              Tip: Completed is irreversible (enterprise safety).
+            </div>
+          </div>
+
+          <!-- Refund (danger zone at bottom) -->
+          <div class="section danger-zone">
+            <div class="section-head">
+              <div class="section-title" data-i18n="refund">Refund (Sensitive)</div>
+              <div class="muted" id="refundMeta">—</div>
+            </div>
+
+            <div class="radio-row">
+              <label class="radio">
+                <input type="radio" name="refundMode" value="full" checked />
+                <span data-i18n="fullRefund">Full refund</span>
+              </label>
+              <label class="radio">
+                <input type="radio" name="refundMode" value="partial" />
+                <span data-i18n="partialRefund">Partial refund</span>
+              </label>
+            </div>
+
+            <div class="refund-grid">
+              <div>
+                <label data-i18n="refundAmountEur">Refund amount (€)</label>
+                <input id="refundAmount" inputmode="decimal" placeholder="e.g. 10.00" data-i18n-placeholder="refundAmountPh" />
+                <div class="muted" style="margin-top: 6px;" id="refundAmountHint" data-i18n="refundAmountHint">
+                  For partial refund only. Full refund ignores this.
+                </div>
+              </div>
+              <div>
+                <label data-i18n="refundReason">Reason (optional)</label>
+                <textarea id="refundReason" data-i18n-placeholder="refundReasonPh" placeholder="Optional internal note..."></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top: 12px;">
+              <button class="btn btn-danger-solid" id="btnRefund" onclick="submitRefund()" data-i18n="doRefund">Refund</button>
+            </div>
+
+            <div class="muted" style="margin-top: 10px;" data-i18n="refundHint2">
+              Refund is a high-risk action. It requires confirmation and is logged via Stripe IDs above.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast">Saved</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div class="modal-title" id="confirmTitle" data-i18n="confirmTitle">Confirm</div>
+      <button class="modal-close-btn" onclick="confirmCancel()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-weight:900;" id="confirmMessage">—</div>
+      <div class="muted" id="confirmHint" style="display:none; margin-top:10px;">—</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="confirmCancel()" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-danger-solid" id="confirmOkBtn" onclick="confirmOk()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Config
+   ========================= */
+const BASE_API = 'https://necosapi.lestoy.com/necos/v1';
+const KEY_STORAGE = 'necos_admin_key_v2';
+const LANG_STORAGE = 'necos_admin_lang_v2';
+
+let currentLang = localStorage.getItem(LANG_STORAGE) || 'cn';
+let adminKey = sessionStorage.getItem(KEY_STORAGE) || '';
+
+let orders = [];
+let selectedOrder = null;
+
+let tab = 'in_progress'; // in_progress | completed | closed | all
+
+let autoOn = true;
+let inFlight = false;
+let lastHash = '';
+let noChange = 0;
+let nextMs = 5000;
+let autoTimer = null;
+
+let noteExpanded = false;
+
+const T = {
+  en: {
+    title: "Orders",
+    adminAccess: "Admin Access",
+    secureKey: "Secure API Key",
+    enterKey: "Enter Secure API Key",
+    login: "Login",
+
+    exportCsv: "Export CSV",
+    exportCsvSub: "Current view",
+    refreshNow: "Refresh",
+    refreshNowSub: "Retry fetch",
+    lock: "Lock",
+    lockSub: "Require key again",
+
+    orderList: "Order List",
+    subtitleHint: "Work queue (pickup-time sorted)",
+    pause: "Pause",
+    resume: "Resume",
+
+    search: "Search",
+    searchPh: "order / phone / name / item ...",
+
+    pickupDateFrom: "Pickup date from",
+    pickupDateTo: "Pickup date to",
+    paymentStatus: "Payment",
+    refundStatus: "Refund",
+    orderStatus: "Order status",
+
+    any: "Any",
+    paid: "Paid",
+    pending: "Pending",
+    draft: "Draft",
+    failed: "Failed",
+    refunded: "Refunded",
+
+    refundNone: "No refund",
+    refundPartial: "Partial",
+    refundFull: "Full",
+
+    moreFilters: "More filters",
+    moreHint: "Tip: pickup date is the default work axis. Created date is for tracing/audit.",
+    createdFrom: "Created from",
+    createdTo: "Created to",
+
+    tabInProgress: "In progress",
+    tabCompleted: "Completed",
+    tabClosed: "Closed",
+    tabAll: "All",
+
+    empty: "No orders",
+
+    details: "Details",
+    selectHint: "Select an order from the list",
+
+    overview: "Overview",
+    copyOrderNo: "Copy order no",
+    copyStripeIds: "Copy Stripe IDs",
+
+    orderNo: "Order",
+    total: "Total",
+    refundedAmt: "Refunded",
+    remaining: "Remaining",
+
+    customer: "Customer & Pickup",
+    customerName: "Name",
+    phone: "Phone",
+    email: "Email",
+    pickupTime: "Pickup",
+    rescheduledAt: "Rescheduled",
+    updatedAt: "Updated",
+
+    items: "Items",
+    note: "Note",
+    showMore: "Show more",
+    showLess: "Show less",
+
+    reconcile: "Reconcile (Stripe)",
+    intentId: "Payment Intent ID",
+    chargeId: "Charge ID",
+    balanceTxId: "Balance Tx",
+    refundId: "Refund ID",
+    copy: "Copy",
+    reconcileHint: "Keep Stripe IDs here for audit. Business details stay above.",
+
+    actions: "Actions",
+    setStatus: "Set status",
+    saveStatus: "Save status",
+    statusHint: "Tip: Completed is irreversible (enterprise safety).",
+
+    refund: "Refund (Sensitive)",
+    fullRefund: "Full refund",
+    partialRefund: "Partial refund",
+    refundAmountEur: "Refund amount (€)",
+    refundAmountPh: "e.g. 10.00",
+    refundAmountHint: "For partial refund only. Full refund ignores this.",
+    refundReason: "Reason (optional)",
+    refundReasonPh: "Optional internal note...",
+    doRefund: "Refund",
+    refundHint2: "Refund is a high-risk action. It requires confirmation and is logged via Stripe IDs above.",
+
+    confirmTitle: "Confirm",
+    cancel: "Cancel",
+    confirm: "Confirm",
+
+    // fulfillment statuses
+    fs_pending: "Pending",
+    fs_accepted: "Accepted",
+    fs_baking: "Baking",
+    fs_ready: "Ready",
+    fs_uncollected: "Uncollected",
+    fs_completed: "Completed",
+    fs_cancelled: "Cancelled",
+
+    // flags
+    flag_uncollected: "⚠ Missed pickup (uncollected)",
+    flag_rescheduled: "Rescheduled",
+    flag_partial_refund: "Partial refund",
+    flag_full_refund: "Full refund",
+
+    // toast
+    toast_saved: "Saved",
+    toast_copied: "Copied",
+    toast_login_failed: "Access Denied",
+    toast_refunded: "Refunded",
+    toast_updated: "Updated",
+    toast_fetch_failed: "Fetch failed",
+  },
+
+  pt: {
+    title: "Pedidos",
+    adminAccess: "Acesso Admin",
+    secureKey: "Chave API",
+    enterKey: "Introduza a chave API",
+    login: "Entrar",
+
+    exportCsv: "Exportar CSV",
+    exportCsvSub: "Vista atual",
+    refreshNow: "Atualizar",
+    refreshNowSub: "Tentar novamente",
+    lock: "Bloquear",
+    lockSub: "Pedir chave novamente",
+
+    orderList: "Lista de Pedidos",
+    subtitleHint: "Fila de trabalho (ordenado por recolha)",
+    pause: "Pausar",
+    resume: "Retomar",
+
+    search: "Pesquisar",
+    searchPh: "pedido / telefone / nome / item ...",
+
+    pickupDateFrom: "Recolha desde",
+    pickupDateTo: "Recolha até",
+    paymentStatus: "Pagamento",
+    refundStatus: "Reembolso",
+    orderStatus: "Estado do pedido",
+
+    any: "Qualquer",
+    paid: "Pago",
+    pending: "Pendente",
+    draft: "Criado",
+    failed: "Falhou",
+    refunded: "Reembolsado",
+
+    refundNone: "Sem reembolso",
+    refundPartial: "Parcial",
+    refundFull: "Total",
+
+    moreFilters: "Mais filtros",
+    moreHint: "Dica: a data de recolha é o eixo principal. A data de criação é para auditoria.",
+    createdFrom: "Criado desde",
+    createdTo: "Criado até",
+
+    tabInProgress: "Em curso",
+    tabCompleted: "Concluídos",
+    tabClosed: "Fechados",
+    tabAll: "Todos",
+
+    empty: "Sem pedidos",
+
+    details: "Detalhes",
+    selectHint: "Selecione um pedido na lista",
+
+    overview: "Visão geral",
+    copyOrderNo: "Copiar nº pedido",
+    copyStripeIds: "Copiar IDs Stripe",
+
+    orderNo: "Pedido",
+    total: "Total",
+    refundedAmt: "Reembolsado",
+    remaining: "Restante",
+
+    customer: "Cliente & Recolha",
+    customerName: "Nome",
+    phone: "Telefone",
+    email: "Email",
+    pickupTime: "Recolha",
+    rescheduledAt: "Remarcado",
+    updatedAt: "Atualizado",
+
+    items: "Itens",
+    note: "Nota",
+    showMore: "Mostrar mais",
+    showLess: "Mostrar menos",
+
+    reconcile: "Conciliação (Stripe)",
+    intentId: "Payment Intent ID",
+    chargeId: "Charge ID",
+    balanceTxId: "Balance Tx",
+    refundId: "Refund ID",
+    copy: "Copiar",
+    reconcileHint: "Mantenha os IDs do Stripe aqui para auditoria. Detalhes do negócio acima.",
+
+    actions: "Ações",
+    setStatus: "Definir estado",
+    saveStatus: "Guardar estado",
+    statusHint: "Dica: Concluído é irreversível (segurança).",
+
+    refund: "Reembolso (Sensível)",
+    fullRefund: "Reembolso total",
+    partialRefund: "Reembolso parcial",
+    refundAmountEur: "Valor (€)",
+    refundAmountPh: "ex. 10.00",
+    refundAmountHint: "Apenas para parcial. Total ignora este campo.",
+    refundReason: "Motivo (opcional)",
+    refundReasonPh: "Nota interna opcional...",
+    doRefund: "Reembolsar",
+    refundHint2: "Reembolso é uma ação de alto risco. Requer confirmação.",
+
+    confirmTitle: "Confirmar",
+    cancel: "Cancelar",
+    confirm: "Confirmar",
+
+    fs_pending: "Pendente",
+    fs_accepted: "Aceite",
+    fs_baking: "A preparar",
+    fs_ready: "Pronto",
+    fs_uncollected: "Não levantado",
+    fs_completed: "Concluído",
+    fs_cancelled: "Cancelado",
+
+    flag_uncollected: "⚠ Falhou recolha (não levantado)",
+    flag_rescheduled: "Remarcado",
+    flag_partial_refund: "Reembolso parcial",
+    flag_full_refund: "Reembolso total",
+
+    toast_saved: "Guardado",
+    toast_copied: "Copiado",
+    toast_login_failed: "Acesso negado",
+    toast_refunded: "Reembolsado",
+    toast_updated: "Atualizado",
+    toast_fetch_failed: "Falha ao obter",
+  },
+
+  cn: {
+    title: "订单",
+    adminAccess: "后台登录",
+    secureKey: "安全密钥",
+    enterKey: "输入安全密钥",
+    login: "登录",
+
+    exportCsv: "导出 CSV",
+    exportCsvSub: "当前视图",
+    refreshNow: "立即刷新",
+    refreshNowSub: "重试拉取",
+    lock: "锁定",
+    lockSub: "重新输入密钥",
+
+    orderList: "订单列表",
+    subtitleHint: "工作队列（按取货时间排序）",
+    pause: "暂停",
+    resume: "继续",
+
+    search: "搜索",
+    searchPh: "订单号 / 电话 / 姓名 / 商品 ...",
+
+    pickupDateFrom: "取货日期从",
+    pickupDateTo: "取货日期到",
+    paymentStatus: "支付状态",
+    refundStatus: "退款",
+    orderStatus: "订单状态",
+
+    any: "不限",
+    paid: "已支付",
+    pending: "待支付",
+    draft: "Created",
+    failed: "失败",
+    refunded: "已退款",
+
+    refundNone: "无退款",
+    refundPartial: "部分退款",
+    refundFull: "全额退款",
+
+    moreFilters: "更多筛选",
+    moreHint: "提示：默认以取货日期作为工作轴；创建日期用于追溯/审计。",
+    createdFrom: "创建日期从",
+    createdTo: "创建日期到",
+
+    tabInProgress: "进行中",
+    tabCompleted: "已完成",
+    tabClosed: "已关闭",
+    tabAll: "全部",
+
+    empty: "暂无订单",
+
+    details: "详情",
+    selectHint: "请从左侧选择订单",
+
+    overview: "概览",
+    copyOrderNo: "复制订单号",
+    copyStripeIds: "复制 Stripe IDs",
+
+    orderNo: "订单",
+    total: "总额",
+    refundedAmt: "已退",
+    remaining: "剩余",
+
+    customer: "客户与取货",
+    customerName: "姓名",
+    phone: "电话",
+    email: "邮箱",
+    pickupTime: "取货时间",
+    rescheduledAt: "改期时间",
+    updatedAt: "更新时间",
+
+    items: "商品",
+    note: "备注",
+    showMore: "展开",
+    showLess: "收起",
+
+    reconcile: "对账（Stripe）",
+    intentId: "Payment Intent ID",
+    chargeId: "Charge ID",
+    balanceTxId: "Balance Tx",
+    refundId: "Refund ID",
+    copy: "复制",
+    reconcileHint: "Stripe 对账信息放这里；业务信息放上面，避免干扰。",
+
+    actions: "操作",
+    setStatus: "设置状态",
+    saveStatus: "保存状态",
+    statusHint: "提示：已完成属于不可逆状态（企业级防误操作）。",
+
+    refund: "退款（高敏感）",
+    fullRefund: "全额退款",
+    partialRefund: "部分退款",
+    refundAmountEur: "退款金额（€）",
+    refundAmountPh: "例如 10.00",
+    refundAmountHint: "仅部分退款需要填；全额退款忽略此输入。",
+    refundReason: "原因（可选）",
+    refundReasonPh: "可选：内部备注…",
+    doRefund: "退款",
+    refundHint2: "退款属于高风险操作：需要确认，并在 Stripe 中可追溯。",
+
+    confirmTitle: "确认",
+    cancel: "取消",
+    confirm: "确认",
+
+    fs_pending: "待确认",
+    fs_accepted: "已接单",
+    fs_baking: "制作中",
+    fs_ready: "待领取",
+    fs_uncollected: "未领取",
+    fs_completed: "已完成",
+    fs_cancelled: "已取消",
+
+    flag_uncollected: "⚠ 超时未取（未领取）",
+    flag_rescheduled: "已改期",
+    flag_partial_refund: "部分退款",
+    flag_full_refund: "全额退款",
+
+    toast_saved: "已保存",
+    toast_copied: "已复制",
+    toast_login_failed: "密钥错误",
+    toast_refunded: "已退款",
+    toast_updated: "已更新",
+    toast_fetch_failed: "拉取失败",
+  }
+};
+
+function t(k){ return (T[currentLang] && T[currentLang][k]) || k; }
+
+function S(id){ return document.getElementById(id); }
+
+/* =========================
+   i18n apply
+   ========================= */
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (!key) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (!key) return;
+    el.setAttribute('placeholder', t(key));
+  });
+
+  ['en','pt','cn'].forEach(x => S('lang-'+x)?.classList.toggle('active', x === currentLang));
+  S('btnAuto').textContent = autoOn ? t('pause') : t('resume');
+  S('pillAuto').textContent = autoOn ? 'Auto: ON' : 'Auto: OFF';
+
+  // note more button text
+  S('noteMoreBtn').textContent = noteExpanded ? t('showLess') : t('showMore');
+
+  refreshCustomSelectLabels();
+}
+
+/* =========================
+   Menu
+   ========================= */
+function setupMenu(){
+  const btn = S('menuBtn');
+  const pop = S('menuPop');
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pop.classList.toggle('open');
+  });
+  document.addEventListener('click', () => pop.classList.remove('open'));
+  pop.addEventListener('click', (e) => e.stopPropagation());
+}
+
+/* =========================
+   Toast
+   ========================= */
+let __toastTimer = null;
+function showToast(msg){
+  const el = S('toast');
+  el.textContent = msg;
+  el.style.opacity = 1;
+  clearTimeout(__toastTimer);
+  __toastTimer = setTimeout(() => el.style.opacity = 0, 1600);
+}
+
+/* =========================
+   Confirm modal
+   ========================= */
+let __confirmResolve = null;
+function openConfirm(message, opts = {}){
+  S('confirmTitle').textContent = opts.title || t('confirmTitle');
+  S('confirmMessage').textContent = message || '';
+  const hintEl = S('confirmHint');
+  if (opts.hint){
+    hintEl.style.display = 'block';
+    hintEl.textContent = opts.hint;
+  } else {
+    hintEl.style.display = 'none';
+    hintEl.textContent = '';
+  }
+  S('confirmOkBtn').textContent = opts.okText || t('confirm');
+  S('confirmModal').classList.add('open');
+  return new Promise(resolve => { __confirmResolve = resolve; });
+}
+function confirmOk(){
+  S('confirmModal').classList.remove('open');
+  if (__confirmResolve){ const r = __confirmResolve; __confirmResolve = null; r(true); }
+}
+function confirmCancel(){
+  S('confirmModal').classList.remove('open');
+  if (__confirmResolve){ const r = __confirmResolve; __confirmResolve = null; r(false); }
+}
+S('confirmModal').addEventListener('click', confirmCancel);
+
+/* =========================
+   Helpers
+   ========================= */
+function escapeHtml(str){
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+function safeJson(s, fb){ try{ return s ? JSON.parse(s) : fb; } catch{ return fb; } }
+function moneyEUR(cents){
+  const n = Number(cents || 0);
+  return '€' + (n/100).toFixed(2);
+}
+
+function parseDT(s){
+  if(!s) return null;
+
+  // ✅ 关键：把多个空白压成单空格（修复 "2026-01-04  15:30"）
+  const v = String(s).trim().replace(/\s+/g, ' ');
+
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if(!m) return null;
+
+  const yyyy = Number(m[1]);
+  const mm = Number(m[2]) - 1;
+  const dd = Number(m[3]);
+  const hh = Number(m[4] || 0);
+  const mi = Number(m[5] || 0);
+  const ss = Number(m[6] || 0);
+
+  const d = new Date(yyyy, mm, dd, hh, mi, ss);
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
+function fmtDT(s){
+  const d = parseDT(s);
+  if(!d) return '—';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+function fmtDateOnly(s){
+  const d = parseDT(s);
+  if(!d) return null;
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+function inDateRange(dateStr, fromEl, toEl){
+  const d = fmtDateOnly(dateStr);
+  if(!d) return false;
+  const from = fromEl.value ? fromEl.value : null;
+  const to = toEl.value ? toEl.value : null;
+  if(from && d < from) return false;
+  if(to && d > to) return false;
+  return true;
+}
+
+function highlight(text, q){
+  const s = String(text ?? '');
+  const qq = String(q ?? '').trim();
+  if(!qq) return escapeHtml(s);
+  const idx = s.toLowerCase().indexOf(qq.toLowerCase());
+  if(idx < 0) return escapeHtml(s);
+  return escapeHtml(s.slice(0,idx)) + '<mark class="hl">' + escapeHtml(s.slice(idx, idx+qq.length)) + '</mark>' + escapeHtml(s.slice(idx+qq.length));
+}
+
+function refundStatus(o){
+  const total = Number(o.amount_cents || 0);
+  const refunded = Number(o.refund_amount_cents || 0);
+  if(refunded <= 0) return 'none';
+  if(total > 0 && refunded >= total) return 'full';
+  return 'partial';
+}
+
+function isInProgress(o){
+  const fs = String(o.fulfillment_status || '').toLowerCase();
+  if(fs === 'completed') return false;
+  if(fs === 'cancelled') return false;
+  // payment failed can be considered closed, but keep it in closed tab
+  const ps = String(o.payment_status || o.status || '').toLowerCase();
+  if(ps === 'failed') return false;
+  return true;
+}
+function isCompleted(o){
+  return String(o.fulfillment_status || '').toLowerCase() === 'completed';
+}
+function isClosed(o){
+  const fs = String(o.fulfillment_status || '').toLowerCase();
+  const ps = String(o.payment_status || o.status || '').toLowerCase();
+  return (fs === 'cancelled') || (ps === 'failed');
+}
+
+/* =========================
+   API
+   ========================= */
+async function apiCall(path, method='GET', body=null){
+  const headers = {
+    'Authorization': 'Bearer ' + adminKey,
+    ...(body ? { 'Content-Type': 'application/json' } : {})
+  };
+  const res = await fetch(BASE_API + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+  const json = await res.json().catch(()=>({}));
+  if(!res.ok || json?.success === false){
+    const msg = json?.error || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return json;
+}
+
+/* =========================
+   Login / Logout
+   ========================= */
+function showLogin(){
+  S('loginPanel').style.display = 'block';
+  S('listPanel').style.display = 'none';
+  S('editorPanel').style.display = 'none';
+}
+function showApp(){
+  S('loginPanel').style.display = 'none';
+  S('listPanel').style.display = '';
+  S('editorPanel').style.display = '';
+}
+function logout(){
+  sessionStorage.removeItem(KEY_STORAGE);
+  adminKey = '';
+  orders = [];
+  selectedOrder = null;
+  stopAuto();
+  showLogin();
+}
+S('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  S('loginError').style.display = 'none';
+  adminKey = S('adminKey').value.trim();
+  if(!adminKey) return;
+
+  try{
+    // ping by fetching once
+    await apiCall('/get-orders', 'GET');
+    sessionStorage.setItem(KEY_STORAGE, adminKey);
+    showApp();
+    await manualRefresh();
+    startAuto();
+  }catch(err){
+    S('loginError').style.display = 'block';
+    showToast(t('toast_login_failed'));
+  }
+});
+
+/* =========================
+   Tabs
+   ========================= */
+const TABS = [
+  { id:'in_progress', key:'tabInProgress' },
+  { id:'completed', key:'tabCompleted' },
+  { id:'closed', key:'tabClosed' },
+  { id:'all', key:'tabAll' },
+];
+
+function renderTabs(){
+  const el = S('tabs');
+  el.innerHTML = TABS.map(x => (
+    `<div class="tab ${x.id===tab?'active':''}" onclick="setTab('${x.id}')">${escapeHtml(t(x.key))}</div>`
+  )).join('');
+}
+function setTab(id){
+  tab = id;
+  renderTabs();
+  renderList();
+}
+
+/* =========================
+   Filters / events
+   ========================= */
+function wireFilters(){
+  const rerender = () => renderList();
+
+  S('q').addEventListener('input', debounce(rerender, 120));
+  S('pickupFrom').addEventListener('change', rerender);
+  S('pickupTo').addEventListener('change', rerender);
+  S('payFilter').addEventListener('change', rerender);
+  S('refundFilter').addEventListener('change', rerender);
+  S('fulFilter').addEventListener('change', rerender);
+  S('createdFrom').addEventListener('change', rerender);
+  S('createdTo').addEventListener('change', rerender);
+
+  // refund mode
+  document.querySelectorAll('input[name="refundMode"]').forEach(r => {
+    r.addEventListener('change', updateRefundUI);
+  });
+
+  // status change -> enable save
+  S('dStatus').addEventListener('change', () => {
+    if(!selectedOrder) return;
+    S('btnSaveStatus').disabled = (String(S('dStatus').value) === String(selectedOrder.fulfillment_status || ''));
+  });
+}
+
+function toggleMore(){
+  const box = S('moreBox');
+  box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
+  // refresh popover positions for cselect
+  setTimeout(updatePopoverPosition, 0);
+}
+
+function debounce(fn, ms){
+  let t = null;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+/* =========================
+   Auto refresh (smart)
+   ========================= */
+function computeHash(list){
+  // stable small hash: ids + updated_at + status
+  return list.map(o => `${o.id}:${o.updated_at || ''}:${o.fulfillment_status || ''}:${o.status || ''}:${o.refund_amount_cents||0}`).join('|');
+}
+function stopAuto(){
+  if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+}
+function startAuto(){
+  stopAuto();
+  if(!autoOn) return;
+  autoTimer = setTimeout(async () => {
+    await pollOrders(false);
+    startAuto();
+  }, nextMs);
+}
+function toggleAuto(){
+  autoOn = !autoOn;
+  S('btnAuto').textContent = autoOn ? t('pause') : t('resume');
+  S('pillAuto').textContent = autoOn ? 'Auto: ON' : 'Auto: OFF';
+  if(autoOn) startAuto();
+  else stopAuto();
+}
+async function manualRefresh(){
+  await pollOrders(true);
+}
+
+async function pollOrders(force){
+  if(inFlight) return;
+  inFlight = true;
+
+  try{
+    const json = await apiCall('/get-orders', 'GET');
+    const data = Array.isArray(json?.data) ? json.data : [];
+    // backend returns payment_status alias too; unify
+    data.forEach(o => { if(!o.payment_status) o.payment_status = o.status; });
+
+    const h = computeHash(data);
+    const changed = (h !== lastHash);
+    lastHash = h;
+
+    orders = data;
+
+    // Smart interval logic:
+    // - If changed -> be responsive
+    // - If no change -> exponential backoff up to 60s
+    // - If there are in-progress orders -> cap at 10s
+    const hasActive = orders.some(isInProgress);
+
+    if(force || changed){
+      noChange = 0;
+      nextMs = hasActive ? 5000 : 8000;
+      showUpdatedPill(true);
+      renderList();
+      if(selectedOrder){
+        // refresh selected order from new list
+        const fresh = orders.find(x => String(x.id) === String(selectedOrder.id));
+        if(fresh){ selectedOrder = fresh; renderDetail(); }
+      }
+    } else {
+      noChange++;
+      const base = hasActive ? 10000 : 12000;
+      nextMs = Math.min(60000, Math.round(base * Math.pow(1.6, Math.min(noChange, 6))));
+      showUpdatedPill(true);
+    }
+
+  }catch(e){
+    showUpdatedPill(false);
+    showToast(t('toast_fetch_failed'));
+    // on failure, slow down a bit
+    nextMs = Math.min(60000, Math.max(nextMs, 12000));
+  }finally{
+    inFlight = false;
+  }
+}
+
+function showUpdatedPill(ok){
+  const el = S('pillUpdated');
+  const time = new Date();
+  const hh = String(time.getHours()).padStart(2,'0');
+  const mm = String(time.getMinutes()).padStart(2,'0');
+  const ss = String(time.getSeconds()).padStart(2,'0');
+  el.textContent = `${hh}:${mm}:${ss} · ${Math.round(nextMs/1000)}s`;
+  el.classList.toggle('warn', !ok);
+  el.classList.toggle('ok', ok);
+  el.classList.add('dot');
+  el.classList.toggle('warn', !ok);
+  el.classList.toggle('ok', ok);
+  // dot color by ok:
+  el.classList.toggle('warn', !ok);
+  el.classList.toggle('ok', ok);
+}
+
+/* =========================
+   Render list
+   ========================= */
+function applyAllFilters(list){
+  const q = S('q').value.trim();
+  const pay = String(S('payFilter').value || '').toLowerCase();
+  const ref = String(S('refundFilter').value || '').toLowerCase();
+  const ful = String(S('fulFilter').value || '').toLowerCase();
+
+  const pickupFrom = S('pickupFrom');
+  const pickupTo = S('pickupTo');
+  const createdFrom = S('createdFrom');
+  const createdTo = S('createdTo');
+
+  return list.filter(o => {
+    // tab filter
+    if(tab === 'in_progress' && !isInProgress(o)) return false;
+    if(tab === 'completed' && !isCompleted(o)) return false;
+    if(tab === 'closed' && !isClosed(o)) return false;
+
+    // search
+    if(q){
+      const qq = q.toLowerCase();
+      const bag = [
+        o.order_no, o.id, o.customer_name, o.phone, o.email,
+        o.fulfillment_status, o.status, o.payment_status, o.delivery_date,
+        o.stripe_intent_id, o.stripe_charge_id
+      ].filter(Boolean).join(' | ').toLowerCase();
+
+      let hit = bag.includes(qq);
+      if(!hit){
+        const items = safeJson(o.items_json, []);
+        for(const it of items){
+          const title = safeJson(it.title_json, {});
+          const name = safeJson(it.name_json, {});
+          const s = `${title.en||''} ${title.cn||''} ${title.pt||''} ${name.en||''} ${name.cn||''} ${name.pt||''}`.toLowerCase();
+          if(s.includes(qq)){ hit = true; break; }
+        }
+      }
+      if(!hit) return false;
+    }
+
+    // pickup date range (default work axis)
+    if(pickupFrom.value || pickupTo.value){
+      if(!inDateRange(o.delivery_date, pickupFrom, pickupTo)) return false;
+    }
+
+    // payment filter
+    const ps = String(o.payment_status || o.status || '').toLowerCase();
+    if(pay && ps !== pay) return false;
+
+    // refund filter
+    const rs = refundStatus(o);
+    if(ref && rs !== ref) return false;
+
+    // order status filter (more)
+    const fs = String(o.fulfillment_status || '').toLowerCase();
+    if(ful && fs !== ful) return false;
+
+    // created date range (more)
+    if(createdFrom.value || createdTo.value){
+      if(!inDateRange(o.created_at, createdFrom, createdTo)) return false;
+    }
+
+    return true;
+  });
+}
+
+function sortForTab(list){
+  const arr = list.slice();
+
+  if(tab === 'in_progress'){
+    // soonest pickup first (enterprise)
+    arr.sort((a,b) => {
+      const da = parseDT(a.delivery_date);
+      const db = parseDT(b.delivery_date);
+      const ta = da ? da.getTime() : 9e15;
+      const tb = db ? db.getTime() : 9e15;
+      if(ta !== tb) return ta - tb;
+      return Number(b.id||0) - Number(a.id||0);
+    });
+  } else {
+    // history views: newest first by created_at
+    arr.sort((a,b) => {
+      const da = parseDT(a.created_at);
+      const db = parseDT(b.created_at);
+      const ta = da ? da.getTime() : 0;
+      const tb = db ? db.getTime() : 0;
+      if(ta !== tb) return tb - ta;
+      return Number(b.id||0) - Number(a.id||0);
+    });
+  }
+  return arr;
+}
+
+function renderList(){
+  const base = orders.slice();
+  const filtered = applyAllFilters(base);
+  const view = sortForTab(filtered);
+
+  S('pillCount').textContent = `${view.length} / ${orders.length}`;
+
+  const listEl = S('orderListView');
+  const emptyEl = S('emptyList');
+
+  if(view.length === 0){
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  const q = S('q').value.trim();
+
+  listEl.innerHTML = view.map(o => {
+    const orderNo = o.order_no || ('#' + o.id);
+    const name = o.customer_name || '—';
+    const phone = o.phone || '';
+    const ps = String(o.payment_status || o.status || '').toLowerCase();
+    const fs = String(o.fulfillment_status || '').toLowerCase();
+    const rs = refundStatus(o);
+
+    const badges = [];
+
+    if(ps === 'paid') badges.push(`<span class="badge paid">${escapeHtml(t('paid'))}</span>`);
+    else if(ps) badges.push(`<span class="badge">${escapeHtml(t(ps) || ps)}</span>`);
+
+    if(rs === 'partial') badges.push(`<span class="badge refund">${escapeHtml(t('refundPartial'))}</span>`);
+    if(rs === 'full') badges.push(`<span class="badge refund">${escapeHtml(t('refundFull'))}</span>`);
+
+    if(fs === 'uncollected') badges.push(`<span class="badge warn">${escapeHtml(t('fs_uncollected'))}</span>`);
+    if(o.pickup_rescheduled_at) badges.push(`<span class="badge neutral">${escapeHtml(t('flag_rescheduled'))}</span>`);
+
+    // keep badges small: max 3
+    const badgeHtml = badges.slice(0,3).join('');
+
+    const pickup = fmtDT(o.delivery_date);
+
+    return `
+      <div class="list-item ${selectedOrder && String(selectedOrder.id)===String(o.id) ? 'active' : ''}"
+           onclick="selectOrderById('${escapeHtml(String(o.id))}')">
+        <div class="li-main">
+          <div class="li-top">
+            <div class="li-order">${highlight(orderNo, q)}</div>
+            <div class="li-sub">${highlight(name, q)}${phone ? ' · ' + highlight(phone, q) : ''}</div>
+          </div>
+          <div class="li-mid">${badgeHtml}</div>
+        </div>
+        <div class="li-right">
+          <div class="li-pickup">${escapeHtml(pickup)}</div>
+          <div class="li-amount">${escapeHtml(moneyEUR(o.amount_cents))}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectOrderById(id){
+  const o = orders.find(x => String(x.id) === String(id));
+  if(!o) return;
+  selectedOrder = o;
+  noteExpanded = false;
+  renderList();
+  renderDetail();
+  openEditor();
+}
+
+/* =========================
+   Detail rendering
+   ========================= */
+function renderDetail(){
+  if(!selectedOrder){
+    S('detailEmpty').style.display = 'block';
+    S('detailBody').style.display = 'none';
+    S('detailTitle').textContent = t('details');
+    S('detailSub').textContent = t('selectHint');
+    return;
+  }
+
+  S('detailEmpty').style.display = 'none';
+  S('detailBody').style.display = 'block';
+
+  const o = selectedOrder;
+  const orderNo = o.order_no || ('#' + o.id);
+
+  S('detailTitle').textContent = orderNo;
+  S('detailSub').textContent = `${fmtDT(o.created_at)} · ID ${o.id}`;
+
+  // overview
+  S('dOrderNo').textContent = orderNo;
+
+  const ps = String(o.payment_status || o.status || '').toLowerCase();
+  S('dPay').textContent = t(ps) || ps || '—';
+
+  const fs = String(o.fulfillment_status || '').toLowerCase();
+  S('dFul').textContent = t('fs_'+fs) || fs || '—';
+
+  const total = Number(o.amount_cents || 0);
+  const refunded = Number(o.refund_amount_cents || 0);
+  const remaining = Math.max(0, total - refunded);
+
+  S('dTotal').textContent = moneyEUR(total);
+  S('dRefunded').textContent = moneyEUR(refunded);
+  S('dRemaining').textContent = moneyEUR(remaining);
+S('dFee').textContent = moneyEUR(o.fee_cents || 0);
+S('dNet').textContent = moneyEUR(o.net_cents || 0);
+
+  // customer
+  S('dName').textContent = o.customer_name || '—';
+  S('dPhone').textContent = o.phone || '—';
+  S('dEmail').textContent = o.email || '—';
+  S('dPickup').textContent = fmtDT(o.delivery_date);
+  S('dRescheduled').textContent = o.pickup_rescheduled_at ? fmtDT(o.pickup_rescheduled_at) : '—';
+  S('dUpdated').textContent = fmtDT(o.updated_at);
+
+  // flags line
+  const flags = [];
+  if(fs === 'uncollected') flags.push(t('flag_uncollected'));
+  const rs = refundStatus(o);
+  if(rs === 'partial') flags.push(t('flag_partial_refund'));
+  if(rs === 'full') flags.push(t('flag_full_refund'));
+  if(o.pickup_rescheduled_at) flags.push(t('flag_rescheduled'));
+
+  // items
+  const items = safeJson(o.items_json, []);
+  S('dItems').innerHTML = (items || []).map(it => {
+    const title = safeJson(it.title_json, {});
+    const name = safeJson(it.name_json, {});
+    const tTitle = title[currentLang] || title.en || title.cn || title.pt || 'Item';
+    const tName = name[currentLang] || name.en || name.cn || name.pt || '';
+    const qty = Number(it.qty || 1);
+    const unit = Number(it.price_cents || 0);
+    const line = unit * qty;
+    const img = it.img_url || '';
+    return `
+      <div class="it">
+        <img src="${escapeHtml(img)}" onerror="this.style.display='none'">
+        <div>
+          <div class="t">${escapeHtml(tTitle)}</div>
+          <div class="s">${escapeHtml(tName)} · x${qty}</div>
+        </div>
+        <div class="r">${escapeHtml(moneyEUR(line))}</div>
+      </div>
+    `;
+  }).join('');
+
+  // note
+  const note = String(o.note || '').trim();
+  if(note){
+    S('noteSection').style.display = 'block';
+    renderNote(note);
+  }else{
+    S('noteSection').style.display = 'none';
+  }
+
+  // stripe ids
+  S('dIntent').textContent = o.stripe_intent_id || '—';
+  S('dCharge').textContent = o.stripe_charge_id || '—';
+  S('dRefundId').textContent = o.refund_id || '—';
+
+  // status select
+  S('dStatus').value = fs || 'pending';
+  S('btnSaveStatus').disabled = true;
+
+  // refund UI
+  updateRefundUI();
+
+  refreshCustomSelectLabels();
+}
+
+function renderNote(note){
+  const MAX = 220;
+  if(noteExpanded || note.length <= MAX){
+    S('dNote').textContent = note;
+    S('noteMoreBtn').style.display = note.length > MAX ? 'inline-flex' : 'none';
+  } else {
+    S('dNote').textContent = note.slice(0, MAX) + '…';
+    S('noteMoreBtn').style.display = 'inline-flex';
+  }
+  S('noteMoreBtn').textContent = noteExpanded ? t('showLess') : t('showMore');
+}
+function toggleNote(){
+  noteExpanded = !noteExpanded;
+  if(!selectedOrder) return;
+  renderNote(String(selectedOrder.note || '').trim());
+}
+
+function updateRefundUI(){
+  if(!selectedOrder) return;
+  const o = selectedOrder;
+
+  const total = Number(o.amount_cents || 0);
+  const refunded = Number(o.refund_amount_cents || 0);
+  const remaining = Math.max(0, total - refunded);
+
+  const mode = (document.querySelector('input[name="refundMode"]:checked') || {}).value || 'full';
+  const amountInput = S('refundAmount');
+
+  // only enable amount when partial
+  amountInput.disabled = (mode !== 'partial');
+
+  // button enabled only if remaining > 0 and paid/refunded
+  const ps = String(o.payment_status || o.status || '').toLowerCase();
+  const canRefund = remaining > 0 && (ps === 'paid' || ps === 'refunded');
+  S('btnRefund').disabled = !canRefund;
+
+  S('refundMeta').textContent = `Remaining ${moneyEUR(remaining)}`;
+}
+
+/* =========================
+   Actions
+   ========================= */
+async function saveStatus(){
+  if(!selectedOrder) return;
+
+  const newStatus = String(S('dStatus').value || '');
+  const curStatus = String(selectedOrder.fulfillment_status || '');
+
+  if(newStatus === curStatus) return;
+
+  // enterprise confirm for irreversible states
+  if(curStatus === 'completed' && newStatus !== 'completed'){
+    showToast('Completed is locked');
+    S('dStatus').value = 'completed';
+    refreshCustomSelectLabels();
+    return;
+  }
+
+  if(newStatus === 'completed'){
+    const ok = await openConfirm(
+      `${t('confirmTitle')}: ${t('fs_completed')}?`,
+      { hint: t('statusHint'), okText: t('confirm') }
+    );
+    if(!ok){ S('dStatus').value = curStatus; refreshCustomSelectLabels(); return; }
+  }
+  if(newStatus === 'cancelled'){
+    const ok = await openConfirm(
+      `${t('confirmTitle')}: ${t('fs_cancelled')}?`,
+      { hint: "This closes the order.", okText: t('confirm') }
+    );
+    if(!ok){ S('dStatus').value = curStatus; refreshCustomSelectLabels(); return; }
+  }
+
+  try{
+    await apiCall('/admin/order-fulfillment', 'POST', {
+      order_id: selectedOrder.id,
+      fulfillment_status: newStatus
+    });
+    showToast(t('toast_updated'));
+    await pollOrders(true);
+  }catch(e){
+    showToast(String(e.message || e));
+  }finally{
+    S('btnSaveStatus').disabled = true;
+  }
+}
+
+async function submitRefund(){
+  if(!selectedOrder) return;
+
+  const o = selectedOrder;
+  const total = Number(o.amount_cents || 0);
+  const refunded = Number(o.refund_amount_cents || 0);
+  const remaining = Math.max(0, total - refunded);
+
+  const ps = String(o.payment_status || o.status || '').toLowerCase();
+  if(!(ps === 'paid' || ps === 'refunded')){
+    showToast('Only paid orders can be refunded');
+    return;
+  }
+  if(remaining <= 0){
+    showToast('Already fully refunded');
+    return;
+  }
+
+  const mode = (document.querySelector('input[name="refundMode"]:checked') || {}).value || 'full';
+  let amountCents = null;
+
+  if(mode === 'partial'){
+    const raw = String(S('refundAmount').value || '').trim();
+    if(!raw){
+      showToast('Enter amount');
+      return;
+    }
+    const val = Number(raw.replace(',', '.'));
+    if(!isFinite(val) || val <= 0){
+      showToast('Invalid amount');
+      return;
+    }
+    amountCents = Math.round(val * 100);
+    if(amountCents > remaining){
+      showToast('Exceeds remaining');
+      return;
+    }
+  } else {
+    // full refund -> null means refund remaining in backend
+    amountCents = null;
+  }
+
+  const orderNo = o.order_no || ('#' + o.id);
+  const preview = (amountCents == null) ? remaining : amountCents;
+
+  const ok = await openConfirm(
+    `${t('confirmTitle')}: Refund ${moneyEUR(preview)} (${orderNo}) ?`,
+    { hint: "This cannot be undone.", okText: t('confirm') }
+  );
+  if(!ok) return;
+
+  try{
+    await apiCall('/refund-order', 'POST', {
+      order_id: o.id,
+      amount_cents: amountCents,
+      reason: String(S('refundReason').value || '').trim() || null
+    });
+    showToast(t('toast_refunded'));
+    // clear UI fields
+    S('refundAmount').value = '';
+    S('refundReason').value = '';
+    // refresh
+    const r = await apiCall('/refund-order', 'POST', {
+  order_id: o.id,
+  amount_cents: amountCents,
+  reason: String(S('refundReason').value || '').trim() || null
+});
+
+showToast(t('toast_refunded'));
+
+// ✅ 立刻把最新 fee/net/refund/status 写进当前选中订单并刷新UI
+if (r?.data && selectedOrder) {
+  selectedOrder.refund_amount_cents = r.data.refund_amount_cents;
+  selectedOrder.refund_id = r.data.refund_id;
+  selectedOrder.fee_cents = r.data.fee_cents;
+  selectedOrder.net_cents = r.data.net_cents;
+
+  // payment_status 你前端用它显示“支付状态”
+  selectedOrder.status = r.data.status;
+  selectedOrder.payment_status = r.data.status;
+
+  selectedOrder.updated_at = r.data.updated_at || selectedOrder.updated_at;
+
+  renderDetail();  // ✅ 详情立刻变
+  renderList();    // ✅ 列表也同步
+}
+
+// 清空输入框
+S('refundAmount').value = '';
+S('refundReason').value = '';
+
+// ✅ 再拉一次兜底，防止并发/其它端修改
+await pollOrders(true);
+
+  }catch(e){
+    showToast(String(e.message || e));
+  }
+}
+
+/* =========================
+   Copy
+   ========================= */
+async function copyText(text){
+  const v = String(text || '').trim();
+  if(!v || v === '—') return;
+  try{
+    await navigator.clipboard.writeText(v);
+    showToast(t('toast_copied'));
+  }catch{
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = v;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast(t('toast_copied'));
+  }
+}
+function copyTextFrom(id){
+  copyText(S(id).textContent);
+}
+function copyOrderNo(){
+  if(!selectedOrder) return;
+  const orderNo = selectedOrder.order_no || ('#' + selectedOrder.id);
+  copyText(orderNo);
+}
+function copyStripeIds(){
+  if(!selectedOrder) return;
+  const ids = [
+    selectedOrder.stripe_intent_id ? `intent: ${selectedOrder.stripe_intent_id}` : null,
+    selectedOrder.stripe_charge_id ? `charge: ${selectedOrder.stripe_charge_id}` : null,
+    selectedOrder.stripe_balance_tx_id ? `balance: ${selectedOrder.stripe_balance_tx_id}` : null
+  ].filter(Boolean).join('\n');
+  copyText(ids);
+}
+
+/* =========================
+   Export CSV (current filtered view)
+   ========================= */
+function exportCSV(){
+  const filtered = sortForTab(applyAllFilters(orders));
+  const cols = [
+    'order_no','id','created_at','delivery_date','fulfillment_status','payment_status',
+    'amount_cents','refund_amount_cents','customer_name','phone','email',
+    'stripe_intent_id','stripe_charge_id','stripe_balance_tx_id','refund_id','pickup_rescheduled_at'
+  ];
+  const lines = [];
+  lines.push(cols.join(','));
+  for(const o of filtered){
+    const row = cols.map(k => {
+      const v = (o[k] == null) ? '' : String(o[k]);
+      return '"' + v.replaceAll('"','""') + '"';
+    }).join(',');
+    lines.push(row);
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `orders_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================
+   Mobile editor open/close (double-page)
+   ========================= */
+let __pushedEditor = false;
+function openEditor(){
+  if(window.innerWidth > 900) return;
+  const ep = S('editorPanel');
+  ep.classList.add('open');
+
+  if(!__pushedEditor){
+    history.pushState({ editor: true }, '');
+    __pushedEditor = true;
+  }
+}
+function closeEditor(){
+  if(window.innerWidth > 900) return;
+  const ep = S('editorPanel');
+  ep.classList.remove('open');
+  __pushedEditor = false;
+}
+window.addEventListener('popstate', () => {
+  if(window.innerWidth <= 900){
+    // close editor if open
+    S('editorPanel').classList.remove('open');
+    __pushedEditor = false;
+  }
+});
+
+/* =========================
+   Custom Select Enhancer (copied from admin.html)
+   ========================= */
+let __cselectOpenState = null;
+
+function initCustomSelects() {
+  document.querySelectorAll('.select-wrap select.select-native').forEach(sel => {
+    if (sel.dataset.cselectEnhanced === "1") return;
+    enhanceSelect(sel);
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (!__cselectOpenState) return;
+    if (!__cselectOpenState.btn.contains(e.target) && !__cselectOpenState.pop.contains(e.target)) {
+      closeCSelect(__cselectOpenState);
+    }
+  });
+
+  window.addEventListener('resize', updatePopoverPosition, { passive: true });
+  window.addEventListener('scroll', updatePopoverPosition, { passive: true, capture: true });
+}
+
+function updatePopoverPosition() {
+  if (!__cselectOpenState) return;
+  const { btn, pop } = __cselectOpenState;
+  const rect = btn.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+
+  let top = rect.bottom + 6;
+  let transformOrigin = 'top center';
+  if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+    top = rect.top - pop.offsetHeight - 6;
+    transformOrigin = 'bottom center';
+  }
+
+  pop.style.top = `${top}px`;
+  pop.style.left = `${rect.left}px`;
+  pop.style.width = `${rect.width}px`;
+  pop.style.transformOrigin = transformOrigin;
+}
+
+function refreshCustomSelectLabels() {
+  document.querySelectorAll('.select-wrap select.select-native[data-cselect-id]').forEach(sel => {
+    const id = sel.dataset.cselectId;
+    const state = window.__cselectStates?.get(id);
+    if (!state) return;
+    buildCSelectOptions(state, { keepFilter: true });
+    syncCSelectFromNative(state);
+  });
+}
+
+function enhanceSelect(selectEl) {
+  selectEl.dataset.cselectEnhanced = "1";
+  selectEl.classList.add('cselect-native');
+
+  const uid = selectEl.id || ('cselect_' + Math.random().toString(16).slice(2));
+  selectEl.dataset.cselectId = uid;
+
+  const wrap = selectEl.closest('.select-wrap');
+  const root = document.createElement('div');
+  root.className = 'cselect';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'cselect-btn';
+
+  const label = document.createElement('div');
+  label.className = 'cselect-label';
+
+  const arrow = document.createElement('div');
+  arrow.className = 'cselect-arrow';
+
+  btn.appendChild(label);
+  btn.appendChild(arrow);
+  root.appendChild(btn);
+  wrap.appendChild(root);
+
+  const pop = document.createElement('div');
+  pop.className = 'cselect-pop';
+  pop.id = `pop_${uid}`;
+
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'cselect-search';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.autocomplete = 'off';
+  searchInput.spellcheck = false;
+  searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
+  searchWrap.appendChild(searchInput);
+  pop.appendChild(searchWrap);
+
+  const list = document.createElement('div');
+  list.className = 'cselect-list';
+  pop.appendChild(list);
+
+  document.body.appendChild(pop);
+
+  if (!window.__cselectStates) window.__cselectStates = new Map();
+  const state = { id: uid, selectEl, btn, label, pop, list, searchInput, optionNodes: [], activeIndex: -1 };
+  window.__cselectStates.set(uid, state);
+
+  buildCSelectOptions(state);
+  syncCSelectFromNative(state);
+
+  selectEl.addEventListener('change', () => syncCSelectFromNative(state));
+
+  btn.addEventListener('click', () => {
+    if (state.pop.classList.contains('open')) closeCSelect(state);
+    else openCSelect(state);
+  });
+
+  searchInput.addEventListener('input', () => buildCSelectOptions(state, { keepFilter: true }));
+
+  pop.addEventListener('keydown', (e) => {
+    if (!state.pop.classList.contains('open')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(state, +1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(state, -1); }
+    else if (e.key === 'Enter') { e.preventDefault(); selectActive(state); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeCSelect(state); }
+  });
+}
+
+function buildCSelectOptions(state, opts = {}) {
+  const { selectEl, list, searchInput } = state;
+  const q = (searchInput.value || '').trim().toLowerCase();
+
+  list.innerHTML = '';
+  state.optionNodes = [];
+
+  const options = Array.from(selectEl.options);
+  const visible = options.filter(o => {
+    const text = (o.textContent || '').toLowerCase();
+    return !q || text.includes(q);
+  });
+
+  if (visible.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'cselect-empty';
+    empty.innerText = (currentLang === 'cn') ? '没有结果' : 'No results';
+    list.appendChild(empty);
+    return;
+  }
+
+  visible.forEach((opt, idx) => {
+    const row = document.createElement('div');
+    row.className = 'cselect-opt';
+    row.setAttribute('data-value', opt.value);
+    row.innerHTML = `<span>${escapeHtml(opt.textContent || "")}</span><div class="tick"></div>`;
+
+    row.onclick = () => {
+      setNativeValue(state, opt.value);
+      closeCSelect(state);
+    };
+
+    row.onmouseenter = () => {
+      state.activeIndex = idx;
+      updateHighlight(state);
+    };
+
+    list.appendChild(row);
+    state.optionNodes.push({ el: row, val: opt.value });
+  });
+
+  syncCSelectFromNative(state);
+}
+
+function syncCSelectFromNative(state) {
+  const { selectEl, label, optionNodes } = state;
+  const val = selectEl.value;
+  const opt = selectEl.selectedOptions[0];
+  label.innerText = opt ? (opt.textContent || '') : '';
+  optionNodes.forEach(node => {
+    if (node.val === val) node.el.setAttribute('aria-selected', 'true');
+    else node.el.removeAttribute('aria-selected');
+  });
+  state.searchInput.placeholder = (currentLang === 'cn') ? '搜索...' : 'Search...';
+}
+
+function setNativeValue(state, val) {
+  if (state.selectEl.value === val) return;
+  state.selectEl.value = val;
+  state.selectEl.dispatchEvent(new Event('change'));
+  syncCSelectFromNative(state);
+}
+
+function openCSelect(state) {
+  if (__cselectOpenState && __cselectOpenState !== state) closeCSelect(__cselectOpenState);
+  __cselectOpenState = state;
+
+  state.btn.classList.add('cselect-open');
+  state.pop.style.display = 'flex';
+  updatePopoverPosition();
+
+  requestAnimationFrame(() => {
+    state.pop.classList.add('open');
+  });
+}
+
+function closeCSelect(state) {
+  if (state.searchInput) state.searchInput.blur();
+
+  state.pop.classList.remove('open');
+  state.btn.classList.remove('cselect-open');
+
+  setTimeout(() => {
+    if (!state.pop.classList.contains('open')) state.pop.style.display = 'none';
+  }, 150);
+
+  if (__cselectOpenState === state) __cselectOpenState = null;
+}
+
+function updateHighlight(state) {
+  state.optionNodes.forEach((n, i) => {
+    if (i === state.activeIndex) n.el.classList.add('highlighted');
+    else n.el.classList.remove('highlighted');
+  });
+}
+function moveActive(state, delta) {
+  if (!state.optionNodes.length) return;
+  let i = state.activeIndex;
+  i = (i < 0) ? 0 : i + delta;
+  if (i < 0) i = 0;
+  if (i >= state.optionNodes.length) i = state.optionNodes.length - 1;
+  state.activeIndex = i;
+  updateHighlight(state);
+  state.optionNodes[i].el.scrollIntoView({ block: 'nearest' });
+}
+function selectActive(state) {
+  const i = state.activeIndex;
+  if (i < 0 || i >= state.optionNodes.length) return;
+  const v = state.optionNodes[i].val;
+  setNativeValue(state, v);
+  closeCSelect(state);
+}
+
+/* =========================
+   Boot
+   ========================= */
+function setLang(lang){
+  currentLang = lang;
+  localStorage.setItem(LANG_STORAGE, lang);
+  applyI18n();
+  renderTabs();
+  renderList();
+  renderDetail();
+}
+function init(){
+  setupMenu();
+  initCustomSelects();
+  wireFilters();
+  renderTabs();
+  setLang(currentLang);
+
+  if(adminKey){
+    showApp();
+    manualRefresh().then(() => startAuto());
+  }else{
+    showLogin();
+  }
+}
+init();
+</script>
+</body>
+</html>

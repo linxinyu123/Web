@@ -1033,8 +1033,8 @@ body {
         const today = new Date().toISOString().split('T')[0];
 
         if (datePart >= today) {
-          document.getElementById('date').value = `${datePart}  ${timePart}`.trim();
-          document.getElementById('date-display').value = `${datePart}  ${timePart}`.trim();
+          document.getElementById('date').value = `${datePart} ${timePart}`.trim();
+          document.getElementById('date-display').value = `${datePart} ${timePart}`.trim();
 
           pickerData.date = datePart || null;
           pickerData.time = timePart || null;
