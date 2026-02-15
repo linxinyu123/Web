@@ -353,7 +353,7 @@
         "LABORATORY"
       ],
       "enrolments": {
-        "maximum": 24,
+        "maximum": 26,
         "current": 24
       },
       "classes": [
