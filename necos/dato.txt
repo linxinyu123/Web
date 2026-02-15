@@ -1,0 +1,2426 @@
+{
+  "lessonPeriods": [
+    {
+      "start": "2026-02-16T00:00:00.000Z",
+      "end": "2026-04-03T23:59:59.999+01:00"
+    }
+  ],
+  "courseLoads": [
+    {
+      "type": "LABORATORIAL",
+      "weeklyHours": 1.5,
+      "totalHours": 21
+    },
+    {
+      "type": "TEORICA",
+      "weeklyHours": 2.5,
+      "totalHours": 35
+    }
+  ],
+  "shifts": [
+    {
+      "id": "565698732587316",
+      "name": "IPM3610L03",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEIC-A0205",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-18T10:00:00.000Z",
+          "end": "2026-02-18T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-02-25T10:00:00.000Z",
+          "end": "2026-02-25T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-04T10:00:00.000Z",
+          "end": "2026-03-04T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-11T10:00:00.000Z",
+          "end": "2026-03-11T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-18T10:00:00.000Z",
+          "end": "2026-03-18T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-25T10:00:00.000Z",
+          "end": "2026-03-25T13:00:00.000Z",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-04-01T10:00:00.000+01:00",
+          "end": "2026-04-01T13:00:00.000+01:00",
+          "room": {
+            "id": "2448131362743",
+            "name": "Q4.7",
+            "fullName": "Q4.7 - 1.7  -  Sala aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587313",
+      "name": "IPM3610L04",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEIC-A0206",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0207",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0209",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-18T15:00:00.000Z",
+          "end": "2026-02-18T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-25T15:00:00.000Z",
+          "end": "2026-02-25T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-04T15:00:00.000Z",
+          "end": "2026-03-04T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-11T15:00:00.000Z",
+          "end": "2026-03-11T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-18T15:00:00.000Z",
+          "end": "2026-03-18T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-25T15:00:00.000Z",
+          "end": "2026-03-25T18:00:00.000Z",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-04-01T15:00:00.000+01:00",
+          "end": "2026-04-01T18:00:00.000+01:00",
+          "room": {
+            "id": "2448131363692",
+            "name": "LAB 1",
+            "fullName": "LAB 1 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587314",
+      "name": "IPM3610L05",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEIC-A0204",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0212",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-18T15:00:00.000Z",
+          "end": "2026-02-18T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-25T15:00:00.000Z",
+          "end": "2026-02-25T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-04T15:00:00.000Z",
+          "end": "2026-03-04T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-11T15:00:00.000Z",
+          "end": "2026-03-11T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-18T15:00:00.000Z",
+          "end": "2026-03-18T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-25T15:00:00.000Z",
+          "end": "2026-03-25T18:00:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-04-01T15:00:00.000+01:00",
+          "end": "2026-04-01T18:00:00.000+01:00",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587319",
+      "name": "IPM3610L06",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEIC-A0210",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-19T12:00:00.000Z",
+          "end": "2026-02-19T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-02-26T12:00:00.000Z",
+          "end": "2026-02-26T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-05T12:00:00.000Z",
+          "end": "2026-03-05T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-12T12:00:00.000Z",
+          "end": "2026-03-12T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-19T12:00:00.000Z",
+          "end": "2026-03-19T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-03-26T12:00:00.000Z",
+          "end": "2026-03-26T15:00:00.000Z",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        },
+        {
+          "start": "2026-04-02T12:00:00.000+01:00",
+          "end": "2026-04-02T15:00:00.000+01:00",
+          "room": {
+            "id": "2448131361689",
+            "name": "V1.34",
+            "fullName": "V1.34 - Sala de aula",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Sala de aula"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587312",
+      "name": "IPM3610L07",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEBiom210303",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210304",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210305",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0208",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-19T15:00:00.000Z",
+          "end": "2026-02-19T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-26T15:00:00.000Z",
+          "end": "2026-02-26T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-05T15:00:00.000Z",
+          "end": "2026-03-05T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-12T15:00:00.000Z",
+          "end": "2026-03-12T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-19T15:00:00.000Z",
+          "end": "2026-03-19T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-26T15:00:00.000Z",
+          "end": "2026-03-26T18:00:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-04-02T15:00:00.000+01:00",
+          "end": "2026-04-02T18:00:00.000+01:00",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587318",
+      "name": "IPM3610L08",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEBiom210305",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0202",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-20T12:30:00.000Z",
+          "end": "2026-02-20T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-27T12:30:00.000Z",
+          "end": "2026-02-27T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-06T12:30:00.000Z",
+          "end": "2026-03-06T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-13T12:30:00.000Z",
+          "end": "2026-03-13T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-20T12:30:00.000Z",
+          "end": "2026-03-20T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-27T12:30:00.000Z",
+          "end": "2026-03-27T15:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587322",
+      "name": "IPM3610L09",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEBiom210301",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210303",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0210",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-20T12:30:00.000Z",
+          "end": "2026-02-20T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-27T12:30:00.000Z",
+          "end": "2026-02-27T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-06T12:30:00.000Z",
+          "end": "2026-03-06T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-13T12:30:00.000Z",
+          "end": "2026-03-13T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-20T12:30:00.000Z",
+          "end": "2026-03-20T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-27T12:30:00.000Z",
+          "end": "2026-03-27T15:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587315",
+      "name": "IPM3610L10",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEBiom210302",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210304",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0211",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-20T15:30:00.000Z",
+          "end": "2026-02-20T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-27T15:30:00.000Z",
+          "end": "2026-02-27T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-06T15:30:00.000Z",
+          "end": "2026-03-06T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-13T15:30:00.000Z",
+          "end": "2026-03-13T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-20T15:30:00.000Z",
+          "end": "2026-03-20T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-27T15:30:00.000Z",
+          "end": "2026-03-27T18:30:00.000Z",
+          "room": {
+            "id": "2448131363683",
+            "name": "LAB 5",
+            "fullName": "LAB 5 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587320",
+      "name": "IPM3610L11",
+      "types": [
+        "LABORATORY"
+      ],
+      "enrolments": {
+        "maximum": 24,
+        "current": 24
+      },
+      "classes": [
+        {
+          "name": "LEIC-A0201",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0203",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0213",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-20T15:30:00.000Z",
+          "end": "2026-02-20T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-27T15:30:00.000Z",
+          "end": "2026-02-27T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-06T15:30:00.000Z",
+          "end": "2026-03-06T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-13T15:30:00.000Z",
+          "end": "2026-03-13T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-20T15:30:00.000Z",
+          "end": "2026-03-20T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-27T15:30:00.000Z",
+          "end": "2026-03-27T18:30:00.000Z",
+          "room": {
+            "id": "2448131363690",
+            "name": "LAB 2",
+            "fullName": "LAB 2 - Laboratório de Informática",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Laboratório de ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587317",
+      "name": "IPM3610T01",
+      "types": [
+        "THEORETICAL"
+      ],
+      "enrolments": {
+        "maximum": 130,
+        "current": 98
+      },
+      "classes": [
+        {
+          "name": "LEBiom210301",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210303",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210305",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0202",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0204",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0206",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0208",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0210",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0212",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-20T16:00:00.000Z",
+          "end": "2026-02-20T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-23T16:30:00.000Z",
+          "end": "2026-02-23T18:30:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-27T16:00:00.000Z",
+          "end": "2026-02-27T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-02T16:30:00.000Z",
+          "end": "2026-03-02T18:30:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-06T16:00:00.000Z",
+          "end": "2026-03-06T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-09T16:30:00.000Z",
+          "end": "2026-03-09T18:30:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-13T16:00:00.000Z",
+          "end": "2026-03-13T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-16T16:30:00.000Z",
+          "end": "2026-03-16T18:30:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-20T16:00:00.000Z",
+          "end": "2026-03-20T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-23T16:30:00.000Z",
+          "end": "2026-03-23T18:30:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-27T16:00:00.000Z",
+          "end": "2026-03-27T19:00:00.000Z",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-30T16:30:00.000+01:00",
+          "end": "2026-03-30T18:30:00.000+01:00",
+          "room": {
+            "id": "2448131362371",
+            "name": "GA1",
+            "fullName": "GA1 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "565698732587321",
+      "name": "IPM3610T02",
+      "types": [
+        "THEORETICAL"
+      ],
+      "enrolments": {
+        "maximum": 130,
+        "current": 130
+      },
+      "classes": [
+        {
+          "name": "LEBiom210302",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEBiom210304",
+          "curricularYear": 3,
+          "degree": {
+            "id": "847186594103306",
+            "name": {
+              "pt-PT": "Engenharia Biomédica",
+              "en-GB": "Biomedical Engineering"
+            },
+            "acronym": "LEBiom21",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0201",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0203",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0205",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0207",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0209",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0211",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        },
+        {
+          "name": "LEIC-A0213",
+          "curricularYear": 2,
+          "degree": {
+            "id": "2761663971474",
+            "name": {
+              "pt-PT": "Engenharia Informática e de Computadores - Alameda",
+              "en-GB": "Computer Science and Engineering - Alameda"
+            },
+            "acronym": "LEIC-A",
+            "url": "https://fenix.tecnico.ulisboa.pt/cursos/leic-a",
+            "campi": [
+              {
+                "id": "2448131360897",
+                "name": "Alameda",
+                "fullName": "Alameda",
+                "type": "CAMPUS",
+                "classification": {
+                  "pt-PT": "Campus",
+                  "en-GB": "Campus"
+                }
+              }
+            ],
+            "degreeType": {
+              "pt-PT": "Licenciatura Bolonha",
+              "en-GB": "Bologna Degree"
+            }
+          }
+        }
+      ],
+      "lessons": [
+        {
+          "start": "2026-02-19T14:00:00.000Z",
+          "end": "2026-02-19T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-24T16:30:00.000Z",
+          "end": "2026-02-24T18:30:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-02-26T14:00:00.000Z",
+          "end": "2026-02-26T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-03T16:30:00.000Z",
+          "end": "2026-03-03T18:30:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-05T14:00:00.000Z",
+          "end": "2026-03-05T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-10T16:30:00.000Z",
+          "end": "2026-03-10T18:30:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-12T14:00:00.000Z",
+          "end": "2026-03-12T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-17T16:30:00.000Z",
+          "end": "2026-03-17T18:30:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-19T14:00:00.000Z",
+          "end": "2026-03-19T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-24T16:30:00.000Z",
+          "end": "2026-03-24T18:30:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-26T14:00:00.000Z",
+          "end": "2026-03-26T17:00:00.000Z",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-03-31T16:30:00.000+01:00",
+          "end": "2026-03-31T18:30:00.000+01:00",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        },
+        {
+          "start": "2026-04-02T14:00:00.000+01:00",
+          "end": "2026-04-02T17:00:00.000+01:00",
+          "room": {
+            "id": "2448131362494",
+            "name": "GA5",
+            "fullName": "GA5 - Anfiteatro",
+            "type": "ROOM_SUBDIVISION",
+            "classification": {
+              "pt-PT": "Anfiteatro para ensino"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
