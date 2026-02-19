@@ -126,34 +126,33 @@
   <div id="page" class="page" role="tabpanel" aria-live="polite"></div>
 
 <script>
-/** 数据区（你改这里就行） */
+/** 数据区（已根据最新 ist-horario.ics 重做） */
 const schedule = {
   mon: [
-    { title: 'Cálculo Diferencial e Integral III', type: 'TeoricoPrática', room: 'AM',   start: '13:30', end: '15:00' },
-    { title: 'Análise e Síntese de Algoritmos',          type: 'Teórica',        room: 'VA4',   start: '15:00', end: '17:00' },
+    { title: 'Probabilidade e Estatística', type: 'Problemas', room: 'V1.15', start: '15:30', end: '16:30' },
+    { title: 'Probabilidade e Estatística', type: 'Teórico-Prática', room: 'QA02.3', start: '13:00', end: '14:30' },
+    { title: 'Interacção Pessoa-Máquina', type: 'Teórica', room: 'GA1', start: '16:30', end: '18:30' },
   ],
+
   tue: [
-    { title: 'Análise e Síntese de Algoritmos',          type: 'Laboratorial',        room: 'V0.07', start: '15:00', end: '16:30' },
-    { title: 'Sistemas Operativos',          type: 'Teórica',        room: 'AM', start: '16:30', end: '17:30' },
-    { title: 'Análise e Síntese de Algoritmos',          type: 'Teórica',   room: 'AM',  start: '17:30', end: '18:30' },
+    { title: 'Teoria da Computação', type: 'Problemas', room: 'F3', start: '14:00', end: '16:00' },
+    { title: 'Teoria da Computação', type: 'Teórica', room: 'GA3', start: '16:00', end: '18:00' },
   ],
+
   wed: [
-    { title: 'Cálculo Diferencial e Integral I',  type: 'TeoricoPrática', room: 'QA02.4', start: '11:30', end: '13:00' },
-    { title: 'Sistemas Operativos',               type: 'Laboratorial',   room: 'LAB 1',  start: '14:30', end: '16:00' },
-    { title: 'Cálculo Diferencial e Integral III',type: 'TeoricoPrática', room: 'QA',     start: '16:00', end: '17:30' },
-    { title: 'Sistemas Operativos',          type: 'Teórica',        room: 'GA2',    start: '17:30', end: '18:30' },
+    { title: 'Probabilidade e Estatística', type: 'Teórico-Prática', room: 'QA02.1', start: '13:00', end: '14:30' },
   ],
+
   thu: [
-    { title: 'Análise e Síntese de Algoritmos',          type: 'Laboratorial',   room: 'V0.07',  start: '15:00', end: '16:30' },
-    { title: 'Sistemas Operativos',          type: 'Teórica',        room: 'AM', start: '16:30', end: '18:30' },
+    { title: 'Teoria da Computação', type: 'Problemas', room: 'E1', start: '13:00', end: '15:00' },
+    { title: 'Teoria da Computação', type: 'Teórica', room: 'GA3', start: '15:00', end: '17:00' },
   ],
+
   fri: [
-    { title: 'Cálculo Diferencial e Integral I',  type: 'Problemas',      room: 'V1.15',  start: '09:00', end: '10:00' },
-    { title: 'Cálculo Diferencial e Integral I',  type: 'TeoricoPrática', room: 'QA02.1', start: '10:30', end: '12:00' },
-    { title: 'Cálculo Diferencial e Integral III',type: 'Problemas',      room: 'V0.09',  start: '12:30', end: '13:30' },
-    { title: 'Sistemas Operativos',          type: 'Teórica',        room: 'AM',    start: '13:30', end: '14:30' },
-    { title: 'Análise e Síntese de Algoritmos',          type: 'Teórica',        room: 'AM', start: '15:30', end: '17:30' },
-    { title: 'Sistemas Operativos',          type: 'Laboratorial',        room: 'LAB 2', start: '17:30', end: '19:00' },
+    { title: 'Cálculo Diferencial e Integral II', type: 'Teórico-Prática', room: 'GA1', start: '08:30', end: '10:00' },
+    { title: 'Cálculo Diferencial e Integral II', type: 'Problemas', room: 'V1.07', start: '10:00', end: '11:00' },
+    { title: 'Interacção Pessoa-Máquina', type: 'Laboratorial', room: 'LAB 5', start: '12:30', end: '15:30' },
+    { title: 'Interacção Pessoa-Máquina', type: 'Teórica', room: 'GA1', start: '16:00', end: '19:00' },
   ]
 };
 
