@@ -126,36 +126,36 @@
   <div id="page" class="page" role="tabpanel" aria-live="polite"></div>
 
 <script>
-/** 数据区（已根据最新 ist-horario.ics 重做） */
-const schedule = {
+/** 3/30 起（按里斯本本地时间显示：仍然是 08:30，不写 Z） */
+const schedule_late = {
   mon: [
-    { title: 'Probabilidade e Estatística', type: 'Problemas', room: 'V1.15', start: '15:30', end: '16:30' },
-    { title: 'Probabilidade e Estatística', type: 'Teórico-Prática', room: 'QA02.3', start: '13:00', end: '14:30' },
-    { title: 'Interacção Pessoa-Máquina', type: 'Teórica', room: 'GA1', start: '16:30', end: '18:30' },
+    { title: 'Cálculo Diferencial e Integral II', type: 'Teórico-Prática', room: 'GA1',   start: '08:30', end: '10:00' },
+    { title: 'Probabilidade e Estatística',       type: 'Teórico-Prática', room: 'QA02.3', start: '13:00', end: '14:30' },
+    { title: 'Probabilidade e Estatística',       type: 'Problemas',       room: 'V1.15',  start: '15:30', end: '16:30' },
+    { title: 'Interacção Pessoa-Máquina',         type: 'Teórica',         room: 'GA1',    start: '16:30', end: '18:30' },
   ],
 
   tue: [
-    { title: 'Teoria da Computação', type: 'Problemas', room: 'F3', start: '14:00', end: '16:00' },
-    { title: 'Teoria da Computação', type: 'Teórica', room: 'GA3', start: '16:00', end: '18:00' },
+    { title: 'Teoria da Computação',              type: 'Problemas',       room: 'F3',     start: '14:00', end: '16:00' },
+    { title: 'Teoria da Computação',              type: 'Teórica',         room: 'GA3',    start: '16:00', end: '18:00' },
   ],
 
   wed: [
-    { title: 'Probabilidade e Estatística', type: 'Teórico-Prática', room: 'QA02.1', start: '13:00', end: '14:30' },
+    { title: 'Probabilidade e Estatística',       type: 'Teórico-Prática', room: 'QA02.1', start: '13:00', end: '14:30' },
   ],
 
   thu: [
-    { title: 'Teoria da Computação', type: 'Problemas', room: 'E1', start: '13:00', end: '15:00' },
-    { title: 'Teoria da Computação', type: 'Teórica', room: 'GA3', start: '15:00', end: '17:00' },
+    { title: 'Teoria da Computação',              type: 'Problemas',       room: 'E1',     start: '13:00', end: '15:00' },
+    { title: 'Teoria da Computação',              type: 'Teórica',         room: 'GA3',    start: '15:00', end: '17:00' },
   ],
 
   fri: [
-    { title: 'Cálculo Diferencial e Integral II', type: 'Teórico-Prática', room: 'GA1', start: '08:30', end: '10:00' },
-    { title: 'Cálculo Diferencial e Integral II', type: 'Problemas', room: 'V1.07', start: '10:00', end: '11:00' },
-    { title: 'Interacção Pessoa-Máquina', type: 'Laboratorial', room: 'LAB 5', start: '12:30', end: '15:30' },
-    { title: 'Interacção Pessoa-Máquina', type: 'Teórica', room: 'GA1', start: '16:00', end: '19:00' },
-  ]
+    { title: 'Cálculo Diferencial e Integral II', type: 'Teórico-Prática', room: 'GA1',    start: '08:30', end: '10:00' },
+    { title: 'Cálculo Diferencial e Integral II', type: 'Problemas',       room: 'V1.07',  start: '10:00', end: '11:00' },
+    { title: 'Interacção Pessoa-Máquina',         type: 'Laboratorial',    room: 'LAB 5',  start: '12:30', end: '15:30' },
+    { title: 'Interacção Pessoa-Máquina',         type: 'Teórica',         room: 'GA1',    start: '16:00', end: '19:00' },
+  ],
 };
-
 /* ======= 统一按葡萄牙里斯本时区判断 ======= */
 const TZ = 'Europe/Lisbon';
 function nowLisbon() { return new Date(new Date().toLocaleString('en-US', { timeZone: TZ })); }
