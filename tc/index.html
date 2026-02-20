@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Rede Social de Receitas - Bake-off UI (Enterprise Revision)</title>
+
+  <style>
+    :root{
+      --black:#000; --white:#fff;
+      --gray-light:#F2F2F7; --gray-mid:#E5E5EA; --gray-dark:#8E8E93;
+      --accent:#FF2D55; --green:#34C759; --blue:#007AFF;
+      --radius-xl:28px; --radius-lg:16px; --radius-sm:10px;
+      --shadow-lg:0 20px 40px rgba(0,0,0,.15);
+      --safe-top: env(safe-area-inset-top, 44px);
+      --safe-bottom: env(safe-area-inset-bottom, 34px);
+      --easing:cubic-bezier(.25,1,.5,1);
+      --divider:rgba(0,0,0,.06);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+      background:var(--white); color:var(--black);
+      width:100vw; height:100dvh; overflow:hidden;
+    }
+    svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* Views */
+    .view{
+      position:absolute; inset:0;
+      opacity:0; pointer-events:none;
+      transition:opacity .22s var(--easing);
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-top:var(--safe-top);
+      padding-bottom:calc(110px + var(--safe-bottom));
+      background:var(--white);
+      z-index:1;
+    }
+    .view.active{opacity:1; pointer-events:auto}
+
+    .page-header{padding:24px 24px 16px}
+    .page-title{font-size:34px;font-weight:900;letter-spacing:-1px}
+    .page-subtitle{font-size:16px;color:var(--gray-dark);margin-top:4px;font-weight:650}
+
+    /* Tab bar */
+    .tab-bar{
+      position:fixed; left:0; right:0; bottom:0;
+      height:calc(74px + var(--safe-bottom));
+      padding-bottom:var(--safe-bottom);
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      border-top:1px solid var(--gray-mid);
+      display:flex; align-items:flex-start; justify-content:space-around;
+      z-index:99999;
+      transform:translate3d(0,0,0);
+      will-change:transform;
+      pointer-events:auto;
+      touch-action:manipulation;
+    }
+    .tab-bar.hidden{display:none}
+    .tab-btn{
+      width:33.33%;
+      height:74px;
+      border:none; background:transparent;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:6px;
+      color:var(--gray-dark);
+      cursor:pointer;
+      user-select:none; -webkit-user-select:none;
+      touch-action:manipulation;
+    }
+    .tab-btn span{font-size:11px;font-weight:850}
+    .tab-btn.active{color:var(--black)}
+    .tab-btn:active{transform:scale(.98)}
+    .tab-btn.active svg{stroke-width:2.6}
+
+    /* Buttons / chips */
+    .btn-primary{
+      background:var(--black); color:var(--white);
+      border:none; padding:18px;
+      border-radius:var(--radius-lg);
+      font-size:17px; font-weight:850;
+      width:100%;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      cursor:pointer;
+      transition:transform .12s;
+      touch-action:manipulation;
+    }
+    .btn-primary:active{transform:scale(.98)}
+    .btn-sub{
+      background:var(--gray-light); color:var(--black);
+      padding:10px 16px; border-radius:20px;
+      font-weight:900; font-size:14px;
+      border:none; cursor:pointer;
+      transition:.2s;
+      white-space:nowrap;
+      touch-action:manipulation;
+    }
+    .btn-sub.active{background:var(--black); color:var(--white)}
+    .chip-group{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+    .chip-group::-webkit-scrollbar{display:none}
+    .chip{
+      padding:10px 18px; background:var(--gray-light);
+      border-radius:999px;
+      font-size:14px; font-weight:750;
+      white-space:nowrap;
+      transition:.2s;
+      cursor:pointer;
+      user-select:none;
+      border:2px solid transparent;
+      touch-action:manipulation;
+    }
+    .chip.active{background:var(--black); color:var(--white)}
+    .chip.small{padding:6px 12px; font-size:12px; font-weight:750; cursor:default}
+
+    /* Cards (Enterprise simplified: fewer signals, like YouTube list + 16:9) */
+    .video-card{
+      background:var(--white);
+      margin:0 24px 18px;
+      border-radius:var(--radius-xl);
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      overflow:hidden;
+      border:1px solid var(--divider);
+      cursor:pointer;
+    }
+    .thumb{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      background:var(--gray-light);
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumb .play-overlay{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.12);
+    }
+    .thumb .play-btn{
+      width:58px;height:58px;
+      background:rgba(255,255,255,.28);
+      backdrop-filter:blur(10px);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      color:var(--white);
+    }
+    .thumb .duration{
+      position:absolute; right:12px; bottom:12px;
+      background:rgba(0,0,0,.65);
+      color:#fff;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:-.1px;
+    }
+    .card-body{padding:14px 16px 16px}
+    .card-title{
+      font-size:20px;font-weight:950;line-height:1.25;
+      letter-spacing:-.35px;
+    }
+    .meta-row{
+      margin-top:10px;
+      display:flex; align-items:center; gap:12px;
+      min-width:0;
+    }
+    .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--gray-mid);flex:0 0 auto}
+    .meta-col{min-width:0}
+    .creator-line{
+      display:flex; align-items:center; gap:6px;
+      font-size:14px; font-weight:950;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:62vw;
+    }
+    .verified-icon{color:var(--blue); width:16px; height:16px}
+    .stats{
+      margin-top:3px;
+      font-size:13px;
+      color:var(--gray-dark);
+      font-weight:800;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:70vw;
+    }
+
+    /* Lists */
+    .list-row{display:flex;align-items:center;padding:16px 0;border-bottom:1px solid var(--divider);cursor:pointer}
+    .list-row:last-child{border-bottom:none}
+    .list-icon{
+      width:52px;height:52px;
+      background:var(--gray-light);
+      border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      margin-right:16px;
+      border:1px solid var(--divider);
+      flex:0 0 auto;
+    }
+    .list-content{flex:1;min-width:0}
+    .list-title{font-size:17px;font-weight:950}
+    .list-sub{font-size:14px;color:var(--gray-dark);margin-top:4px;font-weight:750;line-height:1.25}
+    .chev{color:var(--gray-dark); flex:0 0 auto}
+
+    /* Search */
+    .search-wrap{display:flex;gap:12px;padding:0 24px 18px}
+    .search-input{
+      flex:1;background:var(--gray-light);
+      border-radius:16px;padding:0 14px;
+      display:flex;align-items:center;gap:10px;
+      border:1px solid var(--divider);
+    }
+    .search-input input{
+      border:none;background:transparent;
+      height:50px;width:100%;
+      font-size:17px;font-weight:850;
+      outline:none;
+    }
+    .clear-btn{
+      width:28px;height:28px;border-radius:999px;
+      border:none;background:rgba(0,0,0,.08);
+      display:none; align-items:center; justify-content:center;
+      cursor:pointer; touch-action:manipulation;
+    }
+    .clear-btn.show{display:flex}
+    .clear-btn svg{width:16px;height:16px;stroke-width:2.6}
+
+    .filter-btn{
+      width:50px;height:50px;
+      border-radius:16px;border:none;
+      background:var(--black);color:var(--white);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      position:relative;
+      touch-action:manipulation;
+    }
+    .filter-dot{
+      position:absolute;top:12px;right:12px;
+      width:8px;height:8px;background:var(--accent);
+      border-radius:50%;
+      display:none;
+    }
+
+    /* Notification */
+    .toast-notification{
+      position:fixed;
+      top:calc(10px + var(--safe-top));
+      left:16px; right:16px;
+      background:rgba(20,20,20,.95);
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      color:#fff;
+      border-radius:20px;
+      padding:16px 20px;
+      display:flex;align-items:flex-start;gap:16px;
+      box-shadow:0 25px 50px rgba(0,0,0,.3);
+      z-index:11000;
+      transform:translateY(-150%);
+      transition:transform .5s var(--easing), opacity .4s;
+    }
+    .toast-notification.show{transform:translateY(0)}
+    .toast-notification.hide{transform:translateY(-150%);opacity:0}
+    .noti-content{flex:1;cursor:pointer}
+    .noti-close{color:rgba(255,255,255,.6);cursor:pointer;padding:4px}
+
+    /* Bottom Sheets */
+    .overlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.5);
+      opacity:0; pointer-events:none;
+      transition:.25s;
+      z-index:10000;
+    }
+    .overlay.active{opacity:1; pointer-events:auto}
+    .bottom-sheet{
+      position:fixed; left:0; right:0; bottom:0;
+      background:var(--white);
+      border-radius:32px 32px 0 0;
+      transform:translateY(100%);
+      transition:transform .3s var(--easing);
+      display:flex;flex-direction:column;
+      max-height:90dvh;
+      box-shadow:var(--shadow-lg);
+      z-index:10001;
+    }
+    .bottom-sheet.active{transform:translateY(0)}
+    .sheet-drag{width:40px;height:5px;background:var(--gray-mid);border-radius:4px;margin:12px auto}
+    .sheet-header{padding:10px 24px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .sheet-title{font-size:22px;font-weight:1000;letter-spacing:-.4px}
+    .sheet-content{padding:0 24px 28px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+
+    /* Mini toast */
+    .mini-toast{
+      position:fixed;
+      left:16px; right:16px;
+      bottom:calc(84px + var(--safe-bottom));
+      background:rgba(20,20,20,.92);
+      color:#fff;
+      border-radius:18px;
+      padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      box-shadow:0 20px 45px rgba(0,0,0,.35);
+      transform:translateY(140%);
+      opacity:0;
+      transition:transform .28s var(--easing), opacity .28s;
+      z-index:12000;
+    }
+    .mini-toast.show{transform:translateY(0); opacity:1}
+    .mini-toast .msg{font-weight:950;letter-spacing:-.2px}
+    .mini-toast .sub{color:rgba(255,255,255,.72);font-weight:750;font-size:13px;margin-top:2px}
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      padding-top:var(--safe-top);
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--divider);
+    }
+    .topbar-inner{padding:14px 16px 12px;display:flex;align-items:center;gap:12px}
+    .back-btn{
+      width:44px;height:44px;border-radius:16px;border:none;
+      background:var(--gray-light);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer; touch-action:manipulation;
+    }
+    .topbar-title{
+      font-weight:950;letter-spacing:-.3px;font-size:17px;
+      flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+
+    /* Player */
+    .player{
+      margin:18px 24px 14px;
+      border-radius:22px; overflow:hidden;
+      background:#111; position:relative;
+      box-shadow:0 10px 30px rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .player .poster{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:.92}
+    .player .shade{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(0,0,0,.15), rgba(0,0,0,.62))}
+    .player .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+    .player .bigplay{
+      width:72px;height:72px;border-radius:999px;
+      background:rgba(255,255,255,.22);
+      backdrop-filter:blur(10px);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:#fff;
+      transition:transform .12s var(--easing);
+      touch-action:manipulation;
+    }
+    .player .bigplay:active{transform:scale(.96)}
+    .player .timeline{
+      position:absolute; left:14px; right:14px; bottom:12px;
+      height:6px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden
+    }
+    .player .timeline > div{height:100%;width:0%;background:rgba(255,255,255,.7);border-radius:999px;transition:width .2s linear}
+    .player .time{
+      position:absolute; left:14px; top:12px;
+      background:rgba(0,0,0,.55); color:#fff;
+      font-size:12px;font-weight:900;
+      padding:6px 10px;border-radius:999px;
+    }
+
+    .section{padding:0 24px 18px}
+    .h2{font-size:18px;font-weight:1000;letter-spacing:-.3px}
+    .card-block{
+      margin-top:10px;
+      background:var(--gray-light);
+      border:1px solid var(--divider);
+      border-radius:18px;
+      padding:14px 16px;
+    }
+    .step{display:flex;gap:10px;padding:10px 0}
+    .step + .step{border-top:1px solid rgba(0,0,0,.06)}
+    .step .n{width:22px;text-align:center;font-weight:1000}
+    .step .t{font-weight:800;color:rgba(0,0,0,.72);line-height:1.35}
+
+    /* Sticky CTA in Época feed */
+    .sticky-cta{
+      position:sticky;
+      top:calc(var(--safe-top) + 10px);
+      z-index:30;
+      padding:0 24px 10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.78) 50%, rgba(255,255,255,0));
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .mini-cta{
+      width:100%;
+      border-radius:18px;
+      border:1px solid var(--divider);
+      background:rgba(0,0,0,.92);
+      color:#fff;
+      padding:14px 14px;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      font-weight:950;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+    .mini-cta:active{transform:scale(.99)}
+    .mini-cta svg{stroke-width:2.6}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .22s var(--easing)}
+  </style>
+</head>
+
+<body>
+
+  <!-- Notification -->
+  <div class="toast-notification" id="systemNoti">
+    <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 12px; color: #FFA500;">
+      <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    </div>
+    <div class="noti-content" id="notiOpenSeasonal">
+      <div id="notiTitle" style="font-size: 16px; font-weight: 950; margin-bottom: 4px;">Época da Abóbora 🎃</div>
+      <div id="notiSub" style="font-size: 14px; color: #CCC; line-height: 1.35;">Abre para ver receitas filtradas e mercados com stock.</div>
+    </div>
+    <div class="noti-close" id="notiClose">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </div>
+  </div>
+
+  <!-- Mini toast -->
+  <div class="mini-toast" id="miniToast" aria-live="polite">
+    <div>
+      <div class="msg" id="miniMsg">Feito</div>
+      <div class="sub" id="miniSub">—</div>
+    </div>
+    <div style="opacity:.85;">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="view active" id="view-home">
+    <div class="page-header">
+      <h1 class="page-title" id="homeTitle">Para Ti</h1>
+      <p class="page-subtitle" id="homeSub">Receitas recomendadas hoje.</p>
+    </div>
+
+    <div style="padding:0 24px 10px;">
+      <div class="chip-group" id="homeChips">
+        <span class="chip active" data-home-mode="normal">Para Ti</span>
+        <span class="chip" data-home-mode="seasonal">Época</span>
+      </div>
+    </div>
+
+    <!-- Only visible in Época mode -->
+    <div class="sticky-cta" id="seasonalCtaWrap" style="display:none;">
+      <button class="mini-cta" id="openSeasonalHub">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        Ver ingredientes da época
+      </button>
+      <div style="height:10px;"></div>
+      <button class="mini-cta" id="openMarketsFromFeed" style="background:#fff;color:#000;">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Onde comprar (mercados com stock)
+      </button>
+    </div>
+
+    <div id="homeFeed"></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="view" id="view-search">
+    <div class="page-header">
+      <h1 class="page-title">Pesquisa</h1>
+      <p class="page-subtitle">Pesquisa por palavra + filtra pelo botão de filtros.</p>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-input">
+        <svg viewBox="0 0 24 24" style="color: var(--gray-dark);">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+
+        <input type="text" id="searchQueryInput" placeholder="Pesquisar receitas, tags, criadores..." autocomplete="off" />
+
+        <button class="clear-btn" id="clearSearch" aria-label="Limpar">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <button class="filter-btn" id="openFiltersBtn" aria-label="Filtros">
+        <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        <div class="filter-dot" id="filterBadge"></div>
+      </button>
+    </div>
+
+    <!-- Empty / history -->
+    <div id="searchEmpty" style="padding: 10px 24px 0; color: var(--gray-dark);">
+      <div style="text-align:center; padding: 26px 0 10px;">
+        <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; margin: 0 auto 12px; stroke-width: 1;">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <p style="font-size: 18px; font-weight: 950; color:#000;">Sem pesquisa</p>
+        <p style="margin-top: 8px; font-weight: 750; line-height: 1.35;">
+          Dica: Bake-off Task 2 → ativa <b>Asiática</b> + <b>Vegetariano</b> + <b>Wok</b> + <b>Tofu</b> + <b>Verificado</b>.
+        </p>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-weight:1000; color:#000; letter-spacing:-.2px;">Histórico</div>
+          <button class="btn-sub" id="clearHistoryBtn" style="padding:8px 12px;">Limpar</button>
+        </div>
+        <div class="card-block" id="searchHistoryWrap" style="margin-top:10px;">
+          <!-- history rows injected -->
+        </div>
+      </div>
+      <div style="height:12px;"></div>
+    </div>
+
+    <div id="searchResults" style="display:none;">
+      <p style="padding: 0 24px 12px; font-weight: 950; color: var(--gray-dark);" id="searchCount">—</p>
+      <div id="searchList"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE (User page) -->
+  <div class="view" id="view-profile">
+    <div class="page-header">
+      <h1 class="page-title">Perfil</h1>
+      <p class="page-subtitle">A tua conta e preferências.</p>
+    </div>
+
+    <div style="padding:0 24px 10px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img class="avatar" style="width:62px;height:62px;" id="meAvatar" alt="Eu">
+        <div style="min-width:0;">
+          <div style="font-size:20px;font-weight:1000;letter-spacing:-.3px;" id="meName">Utilizador</div>
+          <div style="margin-top:4px;color:var(--gray-dark);font-weight:800;" id="meSubline">Preferências • Utensílios</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 24px;">
+      <div class="card-block">
+        <div class="list-row" data-open-utensils-page>
+          <div class="list-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 12h8M9 12v6a3 3 0 0 0 6 0v-6M12 3v9M7 6h10"></path></svg>
+          </div>
+          <div class="list-content">
+            <div class="list-title">Utensílios</div>
+            <div class="list-sub">Adicionar e gerir utensílios</div>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+        </div>
+
+        <div class="list-row" data-open-about>
+          <div class="list-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </div>
+          <div class="list-content">
+            <div class="list-title">Sobre</div>
+            <div class="list-sub">Informação do protótipo</div>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+        </div>
+
+        <div class="list-row" data-open-settings>
+          <div class="list-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.13.33.2.68.2 1.05s-.07.72-.2 1.05z"></path></svg>
+          </div>
+          <div class="list-content">
+            <div class="list-title">Definições</div>
+            <div class="list-sub">Preferências (mock)</div>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UTENSILS PAGE (pseudo page) -->
+  <div class="view" id="view-utensils">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="navBackUtensils" aria-label="Voltar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="topbar-title">Utensílios</div>
+        <div style="width:44px;"></div>
+      </div>
+    </div>
+
+    <div class="page-header" style="padding-top:18px;">
+      <h1 class="page-title" style="font-size:30px;">Os teus utensílios</h1>
+      <p class="page-subtitle">Task 1: adiciona Batedeira elétrica, Wok, Termómetro culinário.</p>
+    </div>
+
+    <div style="padding:0 24px;">
+      <div id="task1Banner" style="display:none; background: var(--black); color: var(--white); padding: 14px 16px; border-radius: 16px; font-weight: 950; letter-spacing: -0.2px; margin-bottom: 14px;">
+        ✅ 3 utensílios adicionados — <span style="opacity:0.85; font-weight: 800;">Task 1 concluída</span>
+      </div>
+
+      <div id="utensilsList" style="margin-bottom:16px;"></div>
+
+      <button class="btn-primary" style="background: var(--gray-light); color: var(--black);" id="openUtensilsCatalog">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Adicionar Utensílio
+      </button>
+
+      <div style="height:14px;"></div>
+      <div style="background: var(--gray-light); padding: 14px 16px; border-radius: 16px; color: var(--gray-dark); font-weight:750; line-height:1.35;">
+        ✔ Dica: o catálogo é um “pseudo ecrã” — o protótipo não precisa de lógica real.
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT (pseudo page) -->
+  <div class="view" id="view-about">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="navBackAbout" aria-label="Voltar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="topbar-title">Sobre</div>
+        <div style="width:44px;"></div>
+      </div>
+    </div>
+    <div class="page-header" style="padding-top:18px;">
+      <h1 class="page-title" style="font-size:30px;">Sobre o protótipo</h1>
+      <p class="page-subtitle">Bake-off #1 — Rede Social de Receitas.</p>
+    </div>
+    <div class="section">
+      <div class="card-block">
+        <div style="font-weight:950;">Objetivo</div>
+        <div style="margin-top:8px;color:rgba(0,0,0,.72);font-weight:800;line-height:1.35;">
+          UI de uma rede social de vídeos de receitas com suporte a utensílios, pesquisa com filtros, e época/ingredientes.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS (pseudo page) -->
+  <div class="view" id="view-settings">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="navBackSettings" aria-label="Voltar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="topbar-title">Definições</div>
+        <div style="width:44px;"></div>
+      </div>
+    </div>
+    <div class="page-header" style="padding-top:18px;">
+      <h1 class="page-title" style="font-size:30px;">Preferências</h1>
+      <p class="page-subtitle">Mock de definições (não funcional).</p>
+    </div>
+    <div class="section">
+      <div class="card-block">
+        <div class="list-row" style="padding:14px 0;cursor:default;">
+          <div class="list-content">
+            <div class="list-title">Notificações</div>
+            <div class="list-sub">Ativas (demo)</div>
+          </div>
+          <div style="font-weight:950;color:var(--green);">ON</div>
+        </div>
+        <div class="list-row" style="padding:14px 0;cursor:default;">
+          <div class="list-content">
+            <div class="list-title">Idioma</div>
+            <div class="list-sub">Português</div>
+          </div>
+          <div style="font-weight:950;color:var(--gray-dark);">PT</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE -->
+  <div class="view" id="view-recipe">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="navBackRecipe" aria-label="Voltar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="topbar-title" id="recipeTopTitle">Vídeo</div>
+        <div style="width:44px;"></div>
+      </div>
+    </div>
+
+    <div id="recipePlayerWrap"></div>
+    <div id="recipeInfoWrap"></div>
+  </div>
+
+  <!-- MARKETS -->
+  <div class="view" id="view-markets">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="navBackMarkets" aria-label="Voltar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="topbar-title" id="marketsTopTitle">Mercados</div>
+        <div style="width:44px;"></div>
+      </div>
+    </div>
+
+    <div class="section" style="padding-top:18px;">
+      <div style="height:190px;background:#E5E5EA center/cover;border-radius:18px;border:1px solid var(--divider);position:relative;overflow:hidden;" id="marketsHero">
+        <div style="position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.35));"></div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:54px; height:54px; background:rgba(0,0,0,0.8); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white;">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        </div>
+        <div id="marketsCaption" style="position:absolute; left:14px; right:14px; bottom:14px; color:#fff; font-weight:950; font-size:14px; opacity:.95;">—</div>
+      </div>
+    </div>
+
+    <div class="section" style="padding-top:0;">
+      <div class="h2" id="marketsTitle">Mercados próximos</div>
+      <div class="card-block" style="padding-top:6px;">
+        <div style="color: var(--gray-dark); font-weight: 850; line-height: 1.35; margin-bottom: 8px;">
+          Ordenado por <b>stock</b> (Alto → Médio → Poucas unidades) e depois <b>distância</b>.
+        </div>
+        <div id="marketsList"></div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-view="home" type="button">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Início</span>
+    </button>
+    <button class="tab-btn" data-view="search" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>Pesquisa</span>
+    </button>
+    <button class="tab-btn" data-view="profile" type="button">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>Perfil</span>
+    </button>
+  </div>
+
+  <!-- Overlay + Sheets -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Utensils catalog sheet -->
+  <div class="bottom-sheet" id="sheet-utensils">
+    <div class="sheet-drag"></div>
+    <div class="sheet-header">
+      <h2 class="sheet-title">Catálogo</h2>
+      <span style="font-weight: 950; color: var(--gray-dark); cursor:pointer;" data-close-sheet>Fechar</span>
+    </div>
+    <div class="sheet-content" id="utensilsCatalog"></div>
+  </div>
+
+  <!-- Filters sheet -->
+  <div class="bottom-sheet" id="sheet-filters">
+    <div class="sheet-drag"></div>
+    <div class="sheet-header">
+      <span style="font-weight: 950; color: var(--gray-dark); cursor:pointer;" id="clearFilters">Limpar</span>
+      <h2 class="sheet-title" style="text-align:center; flex:1;">Filtros</h2>
+      <span style="font-weight: 950; color: var(--gray-dark); cursor:pointer;" data-close-sheet>Fechar</span>
+    </div>
+
+    <div class="sheet-content">
+      <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Cozinha</h3>
+      <div class="chip-group" style="margin-bottom:22px;">
+        <span class="chip filter-chip" data-filter="asiatica">Asiática</span>
+        <span class="chip filter-chip" data-filter="portuguesa">Portuguesa</span>
+        <span class="chip filter-chip" data-filter="italiana">Italiana</span>
+        <span class="chip filter-chip" data-filter="japonesa">Japonesa</span>
+      </div>
+
+      <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Dieta</h3>
+      <div class="chip-group" style="margin-bottom:22px;">
+        <span class="chip filter-chip" data-filter="vegetariano">Vegetariano</span>
+        <span class="chip filter-chip" data-filter="vegan">Vegan</span>
+        <span class="chip filter-chip" data-filter="semgluten">Sem Glúten</span>
+      </div>
+
+      <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Utensílios</h3>
+      <div class="chip-group" style="margin-bottom:22px;">
+        <span class="chip filter-chip" data-filter="wok">Wok</span>
+        <span class="chip filter-chip" data-filter="forno">Forno</span>
+        <span class="chip filter-chip" data-filter="airfryer">Airfryer</span>
+      </div>
+
+      <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Ingredientes</h3>
+      <div class="chip-group" style="margin-bottom:22px;">
+        <span class="chip filter-chip" data-filter="tofu">Tofu</span>
+        <span class="chip filter-chip" data-filter="abobora">Abóbora</span>
+        <span class="chip filter-chip" data-filter="cogumelos">Cogumelos</span>
+      </div>
+
+      <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Criador</h3>
+      <div class="chip-group" style="margin-bottom:26px;">
+        <span class="chip filter-chip" data-filter="verificado">Verificado</span>
+      </div>
+
+      <button class="btn-primary" id="applyFilters">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Aplicar Filtros
+      </button>
+
+      <div style="margin-top:12px; color: var(--gray-dark); font-weight:750; line-height:1.35;">
+        🎯 Task 2: ativa <b>Asiática</b> + <b>Vegetariano</b> + <b>Wok</b> + <b>Tofu</b> + <b>Verificado</b>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Seasonal hub sheet -->
+  <div class="bottom-sheet" id="sheet-seasonal">
+    <div class="sheet-drag"></div>
+    <div class="sheet-header">
+      <h2 class="sheet-title">Época</h2>
+      <span style="font-weight: 950; color: var(--gray-dark); cursor:pointer;" data-close-sheet>Fechar</span>
+    </div>
+    <div class="sheet-content" id="seasonalHubList"></div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* =================== Data =================== */
+  const DB = {
+    seasonalIngredients: [
+      { id:"abobora", name:"Abóbora", emoji:"🎃", note:"Receitas de outono • stock perto", heroImg:"https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80" },
+      { id:"cogumelos", name:"Cogumelos", emoji:"🍄", note:"Ideias rápidas e leves", heroImg:"https://images.unsplash.com/photo-1505253213348-cee1f5b14a6c?auto=format&fit=crop&w=1200&q=80" },
+      { id:"tomate", name:"Tomate", emoji:"🍅", note:"No pico da estação", heroImg:"https://images.unsplash.com/photo-1546470427-2277c9fbecc2?auto=format&fit=crop&w=1200&q=80" },
+      { id:"espinafre", name:"Espinafre", emoji:"🥬", note:"Fresco esta semana", heroImg:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80" }
+    ],
+    creators: {
+      chen:  { id:"chen",  name:"Chef Chen",  verified:true,  avatar:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" },
+      sofia: { id:"sofia", name:"Chef Sofia", verified:false, avatar:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" },
+      ana:   { id:"ana",   name:"Ana Martins",verified:true,  avatar:"https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" }
+    },
+    recipes: [
+      {
+        id: "tofu-wok",
+        title: "Tofu Salteado com Legumes no Wok",
+        duration: "18 min",
+        tags: ["Asiática","Vegetariano","Wok","Tofu"],
+        cuisine: "asiatica",
+        diet: "vegetariano",
+        utensil: "wok",
+        ingredient: "tofu",
+        creatorId: "chen",
+        views: 186000,
+        publishedDaysAgo: 8,
+        cover: "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Tofu","Brócolos","Cenoura","Gengibre","Molho de soja"],
+        steps: [
+          "Aquece o wok e adiciona óleo.",
+          "Salteia legumes e tofu até dourar.",
+          "Finaliza com molho de soja e gengibre."
+        ]
+      },
+      {
+        id: "salad",
+        title: "Salada Mediterrânica Rápida",
+        duration: "15 min",
+        tags: ["Italiana","Rápido"],
+        cuisine: "italiana",
+        diet: "saudavel",
+        utensil: "tigela",
+        ingredient: "tomate",
+        creatorId: "ana",
+        views: 92000,
+        publishedDaysAgo: 3,
+        cover: "https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Tomate","Pepino","Azeitonas","Feta","Azeite"],
+        steps: ["Corta tomate e pepino.","Mistura com azeitonas e feta.","Temperar com azeite e sal."]
+      },
+      {
+        id: "miso",
+        title: "Sopa Miso Minimalista",
+        duration: "12 min",
+        tags: ["Japonesa","Conforto"],
+        cuisine: "japonesa",
+        diet: "leve",
+        utensil: "panela",
+        ingredient: "miso",
+        creatorId: "sofia",
+        views: 54000,
+        publishedDaysAgo: 21,
+        cover: "https://images.unsplash.com/photo-1604908176997-125f25cc5001?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Pasta miso","Tofu (opcional)","Cebolinho","Água"],
+        steps: ["Aquece a água sem ferver.","Dissolve o miso fora do lume.","Finaliza com cebolinho."]
+      },
+      {
+        id: "pumpkin-cream",
+        title: "Creme de Abóbora Assada com Especiarias",
+        duration: "40 min",
+        tags: ["Época: Abóbora","Vegetariano"],
+        cuisine: "portuguesa",
+        diet: "vegetariano",
+        utensil: "forno",
+        ingredient: "abobora",
+        creatorId: "sofia",
+        views: 211000,
+        publishedDaysAgo: 1,
+        cover: "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Abóbora","Alho","Azeite","Pimenta","Noz-moscada"],
+        steps: ["Assa a abóbora com alho e azeite.","Tritura até ficar cremoso.","Ajusta especiarias e serve quente."]
+      },
+      {
+        id: "pumpkin-herbs",
+        title: "Abóbora no Forno com Ervas e Limão",
+        duration: "35 min",
+        tags: ["Época: Abóbora","Simples"],
+        cuisine: "portuguesa",
+        diet: "vegetariano",
+        utensil: "forno",
+        ingredient: "abobora",
+        creatorId: "ana",
+        views: 67000,
+        publishedDaysAgo: 5,
+        cover: "https://images.unsplash.com/photo-1603046891744-76d2c3a01d10?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Abóbora","Alecrim","Limão","Azeite","Sal"],
+        steps: ["Corta a abóbora em cubos.","Envolve com azeite, alecrim e limão.","Assa até dourar."]
+      },
+      {
+        id: "pumpkin-salad",
+        title: "Salada Morna de Abóbora e Cogumelos",
+        duration: "20 min",
+        tags: ["Época: Abóbora","Vegetariano"],
+        cuisine: "italiana",
+        diet: "vegetariano",
+        utensil: "panela",
+        ingredient: "abobora",
+        creatorId: "sofia",
+        views: 38500,
+        publishedDaysAgo: 14,
+        cover: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=80",
+        ingredients: ["Abóbora","Cogumelos","Rúcula","Azeite","Vinagre"],
+        steps: ["Salteia cogumelos rapidamente.","Cozinha a abóbora até ficar macia.","Monta a salada e tempera."]
+      }
+    ],
+    markets: [
+      { name:"Mercado da Ribeira", distanceM: 850, open: true,  stock: { abobora: "alto", cogumelos:"medio", tomate:"alto", espinafre:"medio" } },
+      { name:"Mini Mercado Bairro",distanceM: 600, open: false, stock: { abobora: "medio", cogumelos:"baixo", tomate:"medio", espinafre:"baixo" } },
+      { name:"Supermercado Bio",   distanceM: 1200, open: true, stock: { abobora: "baixo", cogumelos:"alto", tomate:"baixo", espinafre:"alto" } }
+    ],
+    utensilsCatalog: [
+      { id:"mixer", name:"Batedeira elétrica", svg:`<path d="M8 12h8M9 12v6a3 3 0 0 0 6 0v-6M12 3v9M7 6h10"></path>` },
+      { id:"wok", name:"Wok", svg:`<path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8H4zM20 12l2-4"></path>` },
+      { id:"thermo", name:"Termómetro culinário", svg:`<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>` },
+      { id:"oven", name:"Forno", svg:`<path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path>` },
+      { id:"airfryer", name:"Airfryer", svg:`<path d="M7 4h10v4H7z"></path><path d="M6 8h12v12H6z"></path><path d="M9 12h6"></path>` }
+    ],
+    me: {
+      name: "Utilizador IPM",
+      avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+    }
+  };
+
+  /* =================== State =================== */
+  const STORAGE_KEY = "bakeoff_rss_state_enterprise_rev_v1";
+  const REQUIRED_TASK2 = ["asiatica","vegetariano","wok","tofu","verificado"];
+  const REQUIRED_TASK1 = ["mixer","wok","thermo"];
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      obj.filters = new Set(obj.filters || []);
+      obj.navStack = Array.isArray(obj.navStack) && obj.navStack.length ? obj.navStack : [{name:"home",params:{}}];
+      obj.searchQuery = obj.searchQuery || "";
+      obj.searchHistory = Array.isArray(obj.searchHistory) ? obj.searchHistory : [];
+      obj.subscriptions = obj.subscriptions || {};
+      obj.myUtensils = Array.isArray(obj.myUtensils) ? obj.myUtensils : [];
+      return obj;
+    }catch(e){ return null; }
+  }
+
+  const state = loadState() || {
+    navStack: [{name:"home", params:{}}],
+    homeMode: "normal",
+    seasonalIngredientId: "abobora",
+    myUtensils: [],
+    subscriptions: {},
+    filters: new Set(),
+    activeRecipeId: null,
+    searchQuery: "",
+    searchHistory: [],
+    player: { playing:false, progress:0 }
+  };
+
+  let saveTimer = null;
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      const out = { ...state, filters: Array.from(state.filters) };
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(out)); }catch(e){}
+    }, 160);
+  }
+
+  function toast(msg, sub=""){
+    $("#miniMsg").textContent = msg;
+    $("#miniSub").textContent = sub || " ";
+    const el = $("#miniToast");
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("show"), 1600);
+  }
+
+  const overlay = $("#overlay");
+  function openSheet(id){
+    overlay.classList.add("active");
+    $(id).classList.add("active");
+  }
+  function closeSheets(){
+    overlay.classList.remove("active");
+    $$(".bottom-sheet").forEach(s => s.classList.remove("active"));
+  }
+
+  function getRecipe(id){ return DB.recipes.find(r => r.id === id); }
+  function getCreator(id){ return DB.creators[id]; }
+  function getSeasonal(id){ return DB.seasonalIngredients.find(x => x.id === id); }
+  function currentRoute(){ return state.navStack[state.navStack.length-1]; }
+  function rootRoute(){ return state.navStack[0]?.name || "home"; }
+
+  function verifiedBadge(verified){
+    return verified ? `
+      <svg class="verified-icon" viewBox="0 0 24 24">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>` : "";
+  }
+
+  /* =================== Formatting =================== */
+  function fmtViews(n){
+    if(n == null) return "—";
+    if(n >= 1_000_000) return (n/1_000_000).toFixed(n%1_000_000===0 ? 0 : 1).replace(".0","") + " M";
+    if(n >= 1_000) return (n/1_000).toFixed(n%1_000===0 ? 0 : 1).replace(".0","") + " K";
+    return String(n);
+  }
+  function fmtAge(days){
+    if(days == null) return "—";
+    if(days === 0) return "hoje";
+    if(days === 1) return "há 1 dia";
+    if(days < 7) return `há ${days} dias`;
+    const w = Math.round(days/7);
+    return w === 1 ? "há 1 semana" : `há ${w} semanas`;
+  }
+
+  /* =================== Navigation =================== */
+  function showView(viewName){
+    $$(".view").forEach(v => v.classList.remove("active"));
+    $(`#view-${viewName}`).classList.add("active");
+
+    const isMain = ["home","search","profile"].includes(viewName);
+    $("#tabBar").classList.toggle("hidden", !isMain);
+
+    const root = rootRoute();
+    $$(".tab-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === root));
+
+    if(viewName === "home") renderHome();
+    if(viewName === "search") renderSearch();
+    if(viewName === "profile") renderProfile();
+    if(viewName === "utensils") renderUtensilsPage();
+    if(viewName === "about") renderAbout();
+    if(viewName === "settings") renderSettings();
+    if(viewName === "recipe") renderRecipe();
+    if(viewName === "markets") renderMarkets();
+
+    scheduleSave();
+  }
+
+  function goTab(name){
+    state.navStack = [{name, params:{}}];
+    showView(name);
+  }
+  function push(name, params={}){
+    state.navStack.push({name, params});
+    showView(name);
+  }
+  function pop(){
+    if(state.navStack.length <= 1) return;
+    state.navStack.pop();
+    showView(currentRoute().name);
+  }
+
+  /* =================== Cards (Enterprise, simplified) =================== */
+  function recipeCard(r){
+    const c = getCreator(r.creatorId);
+    return `
+      <div class="video-card fade-up" data-open-recipe="${r.id}">
+        <div class="thumb">
+          <img src="${r.cover}" alt="${r.title}">
+          <div class="play-overlay">
+            <div class="play-btn">
+              <svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; margin-left:4px;">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </div>
+          </div>
+          <div class="duration">${r.duration}</div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-title">${r.title}</div>
+
+          <div class="meta-row" data-stop-open="1">
+            <img class="avatar" src="${c.avatar}" alt="${c.name}">
+            <div class="meta-col">
+              <div class="creator-line">${c.name}${verifiedBadge(c.verified)}</div>
+              <div class="stats">${fmtViews(r.views)} visualizações • ${fmtAge(r.publishedDaysAgo)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* =================== Home =================== */
+  function renderHome(){
+    const seasonal = getSeasonal(state.seasonalIngredientId) || getSeasonal("abobora");
+
+    if(state.homeMode === "seasonal"){
+      $("#homeTitle").textContent = `Época: ${seasonal.name} ${seasonal.emoji}`;
+      $("#homeSub").textContent = `Receitas filtradas por ${seasonal.name}.`;
+      $("#seasonalCtaWrap").style.display = "block";
+    }else{
+      $("#homeTitle").textContent = "Para Ti";
+      $("#homeSub").textContent = "Receitas recomendadas hoje.";
+      $("#seasonalCtaWrap").style.display = "none";
+    }
+
+    $$("#homeChips .chip").forEach(ch => ch.classList.toggle("active", ch.dataset.homeMode === state.homeMode));
+
+    const list = (state.homeMode === "seasonal")
+      ? DB.recipes.filter(r => r.ingredient === state.seasonalIngredientId)
+      : DB.recipes.filter(r => r.ingredient !== state.seasonalIngredientId).slice(0,4);
+
+    $("#homeFeed").innerHTML = list.map(recipeCard).join("") || `
+      <div style="padding: 30px 24px; color: var(--gray-dark); font-weight:900;">
+        Sem receitas para esta época.
+      </div>
+    `;
+  }
+
+  /* =================== Search =================== */
+  function updateFilterBadge(){
+    $("#filterBadge").style.display = state.filters.size > 0 ? "block" : "none";
+  }
+  function isExactTask2Selection(){
+    return REQUIRED_TASK2.every(k => state.filters.has(k)) && state.filters.size === REQUIRED_TASK2.length;
+  }
+  function normalize(s){ return (s||"").toLowerCase().trim(); }
+
+  function matchesQuery(recipe, q){
+    if(!q) return true;
+    const c = getCreator(recipe.creatorId);
+    const hay = [
+      recipe.title,
+      (recipe.tags||[]).join(" "),
+      c?.name || ""
+    ].join(" ").toLowerCase();
+    return hay.includes(q);
+  }
+
+  function addToHistory(q){
+    const v = normalize(q);
+    if(!v) return;
+    // Keep most recent first, unique, max 8
+    state.searchHistory = [v, ...state.searchHistory.filter(x => x !== v)].slice(0,8);
+    scheduleSave();
+  }
+
+  function renderHistory(){
+    const wrap = $("#searchHistoryWrap");
+    if(!state.searchHistory.length){
+      wrap.innerHTML = `<div style="color: var(--gray-dark); font-weight:850;">Ainda sem histórico.</div>`;
+      return;
+    }
+    wrap.innerHTML = state.searchHistory.map(q => `
+      <div class="list-row" data-history-q="${q}" style="padding:12px 0;">
+        <div class="list-icon" style="width:46px;height:46px;border-radius:14px;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="list-content">
+          <div class="list-title" style="font-size:16px;">${q}</div>
+          <div class="list-sub">Toca para pesquisar</div>
+        </div>
+        <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+    `).join("");
+  }
+
+  function applySearchRender(silent=false){
+    const q = normalize(state.searchQuery);
+    const s = state.filters;
+
+    let results = DB.recipes.filter(r => matchesQuery(r, q));
+
+    results = results.filter(r => {
+      if (s.has("asiatica")    && r.cuisine !== "asiatica") return false;
+      if (s.has("portuguesa") && r.cuisine !== "portuguesa") return false;
+      if (s.has("italiana")   && r.cuisine !== "italiana") return false;
+      if (s.has("japonesa")   && r.cuisine !== "japonesa") return false;
+
+      if (s.has("vegetariano") && r.diet !== "vegetariano") return false;
+      if (s.has("vegan")       && r.diet !== "vegan") return false;
+      if (s.has("semgluten")   && r.diet !== "semgluten") return false;
+
+      if (s.has("wok")      && r.utensil !== "wok") return false;
+      if (s.has("forno")    && r.utensil !== "forno") return false;
+      if (s.has("airfryer") && r.utensil !== "airfryer") return false;
+
+      if (s.has("tofu")      && r.ingredient !== "tofu") return false;
+      if (s.has("abobora")   && r.ingredient !== "abobora") return false;
+      if (s.has("cogumelos") && r.ingredient !== "cogumelos") return false;
+
+      if (s.has("verificado")) {
+        const c = getCreator(r.creatorId);
+        if(!c?.verified) return false;
+      }
+      return true;
+    });
+
+    // Teacher rule: tofu-wok only appears when exact 5 filters selected
+    const exact = isExactTask2Selection();
+    if(exact){
+      results = [getRecipe("tofu-wok")].filter(Boolean).filter(r => matchesQuery(r, q));
+    }else{
+      results = results.filter(r => r.id !== "tofu-wok");
+    }
+
+    const shouldShowHistory = (normalize(state.searchQuery) === "" && state.filters.size === 0);
+    if(shouldShowHistory){
+      $("#searchResults").style.display = "none";
+      $("#searchEmpty").style.display = "block";
+      renderHistory();
+      return;
+    }
+
+    if(results.length === 0){
+      $("#searchResults").style.display = "none";
+      $("#searchEmpty").style.display = "block";
+      renderHistory();
+
+      if(!silent){
+        const hint = (q.includes("tofu") || q.includes("wok") || q.includes("chen"))
+          ? "Para ver “Tofu … no Wok”, ativa os 5 filtros exatos."
+          : "Ajusta palavra-chave ou filtros.";
+        toast("Sem resultados", hint);
+      }
+      return;
+    }
+
+    $("#searchEmpty").style.display = "none";
+    $("#searchResults").style.display = "block";
+
+    $("#searchCount").textContent = (exact && results.length === 1) ? "1 Resultado Exato" : `${results.length} resultado(s)`;
+    $("#searchList").innerHTML = results.map(recipeCard).join("");
+
+    if(!silent){
+      addToHistory(state.searchQuery);
+      if(exact){
+        const chenSub = !!state.subscriptions["chen"];
+        toast(chenSub ? "Task 2 OK" : "Quase lá", chenSub ? "Task 2 concluída." : "Agora falta Subscrever o Chef Chen (no detalhe).");
+      }
+    }
+  }
+
+  function renderSearch(){
+    $$("#sheet-filters .filter-chip").forEach(ch => ch.classList.toggle("active", state.filters.has(ch.dataset.filter)));
+    updateFilterBadge();
+
+    const input = $("#searchQueryInput");
+    input.value = state.searchQuery || "";
+    $("#clearSearch").classList.toggle("show", normalize(input.value).length > 0);
+
+    applySearchRender(true);
+  }
+
+  /* =================== Profile & pseudo pages =================== */
+  function renderProfile(){
+    $("#meAvatar").src = DB.me.avatar;
+    $("#meName").textContent = DB.me.name;
+    $("#meSubline").textContent = `Utensílios: ${state.myUtensils.length} • Subscrições: ${Object.values(state.subscriptions).filter(Boolean).length}`;
+  }
+  function renderAbout(){ /* static */ }
+  function renderSettings(){ /* static */ }
+
+  function renderUtensilsPage(){
+    renderUtensilsList();
+    renderUtensilsCatalog();
+    const task1Done = REQUIRED_TASK1.every(id => state.myUtensils.includes(id));
+    $("#task1Banner").style.display = task1Done ? "block" : "none";
+  }
+
+  function renderUtensilsList(){
+    const wrap = $("#utensilsList");
+    if(state.myUtensils.length === 0){
+      wrap.innerHTML = `<div style="text-align:center; padding:26px 0; color: var(--gray-dark); font-weight:950;">Nenhum utensílio adicionado.</div>`;
+      return;
+    }
+    wrap.innerHTML = state.myUtensils.map(id => {
+      const u = DB.utensilsCatalog.find(x => x.id === id);
+      if(!u) return "";
+      return `
+        <div class="list-row fade-up" data-remove-utensil="${id}">
+          <div class="list-icon"><svg viewBox="0 0 24 24">${u.svg}</svg></div>
+          <div class="list-content">
+            <div class="list-title">${u.name}</div>
+            <div class="list-sub">Toca para remover</div>
+          </div>
+          <div style="color: var(--accent);">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderUtensilsCatalog(){
+    $("#utensilsCatalog").innerHTML = DB.utensilsCatalog.map(u => {
+      const added = state.myUtensils.includes(u.id);
+      return `
+        <div class="list-row" data-toggle-utensil="${u.id}">
+          <div class="list-icon"><svg viewBox="0 0 24 24">${u.svg}</svg></div>
+          <div class="list-content">
+            <div class="list-title">${u.name}</div>
+            <div class="list-sub">${added ? "Já adicionado" : "Toca para adicionar"}</div>
+          </div>
+          <div style="color:${added ? "var(--green)" : "var(--black)"};">
+            ${added ? `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+                    : `<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function toggleUtensil(id){
+    const idx = state.myUtensils.indexOf(id);
+    if(idx >= 0){
+      state.myUtensils.splice(idx,1);
+      toast("Removido", "Utensílio removido.");
+    }else{
+      state.myUtensils.push(id);
+      const u = DB.utensilsCatalog.find(x => x.id === id);
+      toast("Adicionado", u ? u.name : "Utensílio");
+    }
+    scheduleSave();
+    renderUtensilsPage();
+  }
+
+  /* =================== Recipe detail (tags + subscribe only here) =================== */
+  let playerTimer = null;
+
+  function openRecipe(id){
+    state.activeRecipeId = id;
+    state.player.playing = false;
+    state.player.progress = 0;
+    scheduleSave();
+    push("recipe", { recipeId:id });
+  }
+
+  function renderRecipe(){
+    const id = currentRoute().params?.recipeId || state.activeRecipeId;
+    state.activeRecipeId = id;
+
+    const r = getRecipe(id);
+    if(!r){
+      $("#recipePlayerWrap").innerHTML = `<div class="page-header"><h1 class="page-title">Vídeo</h1><p class="page-subtitle">Não encontrado.</p></div>`;
+      $("#recipeInfoWrap").innerHTML = "";
+      return;
+    }
+
+    $("#recipeTopTitle").textContent = r.title;
+
+    $("#recipePlayerWrap").innerHTML = `
+      <div class="player fade-up">
+        <img class="poster" src="${r.cover}" alt="${r.title}">
+        <div class="shade"></div>
+        <div class="time" id="playerTime">0:00 • ${r.duration}</div>
+        <div class="center">
+          <div class="bigplay" id="playerToggle" aria-label="Play/Pause">
+            <svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; width:26px; height:26px; margin-left:3px;">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="timeline"><div id="playerBar"></div></div>
+      </div>
+    `;
+
+    const c = getCreator(r.creatorId);
+    const subbed = !!state.subscriptions[c.id];
+    const chips = (r.tags || []).map(t => `<span class="chip small">${t}</span>`).join("");
+
+    $("#recipeInfoWrap").innerHTML = `
+      <div class="section">
+        <div style="font-size:22px; font-weight:1000; letter-spacing:-.4px; line-height:1.2;">${r.title}</div>
+
+        <div style="margin-top:8px;color:var(--gray-dark);font-weight:850;">
+          ${fmtViews(r.views)} visualizações • ${fmtAge(r.publishedDaysAgo)}
+        </div>
+
+        <div class="chip-group" style="margin-top:10px;">${chips}</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <img class="avatar" src="${c.avatar}" alt="${c.name}">
+            <div style="min-width:0;">
+              <div style="font-weight:1000;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw;">
+                ${c.name}${verifiedBadge(c.verified)}
+              </div>
+              <div style="margin-top:3px;color:var(--gray-dark);font-weight:800;">Criador</div>
+            </div>
+          </div>
+          <button class="btn-sub ${subbed ? "active":""}" data-subscribe="${c.id}">
+            ${subbed ? "Subscrito ✓" : "Subscrever"}
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="h2">Ingredientes</div>
+        <div class="card-block">
+          ${(r.ingredients||[]).map(x => `<div style="padding:8px 0; font-weight:800; color:rgba(0,0,0,.72);">${x}</div>`).join("")}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="h2">Receita</div>
+        <div class="card-block">
+          ${(r.steps||[]).map((s,i) => `
+            <div class="step">
+              <div class="n">${i+1}</div>
+              <div class="t">${s}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+    `;
+
+    $("#playerToggle").addEventListener("pointerup", togglePlayer, {passive:true});
+    $("#playerToggle").addEventListener("click", (e) => { e.preventDefault(); togglePlayer(); });
+    updatePlayerUI();
+  }
+
+  function togglePlayer(){
+    state.player.playing = !state.player.playing;
+
+    if(playerTimer) { clearInterval(playerTimer); playerTimer = null; }
+
+    if(state.player.playing){
+      playerTimer = setInterval(() => {
+        state.player.progress = Math.min(100, state.player.progress + 2.5);
+        if(state.player.progress >= 100){
+          state.player.playing = false;
+          clearInterval(playerTimer);
+          playerTimer = null;
+        }
+        updatePlayerUI();
+      }, 250);
+    }else{
+      scheduleSave();
+    }
+    updatePlayerUI();
+  }
+
+  function updatePlayerUI(){
+    const bar = $("#playerBar");
+    const t = $("#playerTime");
+    const btn = $("#playerToggle");
+    if(!bar || !t || !btn) return;
+
+    bar.style.width = `${state.player.progress}%`;
+
+    const seconds = Math.floor((state.player.progress / 100) * 60);
+    const mm = Math.floor(seconds / 60);
+    const ss = String(seconds % 60).padStart(2,"0");
+    t.textContent = `${mm}:${ss} • ${getRecipe(state.activeRecipeId)?.duration || ""}`;
+
+    btn.innerHTML = state.player.playing
+      ? `<svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; width:26px; height:26px;">
+          <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+          <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+        </svg>`
+      : `<svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; width:26px; height:26px; margin-left:3px;">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>`;
+  }
+
+  /* =================== Markets =================== */
+  function fmtDist(m){ return m < 1000 ? `${m} m` : `${(m/1000).toFixed(1)} km`; }
+  function stockScore(lvl){ return lvl==="alto"?3:lvl==="medio"?2:lvl==="baixo"?1:0; }
+  function stockText(lvl){ return lvl==="alto"?"Stock Alto":lvl==="medio"?"Stock Médio":lvl==="baixo"?"Poucas unidades":"Sem info"; }
+  function stockColor(lvl){ return lvl==="alto"?"var(--green)":lvl==="medio"?"#FF9F0A":lvl==="baixo"?"var(--accent)":"var(--gray-dark)"; }
+
+  function openMarkets(ingredientId){
+    push("markets", { ingredientId });
+  }
+
+  function renderMarkets(){
+    const ingredientId = currentRoute().params?.ingredientId || state.seasonalIngredientId || "abobora";
+    const ing = getSeasonal(ingredientId) || getSeasonal("abobora");
+
+    $("#marketsTopTitle").textContent = `Mercados • ${ing.name}`;
+    $("#marketsTitle").textContent = `Mercados: ${ing.name}`;
+    $("#marketsCaption").textContent = "Toca no primeiro recomendado para concluir a Task 3.";
+    $("#marketsHero").style.backgroundImage = `url('${ing.heroImg}')`;
+
+    const list = DB.markets.map(m => {
+      const lvl = (m.stock && m.stock[ingredientId]) ? m.stock[ingredientId] : null;
+      return { ...m, lvl, score: stockScore(lvl) };
+    }).sort((a,b) => (b.score - a.score) || (a.distanceM - b.distanceM));
+
+    const recommended = list[0]?.name || null;
+
+    $("#marketsList").innerHTML = list.map((m, idx) => {
+      const dist = fmtDist(m.distanceM);
+      const isTop = idx === 0;
+      return `
+        <div class="list-row fade-up" data-select-market="${m.name}" data-is-top="${isTop ? "1":"0"}" style="padding:14px 0;">
+          <div class="list-icon" style="${m.lvl==="alto" && isTop ? "background: var(--black); color: var(--white);" : ""}">
+            <svg viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          <div class="list-content">
+            <div class="list-title">${m.name}${(m.name === recommended) ? ` <span style="color: var(--gray-dark); font-weight:900; font-size:12px;">• Recomendado</span>` : ""}</div>
+            <div class="list-sub" style="color:${stockColor(m.lvl)}; font-weight:950;">● ${stockText(m.lvl)} (${ing.name})</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:1000; font-size:16px;">${dist}</div>
+            <div style="font-size:13px; color: var(--gray-dark); margin-top:4px; font-weight:850;">${m.open ? "Aberto" : "Fechado"}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* =================== Subscribe =================== */
+  function toggleSubscribe(creatorId){
+    state.subscriptions[creatorId] = !state.subscriptions[creatorId];
+    scheduleSave();
+
+    const c = getCreator(creatorId);
+    const exact = isExactTask2Selection();
+
+    if(state.subscriptions[creatorId]){
+      if(creatorId === "chen" && exact){
+        toast("Subscrito ✓", "Task 2 concluída");
+      }else{
+        toast("Subscrito ✓", c?.name || "—");
+      }
+    }else{
+      toast("Subscrição removida", c?.name || "—");
+    }
+
+    showView(currentRoute().name);
+  }
+
+  /* =================== Seasonal hub =================== */
+  function renderSeasonalHub(){
+    const currentId = state.seasonalIngredientId;
+    $("#seasonalHubList").innerHTML = DB.seasonalIngredients.map(i => {
+      const active = i.id === currentId;
+      return `
+        <div class="list-row" data-pick-seasonal="${i.id}">
+          <div class="list-icon" style="${active ? "background:#000;color:#fff;" : ""}">
+            <div style="font-size:22px;">${i.emoji}</div>
+          </div>
+          <div class="list-content">
+            <div class="list-title">${i.name}${active ? ` <span style="font-size:12px;color:var(--gray-dark);font-weight:900;">• atual</span>` : ""}</div>
+            <div class="list-sub">${i.note}</div>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* =================== Notification =================== */
+  function showSeasonalNotification(){
+    const seasonal = getSeasonal("abobora");
+    $("#notiTitle").textContent = `Época da ${seasonal.name} ${seasonal.emoji}`;
+    $("#notiSub").textContent = `Abre para ver receitas filtradas e mercados com stock de ${seasonal.name}.`;
+    setTimeout(() => $("#systemNoti").classList.add("show"), 900);
+  }
+  function closeNotification(){
+    const el = $("#systemNoti");
+    el.classList.remove("show");
+    el.classList.add("hide");
+  }
+  function activateSeasonalModeFromNoti(){
+    closeNotification();
+    state.homeMode = "seasonal";
+    state.seasonalIngredientId = "abobora";
+    scheduleSave();
+    goTab("home");
+    const seasonal = getSeasonal("abobora");
+    toast("Época ativada", `Receitas filtradas por ${seasonal.name}.`);
+  }
+
+  /* =================== Events =================== */
+  let lastPointerUpTs = 0;
+  function safeClickGuardedClick(){
+    const now = Date.now();
+    if(now - lastPointerUpTs < 380) return true;
+    return false;
+  }
+
+  function bindEvents(){
+    // Tab bar
+    const tabBar = $("#tabBar");
+    tabBar.addEventListener("pointerup", (e) => {
+      const btn = e.target.closest(".tab-btn");
+      if(!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      lastPointerUpTs = Date.now();
+      goTab(btn.dataset.view);
+    }, {passive:false});
+    tabBar.addEventListener("click", (e) => {
+      if(safeClickGuardedClick()) return;
+      const btn = e.target.closest(".tab-btn");
+      if(!btn) return;
+      e.preventDefault();
+      goTab(btn.dataset.view);
+    });
+
+    // Home chips
+    $("#homeChips").addEventListener("pointerup", (e) => {
+      const chip = e.target.closest(".chip[data-home-mode]");
+      if(!chip) return;
+      state.homeMode = chip.dataset.homeMode;
+      scheduleSave();
+      renderHome();
+    }, {passive:true});
+
+    // Época: open hub + markets
+    $("#openSeasonalHub").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      renderSeasonalHub();
+      openSheet("#sheet-seasonal");
+    }, {passive:false});
+
+    $("#openMarketsFromFeed").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      openMarkets(state.seasonalIngredientId || "abobora");
+    }, {passive:false});
+
+    $("#seasonalHubList").addEventListener("pointerup", (e) => {
+      const row = e.target.closest("[data-pick-seasonal]");
+      if(!row) return;
+      const id = row.dataset.pickSeasonal;
+      state.seasonalIngredientId = id;
+      state.homeMode = "seasonal";
+      scheduleSave();
+      closeSheets();
+      renderHome();
+      const ing = getSeasonal(id);
+      toast("Época", `${ing.name} selecionado.`);
+    }, {passive:true});
+
+    // Search input
+    const input = $("#searchQueryInput");
+    const clearBtn = $("#clearSearch");
+    let searchDebounce = null;
+
+    function setQuery(val, silent=false){
+      state.searchQuery = val;
+      scheduleSave();
+      clearBtn.classList.toggle("show", normalize(val).length > 0);
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => applySearchRender(silent), 120);
+    }
+
+    input.addEventListener("input", () => setQuery(input.value, true));
+    input.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        input.blur();
+        applySearchRender(false);
+      }
+    });
+
+    clearBtn.addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      input.value = "";
+      setQuery("", true);
+      input.focus();
+    }, {passive:false});
+
+    // History click
+    $("#searchHistoryWrap").addEventListener("pointerup", (e) => {
+      const row = e.target.closest("[data-history-q]");
+      if(!row) return;
+      const q = row.dataset.historyQ;
+      $("#searchQueryInput").value = q;
+      state.searchQuery = q;
+      scheduleSave();
+      applySearchRender(false);
+    }, {passive:true});
+
+    $("#clearHistoryBtn").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      state.searchHistory = [];
+      scheduleSave();
+      renderHistory();
+      toast("Histórico limpo", "Pronto.");
+    }, {passive:false});
+
+    // Filters sheet open
+    $("#openFiltersBtn").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      openSheet("#sheet-filters");
+    }, {passive:false});
+    $("#openFiltersBtn").addEventListener("click", (e) => {
+      if(safeClickGuardedClick()) return;
+      e.preventDefault();
+      openSheet("#sheet-filters");
+    });
+
+    // Filter chips
+    $$("#sheet-filters .filter-chip").forEach(ch => {
+      ch.addEventListener("pointerup", () => {
+        ch.classList.toggle("active");
+        const key = ch.dataset.filter;
+        if(ch.classList.contains("active")) state.filters.add(key);
+        else state.filters.delete(key);
+        scheduleSave();
+        updateFilterBadge();
+      }, {passive:true});
+    });
+
+    $("#applyFilters").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      closeSheets();
+      applySearchRender(false);
+    }, {passive:false});
+
+    $("#clearFilters").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      state.filters.clear();
+      $$("#sheet-filters .filter-chip").forEach(ch => ch.classList.remove("active"));
+      updateFilterBadge();
+      scheduleSave();
+      toast("Filtros limpos", "Pronto.");
+      applySearchRender(true);
+    }, {passive:false});
+
+    // Profile navigation
+    $("#view-profile").addEventListener("pointerup", (e) => {
+      if(e.target.closest("[data-open-utensils-page]")) { e.preventDefault(); push("utensils"); return; }
+      if(e.target.closest("[data-open-about]")) { e.preventDefault(); push("about"); return; }
+      if(e.target.closest("[data-open-settings]")) { e.preventDefault(); push("settings"); return; }
+    }, {passive:false});
+
+    // Utensils: open catalog sheet
+    $("#openUtensilsCatalog").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      openSheet("#sheet-utensils");
+    }, {passive:false});
+
+    // Overlay close
+    overlay.addEventListener("pointerup", closeSheets, {passive:true});
+    document.body.addEventListener("pointerup", (e) => {
+      if(e.target.closest("[data-close-sheet]")) closeSheets();
+    }, {passive:true});
+
+    // Utensil catalog + list
+    $("#utensilsCatalog").addEventListener("pointerup", (e) => {
+      const row = e.target.closest("[data-toggle-utensil]");
+      if(!row) return;
+      toggleUtensil(row.dataset.toggleUtensil);
+    }, {passive:true});
+
+    $("#utensilsList").addEventListener("pointerup", (e) => {
+      const row = e.target.closest("[data-remove-utensil]");
+      if(!row) return;
+      toggleUtensil(row.dataset.removeUtensil || row.dataset.removeUtensil || row.getAttribute("data-remove-utensil"));
+    }, {passive:true});
+
+    // Global delegation (open recipe / subscribe)
+    document.body.addEventListener("pointerup", (e) => {
+      const subBtn = e.target.closest("[data-subscribe]");
+      if(subBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSubscribe(subBtn.dataset.subscribe);
+        return;
+      }
+
+      if(e.target.closest("[data-stop-open]")) return;
+
+      const card = e.target.closest("[data-open-recipe]");
+      if(card){
+        e.preventDefault();
+        openRecipe(card.dataset.openRecipe);
+      }
+    }, {passive:false});
+
+    // Markets select
+    $("#marketsList").addEventListener("pointerup", (e) => {
+      const row = e.target.closest("[data-select-market]");
+      if(!row) return;
+      const isTop = row.dataset.isTop === "1";
+      if(isTop) toast("Mercado selecionado", "Task 3 concluída");
+      else toast("Mercado selecionado", row.dataset.selectMarket);
+    }, {passive:true});
+
+    // Back buttons
+    $("#navBackRecipe").addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      if(playerTimer){ clearInterval(playerTimer); playerTimer = null; }
+      state.player.playing = false;
+      scheduleSave();
+      pop();
+    }, {passive:false});
+
+    $("#navBackMarkets").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
+    $("#navBackUtensils").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
+    $("#navBackAbout").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
+    $("#navBackSettings").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
+
+    // Notification
+    $("#notiClose").addEventListener("pointerup", (e) => { e.preventDefault(); closeNotification(); }, {passive:false});
+    $("#notiOpenSeasonal").addEventListener("pointerup", (e) => { e.preventDefault(); activateSeasonalModeFromNoti(); }, {passive:false});
+  }
+
+  /* =================== init =================== */
+  function init(){
+    // Restore initial view
+    showView(currentRoute().name || "home");
+    renderProfile();
+    renderSearch();
+    showSeasonalNotification();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    bindEvents();
+    init();
+  });
+
+})();
+</script>
+</body>
+</html>
