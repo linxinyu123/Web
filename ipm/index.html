@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Rede Social de Receitas - Bake-off UI (Enterprise Revision)</title>
+  <title>Rede Social de Receitas - Bake-off UI (Enterprise)</title>
 
   <style>
     :root{
@@ -115,7 +115,7 @@
     .chip.active{background:var(--black); color:var(--white)}
     .chip.small{padding:6px 12px; font-size:12px; font-weight:750; cursor:default}
 
-    /* Cards (Enterprise simplified: fewer signals, like YouTube list + 16:9) */
+    /* Card */
     .video-card{
       background:var(--white);
       margin:0 24px 18px;
@@ -125,18 +125,9 @@
       border:1px solid var(--divider);
       cursor:pointer;
     }
-    .thumb{
-      position:relative;
-      width:100%;
-      aspect-ratio:16/9;
-      background:var(--gray-light);
-    }
+    .thumb{position:relative;width:100%;aspect-ratio:16/9;background:var(--gray-light)}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .thumb .play-overlay{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(0,0,0,.12);
-    }
+    .thumb .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.12)}
     .thumb .play-btn{
       width:58px;height:58px;
       background:rgba(255,255,255,.28);
@@ -146,59 +137,42 @@
       color:var(--white);
     }
     .thumb .duration{
-      position:absolute; right:12px; bottom:12px;
+      position:absolute;right:12px;bottom:12px;
       background:rgba(0,0,0,.65);
       color:#fff;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:-.1px;
+      padding:6px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;letter-spacing:-.1px;
     }
     .card-body{padding:14px 16px 16px}
-    .card-title{
-      font-size:20px;font-weight:950;line-height:1.25;
-      letter-spacing:-.35px;
-    }
-    .meta-row{
-      margin-top:10px;
-      display:flex; align-items:center; gap:12px;
-      min-width:0;
-    }
+    .card-title{font-size:20px;font-weight:950;line-height:1.25;letter-spacing:-.35px}
+    .meta-row{margin-top:10px;display:flex;align-items:center;gap:12px;min-width:0}
+    .meta-left{display:flex;align-items:center;gap:12px;min-width:0}
     .avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--gray-mid);flex:0 0 auto}
     .meta-col{min-width:0}
     .creator-line{
-      display:flex; align-items:center; gap:6px;
-      font-size:14px; font-weight:950;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      max-width:62vw;
+      display:flex;align-items:center;gap:6px;
+      font-size:14px;font-weight:950;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      max-width:56vw;
     }
-    .verified-icon{color:var(--blue); width:16px; height:16px}
+    .verified-icon{color:var(--blue);width:16px;height:16px}
     .stats{
-      margin-top:3px;
-      font-size:13px;
-      color:var(--gray-dark);
-      font-weight:800;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      max-width:70vw;
+      margin-top:3px;font-size:13px;color:var(--gray-dark);font-weight:800;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw;
     }
 
     /* Lists */
     .list-row{display:flex;align-items:center;padding:16px 0;border-bottom:1px solid var(--divider);cursor:pointer}
     .list-row:last-child{border-bottom:none}
     .list-icon{
-      width:52px;height:52px;
-      background:var(--gray-light);
-      border-radius:16px;
-      display:flex;align-items:center;justify-content:center;
-      margin-right:16px;
-      border:1px solid var(--divider);
-      flex:0 0 auto;
+      width:52px;height:52px;background:var(--gray-light);
+      border-radius:16px;display:flex;align-items:center;justify-content:center;
+      margin-right:16px;border:1px solid var(--divider);flex:0 0 auto;
     }
     .list-content{flex:1;min-width:0}
     .list-title{font-size:17px;font-weight:950}
     .list-sub{font-size:14px;color:var(--gray-dark);margin-top:4px;font-weight:750;line-height:1.25}
-    .chev{color:var(--gray-dark); flex:0 0 auto}
+    .chev{color:var(--gray-dark);flex:0 0 auto}
 
     /* Search */
     .search-wrap{display:flex;gap:12px;padding:0 24px 18px}
@@ -217,39 +191,75 @@
     .clear-btn{
       width:28px;height:28px;border-radius:999px;
       border:none;background:rgba(0,0,0,.08);
-      display:none; align-items:center; justify-content:center;
-      cursor:pointer; touch-action:manipulation;
+      display:none;align-items:center;justify-content:center;
+      cursor:pointer;touch-action:manipulation;
     }
     .clear-btn.show{display:flex}
     .clear-btn svg{width:16px;height:16px;stroke-width:2.6}
 
     .filter-btn{
-      width:50px;height:50px;
-      border-radius:16px;border:none;
+      width:50px;height:50px;border-radius:16px;border:none;
       background:var(--black);color:var(--white);
       display:flex;align-items:center;justify-content:center;
-      cursor:pointer;
-      position:relative;
-      touch-action:manipulation;
+      cursor:pointer;position:relative;touch-action:manipulation;
     }
     .filter-dot{
       position:absolute;top:12px;right:12px;
       width:8px;height:8px;background:var(--accent);
-      border-radius:50%;
+      border-radius:50%;display:none;
+    }
+
+    /* History block (Enterprise) */
+    .history-wrap{
+      padding: 0 24px 18px;
       display:none;
+    }
+    .history-head{
+      display:flex; align-items:center; justify-content:space-between;
+      margin: 4px 0 10px;
+    }
+    .history-title{
+      font-weight:1000; letter-spacing:-.2px; color: var(--black);
+    }
+    .history-clear{
+      font-weight:950; color: var(--gray-dark);
+      cursor:pointer; user-select:none;
+    }
+    .history-item{
+      display:flex; align-items:center; gap:12px;
+      padding:14px 14px;
+      background: var(--gray-light);
+      border:1px solid var(--divider);
+      border-radius:16px;
+      margin-bottom:10px;
+      cursor:pointer;
+    }
+    .history-item .q{
+      font-weight:950;
+      letter-spacing:-.2px;
+      flex:1; min-width:0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .history-item .x{
+      width:28px; height:28px; border-radius:999px;
+      border:none; background: rgba(0,0,0,.08);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .history-empty{
+      padding: 26px 0;
+      text-align:center;
+      color: var(--gray-dark);
+      font-weight: 850;
+      line-height: 1.35;
     }
 
     /* Notification */
     .toast-notification{
-      position:fixed;
-      top:calc(10px + var(--safe-top));
-      left:16px; right:16px;
+      position:fixed;top:calc(10px + var(--safe-top));left:16px;right:16px;
       background:rgba(20,20,20,.95);
-      backdrop-filter:blur(15px);
-      -webkit-backdrop-filter:blur(15px);
-      color:#fff;
-      border-radius:20px;
-      padding:16px 20px;
+      backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);
+      color:#fff;border-radius:20px;padding:16px 20px;
       display:flex;align-items:flex-start;gap:16px;
       box-shadow:0 25px 50px rgba(0,0,0,.3);
       z-index:11000;
@@ -263,23 +273,17 @@
 
     /* Bottom Sheets */
     .overlay{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.5);
-      opacity:0; pointer-events:none;
-      transition:.25s;
-      z-index:10000;
+      position:fixed;inset:0;background:rgba(0,0,0,.5);
+      opacity:0;pointer-events:none;transition:.25s;z-index:10000;
     }
-    .overlay.active{opacity:1; pointer-events:auto}
+    .overlay.active{opacity:1;pointer-events:auto}
     .bottom-sheet{
-      position:fixed; left:0; right:0; bottom:0;
-      background:var(--white);
+      position:fixed;left:0;right:0;bottom:0;background:var(--white);
       border-radius:32px 32px 0 0;
       transform:translateY(100%);
       transition:transform .3s var(--easing);
-      display:flex;flex-direction:column;
-      max-height:90dvh;
-      box-shadow:var(--shadow-lg);
-      z-index:10001;
+      display:flex;flex-direction:column;max-height:90dvh;
+      box-shadow:var(--shadow-lg);z-index:10001;
     }
     .bottom-sheet.active{transform:translateY(0)}
     .sheet-drag{width:40px;height:5px;background:var(--gray-mid);border-radius:4px;margin:12px auto}
@@ -289,31 +293,24 @@
 
     /* Mini toast */
     .mini-toast{
-      position:fixed;
-      left:16px; right:16px;
-      bottom:calc(84px + var(--safe-bottom));
-      background:rgba(20,20,20,.92);
-      color:#fff;
-      border-radius:18px;
-      padding:14px 16px;
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      position:fixed;left:16px;right:16px;bottom:calc(84px + var(--safe-bottom));
+      background:rgba(20,20,20,.92);color:#fff;border-radius:18px;
+      padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
       box-shadow:0 20px 45px rgba(0,0,0,.35);
-      transform:translateY(140%);
-      opacity:0;
+      transform:translateY(140%);opacity:0;
       transition:transform .28s var(--easing), opacity .28s;
       z-index:12000;
     }
-    .mini-toast.show{transform:translateY(0); opacity:1}
+    .mini-toast.show{transform:translateY(0);opacity:1}
     .mini-toast .msg{font-weight:950;letter-spacing:-.2px}
     .mini-toast .sub{color:rgba(255,255,255,.72);font-weight:750;font-size:13px;margin-top:2px}
 
     /* Topbar */
     .topbar{
-      position:sticky; top:0; z-index:50;
+      position:sticky;top:0;z-index:50;
       padding-top:var(--safe-top);
       background:rgba(255,255,255,.92);
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
       border-bottom:1px solid var(--divider);
     }
     .topbar-inner{padding:14px 16px 12px;display:flex;align-items:center;gap:12px}
@@ -321,7 +318,7 @@
       width:44px;height:44px;border-radius:16px;border:none;
       background:var(--gray-light);
       display:flex;align-items:center;justify-content:center;
-      cursor:pointer; touch-action:manipulation;
+      cursor:pointer;touch-action:manipulation;
     }
     .topbar-title{
       font-weight:950;letter-spacing:-.3px;font-size:17px;
@@ -330,9 +327,8 @@
 
     /* Player */
     .player{
-      margin:18px 24px 14px;
-      border-radius:22px; overflow:hidden;
-      background:#111; position:relative;
+      margin:18px 24px 14px;border-radius:22px;overflow:hidden;
+      background:#111;position:relative;
       box-shadow:0 10px 30px rgba(0,0,0,.18);
       border:1px solid rgba(255,255,255,.06);
     }
@@ -350,55 +346,26 @@
     }
     .player .bigplay:active{transform:scale(.96)}
     .player .timeline{
-      position:absolute; left:14px; right:14px; bottom:12px;
+      position:absolute;left:14px;right:14px;bottom:12px;
       height:6px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden
     }
     .player .timeline > div{height:100%;width:0%;background:rgba(255,255,255,.7);border-radius:999px;transition:width .2s linear}
     .player .time{
-      position:absolute; left:14px; top:12px;
-      background:rgba(0,0,0,.55); color:#fff;
-      font-size:12px;font-weight:900;
+      position:absolute;left:14px;top:12px;
+      background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:900;
       padding:6px 10px;border-radius:999px;
     }
 
     .section{padding:0 24px 18px}
     .h2{font-size:18px;font-weight:1000;letter-spacing:-.3px}
     .card-block{
-      margin-top:10px;
-      background:var(--gray-light);
-      border:1px solid var(--divider);
-      border-radius:18px;
-      padding:14px 16px;
+      margin-top:10px;background:var(--gray-light);
+      border:1px solid var(--divider);border-radius:18px;padding:14px 16px;
     }
     .step{display:flex;gap:10px;padding:10px 0}
     .step + .step{border-top:1px solid rgba(0,0,0,.06)}
     .step .n{width:22px;text-align:center;font-weight:1000}
     .step .t{font-weight:800;color:rgba(0,0,0,.72);line-height:1.35}
-
-    /* Sticky CTA in Época feed */
-    .sticky-cta{
-      position:sticky;
-      top:calc(var(--safe-top) + 10px);
-      z-index:30;
-      padding:0 24px 10px;
-      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.78) 50%, rgba(255,255,255,0));
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
-    }
-    .mini-cta{
-      width:100%;
-      border-radius:18px;
-      border:1px solid var(--divider);
-      background:rgba(0,0,0,.92);
-      color:#fff;
-      padding:14px 14px;
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      font-weight:950;
-      cursor:pointer;
-      touch-action:manipulation;
-    }
-    .mini-cta:active{transform:scale(.99)}
-    .mini-cta svg{stroke-width:2.6}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     .fade-up{animation:fadeUp .22s var(--easing)}
@@ -446,19 +413,6 @@
       </div>
     </div>
 
-    <!-- Only visible in Época mode -->
-    <div class="sticky-cta" id="seasonalCtaWrap" style="display:none;">
-      <button class="mini-cta" id="openSeasonalHub">
-        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-        Ver ingredientes da época
-      </button>
-      <div style="height:10px;"></div>
-      <button class="mini-cta" id="openMarketsFromFeed" style="background:#fff;color:#000;">
-        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        Onde comprar (mercados com stock)
-      </button>
-    </div>
-
     <div id="homeFeed"></div>
   </div>
 
@@ -466,7 +420,7 @@
   <div class="view" id="view-search">
     <div class="page-header">
       <h1 class="page-title">Pesquisa</h1>
-      <p class="page-subtitle">Pesquisa por palavra + filtra pelo botão de filtros.</p>
+      <p class="page-subtitle">Pesquisa as receitas favoritas.</p>
     </div>
 
     <div class="search-wrap">
@@ -476,7 +430,7 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
 
-        <input type="text" id="searchQueryInput" placeholder="Pesquisar receitas, tags, criadores..." autocomplete="off" />
+        <input type="text" id="searchQueryInput" placeholder="Pesquisar por título..." autocomplete="off" />
 
         <button class="clear-btn" id="clearSearch" aria-label="Limpar">
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -489,37 +443,27 @@
       </button>
     </div>
 
-    <!-- Empty / history -->
-    <div id="searchEmpty" style="padding: 10px 24px 0; color: var(--gray-dark);">
-      <div style="text-align:center; padding: 26px 0 10px;">
-        <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; margin: 0 auto 12px; stroke-width: 1;">
-          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <p style="font-size: 18px; font-weight: 950; color:#000;">Sem pesquisa</p>
-        <p style="margin-top: 8px; font-weight: 750; line-height: 1.35;">
-          Dica: Bake-off Task 2 → ativa <b>Asiática</b> + <b>Vegetariano</b> + <b>Wok</b> + <b>Tofu</b> + <b>Verificado</b>.
-        </p>
+    <!-- History -->
+    <div class="history-wrap" id="historyWrap">
+      <div class="history-head">
+        <div class="history-title">Pesquisas recentes</div>
+        <div class="history-clear" id="historyClearAll">Limpar</div>
       </div>
-
-      <div style="margin-top:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-weight:1000; color:#000; letter-spacing:-.2px;">Histórico</div>
-          <button class="btn-sub" id="clearHistoryBtn" style="padding:8px 12px;">Limpar</button>
-        </div>
-        <div class="card-block" id="searchHistoryWrap" style="margin-top:10px;">
-          <!-- history rows injected -->
-        </div>
+      <div id="historyList"></div>
+      <div class="history-empty" id="historyEmpty" style="display:none;">
+        Sem histórico ainda.
       </div>
-      <div style="height:12px;"></div>
     </div>
 
-    <div id="searchResults" style="display:none;">
+    <!-- Results -->
+    <div id="searchResults">
       <p style="padding: 0 24px 12px; font-weight: 950; color: var(--gray-dark);" id="searchCount">—</p>
       <div id="searchList"></div>
+      <div style="height:10px;"></div>
     </div>
   </div>
 
-  <!-- PROFILE (User page) -->
+  <!-- PROFILE -->
   <div class="view" id="view-profile">
     <div class="page-header">
       <h1 class="page-title">Perfil</h1>
@@ -548,33 +492,11 @@
           </div>
           <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
         </div>
-
-        <div class="list-row" data-open-about>
-          <div class="list-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          </div>
-          <div class="list-content">
-            <div class="list-title">Sobre</div>
-            <div class="list-sub">Informação do protótipo</div>
-          </div>
-          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
-        </div>
-
-        <div class="list-row" data-open-settings>
-          <div class="list-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.13.33.2.68.2 1.05s-.07.72-.2 1.05z"></path></svg>
-          </div>
-          <div class="list-content">
-            <div class="list-title">Definições</div>
-            <div class="list-sub">Preferências (mock)</div>
-          </div>
-          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- UTENSILS PAGE (pseudo page) -->
+  <!-- UTENSILS PAGE -->
   <div class="view" id="view-utensils">
     <div class="topbar">
       <div class="topbar-inner">
@@ -588,85 +510,19 @@
 
     <div class="page-header" style="padding-top:18px;">
       <h1 class="page-title" style="font-size:30px;">Os teus utensílios</h1>
-      <p class="page-subtitle">Task 1: adiciona Batedeira elétrica, Wok, Termómetro culinário.</p>
     </div>
 
     <div style="padding:0 24px;">
-      <div id="task1Banner" style="display:none; background: var(--black); color: var(--white); padding: 14px 16px; border-radius: 16px; font-weight: 950; letter-spacing: -0.2px; margin-bottom: 14px;">
-        ✅ 3 utensílios adicionados — <span style="opacity:0.85; font-weight: 800;">Task 1 concluída</span>
-      </div>
+      
 
       <div id="utensilsList" style="margin-bottom:16px;"></div>
 
       <button class="btn-primary" style="background: var(--gray-light); color: var(--black);" id="openUtensilsCatalog">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Adicionar Utensílio
+        Adicionar utensílio
       </button>
 
       <div style="height:14px;"></div>
-      <div style="background: var(--gray-light); padding: 14px 16px; border-radius: 16px; color: var(--gray-dark); font-weight:750; line-height:1.35;">
-        ✔ Dica: o catálogo é um “pseudo ecrã” — o protótipo não precisa de lógica real.
-      </div>
-    </div>
-  </div>
-
-  <!-- ABOUT (pseudo page) -->
-  <div class="view" id="view-about">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <button class="back-btn" id="navBackAbout" aria-label="Voltar">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <div class="topbar-title">Sobre</div>
-        <div style="width:44px;"></div>
-      </div>
-    </div>
-    <div class="page-header" style="padding-top:18px;">
-      <h1 class="page-title" style="font-size:30px;">Sobre o protótipo</h1>
-      <p class="page-subtitle">Bake-off #1 — Rede Social de Receitas.</p>
-    </div>
-    <div class="section">
-      <div class="card-block">
-        <div style="font-weight:950;">Objetivo</div>
-        <div style="margin-top:8px;color:rgba(0,0,0,.72);font-weight:800;line-height:1.35;">
-          UI de uma rede social de vídeos de receitas com suporte a utensílios, pesquisa com filtros, e época/ingredientes.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS (pseudo page) -->
-  <div class="view" id="view-settings">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <button class="back-btn" id="navBackSettings" aria-label="Voltar">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <div class="topbar-title">Definições</div>
-        <div style="width:44px;"></div>
-      </div>
-    </div>
-    <div class="page-header" style="padding-top:18px;">
-      <h1 class="page-title" style="font-size:30px;">Preferências</h1>
-      <p class="page-subtitle">Mock de definições (não funcional).</p>
-    </div>
-    <div class="section">
-      <div class="card-block">
-        <div class="list-row" style="padding:14px 0;cursor:default;">
-          <div class="list-content">
-            <div class="list-title">Notificações</div>
-            <div class="list-sub">Ativas (demo)</div>
-          </div>
-          <div style="font-weight:950;color:var(--green);">ON</div>
-        </div>
-        <div class="list-row" style="padding:14px 0;cursor:default;">
-          <div class="list-content">
-            <div class="list-title">Idioma</div>
-            <div class="list-sub">Português</div>
-          </div>
-          <div style="font-weight:950;color:var(--gray-dark);">PT</div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -711,9 +567,7 @@
     <div class="section" style="padding-top:0;">
       <div class="h2" id="marketsTitle">Mercados próximos</div>
       <div class="card-block" style="padding-top:6px;">
-        <div style="color: var(--gray-dark); font-weight: 850; line-height: 1.35; margin-bottom: 8px;">
-          Ordenado por <b>stock</b> (Alto → Médio → Poucas unidades) e depois <b>distância</b>.
-        </div>
+        
         <div id="marketsList"></div>
       </div>
       <div style="height:10px;"></div>
@@ -739,7 +593,7 @@
   <!-- Overlay + Sheets -->
   <div class="overlay" id="overlay"></div>
 
-  <!-- Utensils catalog sheet -->
+  <!-- Utensils sheet -->
   <div class="bottom-sheet" id="sheet-utensils">
     <div class="sheet-drag"></div>
     <div class="sheet-header">
@@ -771,7 +625,6 @@
       <div class="chip-group" style="margin-bottom:22px;">
         <span class="chip filter-chip" data-filter="vegetariano">Vegetariano</span>
         <span class="chip filter-chip" data-filter="vegan">Vegan</span>
-        <span class="chip filter-chip" data-filter="semgluten">Sem Glúten</span>
       </div>
 
       <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Utensílios</h3>
@@ -785,7 +638,6 @@
       <div class="chip-group" style="margin-bottom:22px;">
         <span class="chip filter-chip" data-filter="tofu">Tofu</span>
         <span class="chip filter-chip" data-filter="abobora">Abóbora</span>
-        <span class="chip filter-chip" data-filter="cogumelos">Cogumelos</span>
       </div>
 
       <h3 style="font-size:16px; margin-bottom:12px; color: var(--gray-dark);">Criador</h3>
@@ -795,7 +647,7 @@
 
       <button class="btn-primary" id="applyFilters">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        Aplicar Filtros
+        Aplicar filtros
       </button>
 
       <div style="margin-top:12px; color: var(--gray-dark); font-weight:750; line-height:1.35;">
@@ -804,28 +656,13 @@
     </div>
   </div>
 
-  <!-- Seasonal hub sheet -->
-  <div class="bottom-sheet" id="sheet-seasonal">
-    <div class="sheet-drag"></div>
-    <div class="sheet-header">
-      <h2 class="sheet-title">Época</h2>
-      <span style="font-weight: 950; color: var(--gray-dark); cursor:pointer;" data-close-sheet>Fechar</span>
-    </div>
-    <div class="sheet-content" id="seasonalHubList"></div>
-  </div>
-
 <script>
 (() => {
   "use strict";
 
-  /* =================== Data =================== */
+  /* =================== Data (single shared source) =================== */
   const DB = {
-    seasonalIngredients: [
-      { id:"abobora", name:"Abóbora", emoji:"🎃", note:"Receitas de outono • stock perto", heroImg:"https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80" },
-      { id:"cogumelos", name:"Cogumelos", emoji:"🍄", note:"Ideias rápidas e leves", heroImg:"https://images.unsplash.com/photo-1505253213348-cee1f5b14a6c?auto=format&fit=crop&w=1200&q=80" },
-      { id:"tomate", name:"Tomate", emoji:"🍅", note:"No pico da estação", heroImg:"https://images.unsplash.com/photo-1546470427-2277c9fbecc2?auto=format&fit=crop&w=1200&q=80" },
-      { id:"espinafre", name:"Espinafre", emoji:"🥬", note:"Fresco esta semana", heroImg:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80" }
-    ],
+    seasonal: { id:"abobora", name:"Abóbora", emoji:"🎃", heroImg:"https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80" },
     creators: {
       chen:  { id:"chen",  name:"Chef Chen",  verified:true,  avatar:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" },
       sofia: { id:"sofia", name:"Chef Sofia", verified:false, avatar:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" },
@@ -833,167 +670,214 @@
     },
     recipes: [
       {
-        id: "tofu-wok",
-        title: "Tofu Salteado com Legumes no Wok",
-        duration: "18 min",
-        tags: ["Asiática","Vegetariano","Wok","Tofu"],
-        cuisine: "asiatica",
-        diet: "vegetariano",
-        utensil: "wok",
-        ingredient: "tofu",
-        creatorId: "chen",
+        id:"tofu-wok",
+        title:"Tofu Salteado com Legumes no Wok",
+        duration:"18 min",
+        tags:["Asiática","Vegetariano","Wok","Tofu"],
+        cuisine:"asiatica", diet:"vegetariano",
+        utensil:"wok", ingredient:"tofu",
+        creatorId:"chen",
         views: 186000,
         publishedDaysAgo: 8,
-        cover: "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Tofu","Brócolos","Cenoura","Gengibre","Molho de soja"],
-        steps: [
-          "Aquece o wok e adiciona óleo.",
-          "Salteia legumes e tofu até dourar.",
-          "Finaliza com molho de soja e gengibre."
-        ]
+        cover:"https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Tofu","Brócolos","Cenoura","Gengibre","Molho de soja"],
+        steps:["Aquece o wok e adiciona óleo.","Salteia legumes e tofu até dourar.","Finaliza com molho de soja e gengibre."]
       },
       {
-        id: "salad",
-        title: "Salada Mediterrânica Rápida",
-        duration: "15 min",
-        tags: ["Italiana","Rápido"],
-        cuisine: "italiana",
-        diet: "saudavel",
-        utensil: "tigela",
-        ingredient: "tomate",
-        creatorId: "ana",
+        id:"ramen-veg",
+        title:"Ramen Vegetariano Rápido",
+        duration:"14 min",
+        tags:["Asiática","Vegetariano"],
+        cuisine:"asiatica", diet:"vegetariano",
+        utensil:"panela", ingredient:"tofu",
+        creatorId:"ana",
+        views: 121000,
+        publishedDaysAgo: 4,
+        cover:"https://images.unsplash.com/photo-1604908554162-97b7e15b0f5a?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Noodles","Caldo","Tofu","Cebolinho","Soja"],
+        steps:["Ferve o caldo.","Cozinha noodles e tofu.","Finaliza com cebolinho."]
+      },
+      {
+        id:"dumplings",
+        title:"Dumplings ao Vapor",
+        duration:"22 min",
+        tags:["Asiática"],
+        cuisine:"asiatica", diet:"normal",
+        utensil:"panela", ingredient:"vegetais",
+        creatorId:"sofia",
+        views: 68000,
+        publishedDaysAgo: 12,
+        cover:"https://images.unsplash.com/photo-1603096942154-2c7e2a4dc5c0?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Massa","Recheio de legumes","Molho"],
+        steps:["Prepara recheio.","Monta dumplings.","Cozinha ao vapor."]
+      },
+      {
+        id:"salad",
+        title:"Salada Mediterrânica Rápida",
+        duration:"15 min",
+        tags:["Italiana","Rápido"],
+        cuisine:"italiana", diet:"saudavel",
+        utensil:"tigela", ingredient:"tomate",
+        creatorId:"ana",
         views: 92000,
         publishedDaysAgo: 3,
-        cover: "https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Tomate","Pepino","Azeitonas","Feta","Azeite"],
-        steps: ["Corta tomate e pepino.","Mistura com azeitonas e feta.","Temperar com azeite e sal."]
+        cover:"https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Tomate","Pepino","Azeitonas","Feta","Azeite"],
+        steps:["Corta tomate e pepino.","Mistura com azeitonas e feta.","Temperar com azeite e sal."]
       },
       {
-        id: "miso",
-        title: "Sopa Miso Minimalista",
-        duration: "12 min",
-        tags: ["Japonesa","Conforto"],
-        cuisine: "japonesa",
-        diet: "leve",
-        utensil: "panela",
-        ingredient: "miso",
-        creatorId: "sofia",
+        id:"miso",
+        title:"Sopa Miso Minimalista",
+        duration:"12 min",
+        tags:["Japonesa","Conforto"],
+        cuisine:"japonesa", diet:"leve",
+        utensil:"panela", ingredient:"miso",
+        creatorId:"sofia",
         views: 54000,
         publishedDaysAgo: 21,
-        cover: "https://images.unsplash.com/photo-1604908176997-125f25cc5001?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Pasta miso","Tofu (opcional)","Cebolinho","Água"],
-        steps: ["Aquece a água sem ferver.","Dissolve o miso fora do lume.","Finaliza com cebolinho."]
+        cover:"https://images.unsplash.com/photo-1604908176997-125f25cc5001?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Pasta miso","Tofu (opcional)","Cebolinho","Água"],
+        steps:["Aquece a água sem ferver.","Dissolve o miso fora do lume.","Finaliza com cebolinho."]
       },
       {
-        id: "pumpkin-cream",
-        title: "Creme de Abóbora Assada com Especiarias",
-        duration: "40 min",
-        tags: ["Época: Abóbora","Vegetariano"],
-        cuisine: "portuguesa",
-        diet: "vegetariano",
-        utensil: "forno",
-        ingredient: "abobora",
-        creatorId: "sofia",
+        id:"pumpkin-cream",
+        title:"Creme de Abóbora Assada com Especiarias",
+        duration:"40 min",
+        tags:["Época: Abóbora","Vegetariano"],
+        cuisine:"portuguesa", diet:"vegetariano",
+        utensil:"forno", ingredient:"abobora",
+        creatorId:"sofia",
         views: 211000,
         publishedDaysAgo: 1,
-        cover: "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Abóbora","Alho","Azeite","Pimenta","Noz-moscada"],
-        steps: ["Assa a abóbora com alho e azeite.","Tritura até ficar cremoso.","Ajusta especiarias e serve quente."]
+        cover:"https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Abóbora","Alho","Azeite","Pimenta","Noz-moscada"],
+        steps:["Assa a abóbora com alho e azeite.","Tritura até ficar cremoso.","Ajusta especiarias e serve quente."]
       },
       {
-        id: "pumpkin-herbs",
-        title: "Abóbora no Forno com Ervas e Limão",
-        duration: "35 min",
-        tags: ["Época: Abóbora","Simples"],
-        cuisine: "portuguesa",
-        diet: "vegetariano",
-        utensil: "forno",
-        ingredient: "abobora",
-        creatorId: "ana",
+        id:"pumpkin-herbs",
+        title:"Abóbora no Forno com Ervas e Limão",
+        duration:"35 min",
+        tags:["Época: Abóbora","Simples"],
+        cuisine:"portuguesa", diet:"vegetariano",
+        utensil:"forno", ingredient:"abobora",
+        creatorId:"ana",
         views: 67000,
         publishedDaysAgo: 5,
-        cover: "https://images.unsplash.com/photo-1603046891744-76d2c3a01d10?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Abóbora","Alecrim","Limão","Azeite","Sal"],
-        steps: ["Corta a abóbora em cubos.","Envolve com azeite, alecrim e limão.","Assa até dourar."]
+        cover:"https://images.unsplash.com/photo-1603046891744-76d2c3a01d10?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Abóbora","Alecrim","Limão","Azeite","Sal"],
+        steps:["Corta a abóbora em cubos.","Envolve com azeite, alecrim e limão.","Assa até dourar."]
       },
       {
-        id: "pumpkin-salad",
-        title: "Salada Morna de Abóbora e Cogumelos",
-        duration: "20 min",
-        tags: ["Época: Abóbora","Vegetariano"],
-        cuisine: "italiana",
-        diet: "vegetariano",
-        utensil: "panela",
-        ingredient: "abobora",
-        creatorId: "sofia",
+  id:"tofu-airfryer",
+  title:"Tofu Crocante na Airfryer (Sem Fritura)",
+  duration:"16 min",
+  tags:["Asiática","Vegetariano","Airfryer","Tofu"],
+  cuisine:"asiatica",
+  diet:"vegetariano",
+  utensil:"airfryer",     // ✅ 用具不同：airfryer
+  ingredient:"tofu",
+  creatorId:"chen",
+  views: 73500,
+  publishedDaysAgo: 6,
+  cover:"https://picsum.photos/seed/tofu-airfryer/1200/675",  // ✅ 稳定封面
+  ingredients:["Tofu","Amido de milho","Molho de soja","Alho","Páprica"],
+  steps:[
+    "Seca o tofu e corta em cubos.",
+    "Envolve com amido + temperos.",
+    "Airfryer 200°C por 12–14 min, mexendo a meio.",
+    "Finaliza com molho de soja e alho."
+  ]
+},
+      {
+        id:"pumpkin-salad",
+        title:"Salada Morna de Abóbora e Cogumelos",
+        duration:"20 min",
+        tags:["Época: Abóbora","Vegetariano"],
+        cuisine:"italiana", diet:"vegetariano",
+        utensil:"panela", ingredient:"abobora",
+        creatorId:"sofia",
         views: 38500,
         publishedDaysAgo: 14,
-        cover: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=80",
-        ingredients: ["Abóbora","Cogumelos","Rúcula","Azeite","Vinagre"],
-        steps: ["Salteia cogumelos rapidamente.","Cozinha a abóbora até ficar macia.","Monta a salada e tempera."]
+        cover:"https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=80",
+        ingredients:["Abóbora","Cogumelos","Rúcula","Azeite","Vinagre"],
+        steps:["Salteia cogumelos rapidamente.","Cozinha a abóbora até ficar macia.","Monta a salada e tempera."]
       }
     ],
     markets: [
-      { name:"Mercado da Ribeira", distanceM: 850, open: true,  stock: { abobora: "alto", cogumelos:"medio", tomate:"alto", espinafre:"medio" } },
-      { name:"Mini Mercado Bairro",distanceM: 600, open: false, stock: { abobora: "medio", cogumelos:"baixo", tomate:"medio", espinafre:"baixo" } },
-      { name:"Supermercado Bio",   distanceM: 1200, open: true, stock: { abobora: "baixo", cogumelos:"alto", tomate:"baixo", espinafre:"alto" } }
+      { name:"Mercado da Ribeira", distanceM: 850, open: true,  stock: { abobora:"alto" } },
+      { name:"Mini Mercado Bairro",distanceM: 600, open: false, stock: { abobora:"medio" } },
+      { name:"Supermercado Bio",   distanceM: 1200, open: true, stock: { abobora:"baixo" } }
     ],
     utensilsCatalog: [
       { id:"mixer", name:"Batedeira elétrica", svg:`<path d="M8 12h8M9 12v6a3 3 0 0 0 6 0v-6M12 3v9M7 6h10"></path>` },
       { id:"wok", name:"Wok", svg:`<path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8H4zM20 12l2-4"></path>` },
       { id:"thermo", name:"Termómetro culinário", svg:`<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>` },
-      { id:"oven", name:"Forno", svg:`<path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path>` },
-      { id:"airfryer", name:"Airfryer", svg:`<path d="M7 4h10v4H7z"></path><path d="M6 8h12v12H6z"></path><path d="M9 12h6"></path>` }
+      { id:"oven", name:"Forno", svg:`<path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path>` }
     ],
     me: {
-      name: "Utilizador IPM",
-      avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      name:"Utilizador IPM",
+      avatar:"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
     }
   };
 
   /* =================== State =================== */
-  const STORAGE_KEY = "bakeoff_rss_state_enterprise_rev_v1";
-  const REQUIRED_TASK2 = ["asiatica","vegetariano","wok","tofu","verificado"];
+  const STORAGE_KEY = "bakeoff_enterprise_v2";
+  const HISTORY_KEY = "bakeoff_search_history_v1";
   const REQUIRED_TASK1 = ["mixer","wok","thermo"];
+  const REQUIRED_TASK2 = ["asiatica","vegetariano","wok","tofu","verificado"];
 
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const $ = (s)=>document.querySelector(s);
+  const $$ = (s)=>Array.from(document.querySelectorAll(s));
 
   function loadState(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(!raw) return null;
       const obj = JSON.parse(raw);
-      obj.filters = new Set(obj.filters || []);
-      obj.navStack = Array.isArray(obj.navStack) && obj.navStack.length ? obj.navStack : [{name:"home",params:{}}];
-      obj.searchQuery = obj.searchQuery || "";
-      obj.searchHistory = Array.isArray(obj.searchHistory) ? obj.searchHistory : [];
       obj.subscriptions = obj.subscriptions || {};
       obj.myUtensils = Array.isArray(obj.myUtensils) ? obj.myUtensils : [];
+      obj.homeMode = obj.homeMode || "normal";
+      obj.seasonalIngredientId = obj.seasonalIngredientId || DB.seasonal.id;
       return obj;
     }catch(e){ return null; }
   }
+  function loadHistory(){
+    try{
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(x=>typeof x==="string") : [];
+    }catch(e){ return []; }
+  }
+  function saveHistory(arr){
+    try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0,8))); }catch(e){}
+  }
 
-  const state = loadState() || {
-    navStack: [{name:"home", params:{}}],
-    homeMode: "normal",
-    seasonalIngredientId: "abobora",
-    myUtensils: [],
-    subscriptions: {},
+  const persisted = loadState() || {};
+  const state = {
+    navStack:[{name:"home", params:{}}],
+    homeMode: persisted.homeMode || "normal",
+    seasonalIngredientId: persisted.seasonalIngredientId || DB.seasonal.id,
+    myUtensils: persisted.myUtensils || [],
+    subscriptions: persisted.subscriptions || {},
     filters: new Set(),
-    activeRecipeId: null,
     searchQuery: "",
-    searchHistory: [],
-    player: { playing:false, progress:0 }
+    activeRecipeId: null,
+    player: { playing:false, progress:0 },
+    history: loadHistory()
   };
 
-  let saveTimer = null;
+  let saveTimer=null;
   function scheduleSave(){
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      const out = { ...state, filters: Array.from(state.filters) };
+    saveTimer=setTimeout(()=>{
+      const out = {
+        homeMode: state.homeMode,
+        seasonalIngredientId: state.seasonalIngredientId,
+        myUtensils: state.myUtensils,
+        subscriptions: state.subscriptions
+      };
       try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(out)); }catch(e){}
-    }, 160);
+    }, 150);
   }
 
   function toast(msg, sub=""){
@@ -1002,22 +886,15 @@
     const el = $("#miniToast");
     el.classList.add("show");
     clearTimeout(toast._t);
-    toast._t = setTimeout(() => el.classList.remove("show"), 1600);
+    toast._t = setTimeout(()=>el.classList.remove("show"), 1600);
   }
 
   const overlay = $("#overlay");
-  function openSheet(id){
-    overlay.classList.add("active");
-    $(id).classList.add("active");
-  }
-  function closeSheets(){
-    overlay.classList.remove("active");
-    $$(".bottom-sheet").forEach(s => s.classList.remove("active"));
-  }
+  function openSheet(id){ overlay.classList.add("active"); $(id).classList.add("active"); }
+  function closeSheets(){ overlay.classList.remove("active"); $$(".bottom-sheet").forEach(s=>s.classList.remove("active")); }
 
-  function getRecipe(id){ return DB.recipes.find(r => r.id === id); }
+  function getRecipe(id){ return DB.recipes.find(r=>r.id===id); }
   function getCreator(id){ return DB.creators[id]; }
-  function getSeasonal(id){ return DB.seasonalIngredients.find(x => x.id === id); }
   function currentRoute(){ return state.navStack[state.navStack.length-1]; }
   function rootRoute(){ return state.navStack[0]?.name || "home"; }
 
@@ -1029,7 +906,8 @@
       </svg>` : "";
   }
 
-  /* =================== Formatting =================== */
+
+  /* =================== Formatting (YouTube-like) =================== */
   function fmtViews(n){
     if(n == null) return "—";
     if(n >= 1_000_000) return (n/1_000_000).toFixed(n%1_000_000===0 ? 0 : 1).replace(".0","") + " M";
@@ -1044,45 +922,31 @@
     const w = Math.round(days/7);
     return w === 1 ? "há 1 semana" : `há ${w} semanas`;
   }
-
   /* =================== Navigation =================== */
   function showView(viewName){
-    $$(".view").forEach(v => v.classList.remove("active"));
+    $$(".view").forEach(v=>v.classList.remove("active"));
     $(`#view-${viewName}`).classList.add("active");
 
     const isMain = ["home","search","profile"].includes(viewName);
     $("#tabBar").classList.toggle("hidden", !isMain);
 
     const root = rootRoute();
-    $$(".tab-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === root));
+    $$(".tab-btn").forEach(btn=>btn.classList.toggle("active", btn.dataset.view===root));
 
-    if(viewName === "home") renderHome();
-    if(viewName === "search") renderSearch();
-    if(viewName === "profile") renderProfile();
-    if(viewName === "utensils") renderUtensilsPage();
-    if(viewName === "about") renderAbout();
-    if(viewName === "settings") renderSettings();
-    if(viewName === "recipe") renderRecipe();
-    if(viewName === "markets") renderMarkets();
+    if(viewName==="home") renderHome();
+    if(viewName==="search") renderSearch();
+    if(viewName==="profile") renderProfile();
+    if(viewName==="utensils") renderUtensilsPage();
+    if(viewName==="recipe") renderRecipe();
+    if(viewName==="markets") renderMarkets();
 
     scheduleSave();
   }
+  function goTab(name){ state.navStack=[{name,params:{}}]; showView(name); }
+  function push(name,params={}){ state.navStack.push({name,params}); showView(name); }
+  function pop(){ if(state.navStack.length<=1) return; state.navStack.pop(); showView(currentRoute().name); }
 
-  function goTab(name){
-    state.navStack = [{name, params:{}}];
-    showView(name);
-  }
-  function push(name, params={}){
-    state.navStack.push({name, params});
-    showView(name);
-  }
-  function pop(){
-    if(state.navStack.length <= 1) return;
-    state.navStack.pop();
-    showView(currentRoute().name);
-  }
-
-  /* =================== Cards (Enterprise, simplified) =================== */
+  /* =================== Card (YouTube-like: no subscribe on card) =================== */
   function recipeCard(r){
     const c = getCreator(r.creatorId);
     return `
@@ -1091,9 +955,7 @@
           <img src="${r.cover}" alt="${r.title}">
           <div class="play-overlay">
             <div class="play-btn">
-              <svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; margin-left:4px;">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
+              <svg viewBox="0 0 24 24" style="fill: currentColor; stroke:none; margin-left:4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </div>
           </div>
           <div class="duration">${r.duration}</div>
@@ -1116,190 +978,191 @@
 
   /* =================== Home =================== */
   function renderHome(){
-    const seasonal = getSeasonal(state.seasonalIngredientId) || getSeasonal("abobora");
-
-    if(state.homeMode === "seasonal"){
-      $("#homeTitle").textContent = `Época: ${seasonal.name} ${seasonal.emoji}`;
-      $("#homeSub").textContent = `Receitas filtradas por ${seasonal.name}.`;
-      $("#seasonalCtaWrap").style.display = "block";
-    }else{
+    if(state.homeMode==="seasonal"){
+      $("#homeTitle").textContent = `Época: ${DB.seasonal.name} ${DB.seasonal.emoji}`;
+      $("#homeSub").textContent = `Receitas filtradas por ${DB.seasonal.name}.`;
+    } else {
       $("#homeTitle").textContent = "Para Ti";
       $("#homeSub").textContent = "Receitas recomendadas hoje.";
-      $("#seasonalCtaWrap").style.display = "none";
     }
 
-    $$("#homeChips .chip").forEach(ch => ch.classList.toggle("active", ch.dataset.homeMode === state.homeMode));
+    $$("#homeChips .chip").forEach(ch=>ch.classList.toggle("active", ch.dataset.homeMode===state.homeMode));
 
-    const list = (state.homeMode === "seasonal")
-      ? DB.recipes.filter(r => r.ingredient === state.seasonalIngredientId)
-      : DB.recipes.filter(r => r.ingredient !== state.seasonalIngredientId).slice(0,4);
+    const list = (state.homeMode==="seasonal")
+      ? DB.recipes.filter(r=>r.ingredient===state.seasonalIngredientId)
+      : DB.recipes.slice(0,5);
 
-    $("#homeFeed").innerHTML = list.map(recipeCard).join("") || `
-      <div style="padding: 30px 24px; color: var(--gray-dark); font-weight:900;">
-        Sem receitas para esta época.
-      </div>
-    `;
+    $("#homeFeed").innerHTML = list.map(recipeCard).join("");
   }
 
-  /* =================== Search =================== */
-  function updateFilterBadge(){
-    $("#filterBadge").style.display = state.filters.size > 0 ? "block" : "none";
-  }
-  function isExactTask2Selection(){
-    return REQUIRED_TASK2.every(k => state.filters.has(k)) && state.filters.size === REQUIRED_TASK2.length;
-  }
+  /* =================== Search (title search + filters narrowing + history when idle) =================== */
   function normalize(s){ return (s||"").toLowerCase().trim(); }
 
-  function matchesQuery(recipe, q){
-    if(!q) return true;
-    const c = getCreator(recipe.creatorId);
-    const hay = [
-      recipe.title,
-      (recipe.tags||[]).join(" "),
-      c?.name || ""
-    ].join(" ").toLowerCase();
-    return hay.includes(q);
+  function updateFilterBadge(){
+    $("#filterBadge").style.display = state.filters.size>0 ? "block" : "none";
   }
 
-  function addToHistory(q){
-    const v = normalize(q);
-    if(!v) return;
-    // Keep most recent first, unique, max 8
-    state.searchHistory = [v, ...state.searchHistory.filter(x => x !== v)].slice(0,8);
-    scheduleSave();
+  function matchesTitle(recipe, q){
+    if(!q) return true;
+    return (recipe.title||"").toLowerCase().includes(q);
+  }
+
+  function applyFilters(list){
+    const s = state.filters;
+    return list.filter(r=>{
+      const tags = (r.tags||[]).join(" ").toLowerCase();
+      const c = getCreator(r.creatorId);
+
+      if(s.has("asiatica") && !(r.cuisine==="asiatica" || tags.includes("asiática") || tags.includes("asiatica"))) return false;
+      if(s.has("portuguesa") && !(r.cuisine==="portuguesa" || tags.includes("portuguesa"))) return false;
+      if(s.has("italiana") && !(r.cuisine==="italiana" || tags.includes("italiana"))) return false;
+      if(s.has("japonesa") && !(r.cuisine==="japonesa" || tags.includes("japonesa"))) return false;
+
+      if(s.has("vegetariano") && !(r.diet==="vegetariano" || tags.includes("vegetariano"))) return false;
+      if(s.has("vegan") && !(r.diet==="vegan" || tags.includes("vegan"))) return false;
+
+      if(s.has("wok") && !(r.utensil==="wok" || tags.includes("wok"))) return false;
+      if(s.has("forno") && !(r.utensil==="forno" || tags.includes("forno"))) return false;
+      if(s.has("airfryer") && !(r.utensil==="airfryer" || tags.includes("airfryer"))) return false;
+
+      if(s.has("tofu") && !(r.ingredient==="tofu" || tags.includes("tofu"))) return false;
+      if(s.has("abobora") && !(r.ingredient==="abobora" || tags.includes("abóbora") || tags.includes("abobora"))) return false;
+
+      if(s.has("verificado") && !(c && c.verified)) return false;
+
+      return true;
+    });
+  }
+
+  function upsertHistory(q){
+    const query = (q||"").trim();
+    if(!query) return;
+    const lower = query.toLowerCase();
+    state.history = state.history.filter(x => x.toLowerCase() !== lower);
+    state.history.unshift(query);
+    state.history = state.history.slice(0,8);
+    saveHistory(state.history);
+    renderHistory();
+  }
+
+  function removeHistoryItem(q){
+    const lower = (q||"").toLowerCase();
+    state.history = state.history.filter(x => x.toLowerCase() !== lower);
+    saveHistory(state.history);
+    renderHistory();
+  }
+
+  function clearAllHistory(){
+    state.history = [];
+    saveHistory([]);
+    renderHistory();
   }
 
   function renderHistory(){
-    const wrap = $("#searchHistoryWrap");
-    if(!state.searchHistory.length){
-      wrap.innerHTML = `<div style="color: var(--gray-dark); font-weight:850;">Ainda sem histórico.</div>`;
-      return;
-    }
-    wrap.innerHTML = state.searchHistory.map(q => `
-      <div class="list-row" data-history-q="${q}" style="padding:12px 0;">
-        <div class="list-icon" style="width:46px;height:46px;border-radius:14px;">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        </div>
-        <div class="list-content">
-          <div class="list-title" style="font-size:16px;">${q}</div>
-          <div class="list-sub">Toca para pesquisar</div>
-        </div>
-        <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+    const wrap = $("#historyWrap");
+    const list = $("#historyList");
+    const empty = $("#historyEmpty");
+
+    list.innerHTML = state.history.map(q => `
+      <div class="history-item" data-history="${q}">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;color:var(--gray-dark);"><path d="M12 8v5l3 2"></path><circle cx="12" cy="12" r="10"></circle></svg>
+        <div class="q">${q}</div>
+        <button class="x" data-history-remove="${q}" aria-label="Remover">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     `).join("");
+
+    empty.style.display = state.history.length ? "none" : "block";
+    $("#historyClearAll").style.visibility = state.history.length ? "visible" : "hidden";
   }
 
-  function applySearchRender(silent=false){
-    const q = normalize(state.searchQuery);
-    const s = state.filters;
+  function showHistoryOnly(){
+    $("#searchResults").style.display = "none";
+    $("#historyWrap").style.display = "block";
+    renderHistory();
+  }
 
-    let results = DB.recipes.filter(r => matchesQuery(r, q));
-
-    results = results.filter(r => {
-      if (s.has("asiatica")    && r.cuisine !== "asiatica") return false;
-      if (s.has("portuguesa") && r.cuisine !== "portuguesa") return false;
-      if (s.has("italiana")   && r.cuisine !== "italiana") return false;
-      if (s.has("japonesa")   && r.cuisine !== "japonesa") return false;
-
-      if (s.has("vegetariano") && r.diet !== "vegetariano") return false;
-      if (s.has("vegan")       && r.diet !== "vegan") return false;
-      if (s.has("semgluten")   && r.diet !== "semgluten") return false;
-
-      if (s.has("wok")      && r.utensil !== "wok") return false;
-      if (s.has("forno")    && r.utensil !== "forno") return false;
-      if (s.has("airfryer") && r.utensil !== "airfryer") return false;
-
-      if (s.has("tofu")      && r.ingredient !== "tofu") return false;
-      if (s.has("abobora")   && r.ingredient !== "abobora") return false;
-      if (s.has("cogumelos") && r.ingredient !== "cogumelos") return false;
-
-      if (s.has("verificado")) {
-        const c = getCreator(r.creatorId);
-        if(!c?.verified) return false;
-      }
-      return true;
-    });
-
-    // Teacher rule: tofu-wok only appears when exact 5 filters selected
-    const exact = isExactTask2Selection();
-    if(exact){
-      results = [getRecipe("tofu-wok")].filter(Boolean).filter(r => matchesQuery(r, q));
-    }else{
-      results = results.filter(r => r.id !== "tofu-wok");
-    }
-
-    const shouldShowHistory = (normalize(state.searchQuery) === "" && state.filters.size === 0);
-    if(shouldShowHistory){
-      $("#searchResults").style.display = "none";
-      $("#searchEmpty").style.display = "block";
-      renderHistory();
-      return;
-    }
-
-    if(results.length === 0){
-      $("#searchResults").style.display = "none";
-      $("#searchEmpty").style.display = "block";
-      renderHistory();
-
-      if(!silent){
-        const hint = (q.includes("tofu") || q.includes("wok") || q.includes("chen"))
-          ? "Para ver “Tofu … no Wok”, ativa os 5 filtros exatos."
-          : "Ajusta palavra-chave ou filtros.";
-        toast("Sem resultados", hint);
-      }
-      return;
-    }
-
-    $("#searchEmpty").style.display = "none";
+  function showResultsOnly(){
+    $("#historyWrap").style.display = "none";
     $("#searchResults").style.display = "block";
-
-    $("#searchCount").textContent = (exact && results.length === 1) ? "1 Resultado Exato" : `${results.length} resultado(s)`;
-    $("#searchList").innerHTML = results.map(recipeCard).join("");
-
-    if(!silent){
-      addToHistory(state.searchQuery);
-      if(exact){
-        const chenSub = !!state.subscriptions["chen"];
-        toast(chenSub ? "Task 2 OK" : "Quase lá", chenSub ? "Task 2 concluída." : "Agora falta Subscrever o Chef Chen (no detalhe).");
-      }
-    }
   }
 
   function renderSearch(){
-    $$("#sheet-filters .filter-chip").forEach(ch => ch.classList.toggle("active", state.filters.has(ch.dataset.filter)));
+    $$("#sheet-filters .filter-chip").forEach(ch=>ch.classList.toggle("active", state.filters.has(ch.dataset.filter)));
     updateFilterBadge();
 
     const input = $("#searchQueryInput");
     input.value = state.searchQuery || "";
-    $("#clearSearch").classList.toggle("show", normalize(input.value).length > 0);
+    $("#clearSearch").classList.toggle("show", normalize(input.value).length>0);
 
     applySearchRender(true);
   }
 
-  /* =================== Profile & pseudo pages =================== */
+  function applySearchRender(silent=false){
+  const q = normalize(state.searchQuery);
+
+  // 1) 完全空闲：显示历史
+  if(q === "" && state.filters.size === 0){
+    showHistoryOnly();
+    return;
+  }
+
+  // 2) 只要有查询或有筛选：就显示结果区（隐藏历史）
+  showResultsOnly();
+
+  let results = DB.recipes.slice();
+  results = results.filter(r => matchesTitle(r, q));
+  if(state.filters.size > 0) results = applyFilters(results);
+
+  // 3) 更新数量
+  $("#searchCount").textContent =
+    (q === "" && state.filters.size > 0) ? `${results.length} filtrado(s)` : `${results.length} resultado(s)`;
+
+  // 4) 有结果 -> 渲染卡片；没结果 -> 渲染“没结果”
+  if(results.length > 0){
+    $("#searchList").innerHTML = results.map(recipeCard).join("");
+  }else{
+    $("#searchList").innerHTML = `
+      <div style="padding: 24px; color: var(--gray-dark); font-weight: 900;">
+        Sem resultados.
+      </div>
+    `;
+    if(!silent) toast("Sem resultados", "Tenta outra palavra ou ajusta filtros.");
+  }
+
+  // 5) （可选）你的 Task 2 提示逻辑（如果你有就保留）
+  const exact = (typeof isTask2Exact === "function") ? isTask2Exact() : false;
+  if(!silent && exact){
+    const hasTarget = results.some(r => r.id === "tofu-wok");
+    if(hasTarget){
+      const chenSub = !!state.subscriptions["chen"];
+      toast(chenSub ? "Task 2 OK" : "Quase lá", chenSub ? "Task 2 concluída." : "Agora falta Subscrever o Chef Chen.");
+    }
+  }
+}
+
+  /* =================== Profile & utensils =================== */
   function renderProfile(){
     $("#meAvatar").src = DB.me.avatar;
     $("#meName").textContent = DB.me.name;
     $("#meSubline").textContent = `Utensílios: ${state.myUtensils.length} • Subscrições: ${Object.values(state.subscriptions).filter(Boolean).length}`;
   }
-  function renderAbout(){ /* static */ }
-  function renderSettings(){ /* static */ }
 
   function renderUtensilsPage(){
     renderUtensilsList();
     renderUtensilsCatalog();
-    const task1Done = REQUIRED_TASK1.every(id => state.myUtensils.includes(id));
-    $("#task1Banner").style.display = task1Done ? "block" : "none";
+    const task1Done = REQUIRED_TASK1.every(id=>state.myUtensils.includes(id));
   }
 
   function renderUtensilsList(){
     const wrap = $("#utensilsList");
-    if(state.myUtensils.length === 0){
+    if(state.myUtensils.length===0){
       wrap.innerHTML = `<div style="text-align:center; padding:26px 0; color: var(--gray-dark); font-weight:950;">Nenhum utensílio adicionado.</div>`;
       return;
     }
-    wrap.innerHTML = state.myUtensils.map(id => {
-      const u = DB.utensilsCatalog.find(x => x.id === id);
+    wrap.innerHTML = state.myUtensils.map(id=>{
+      const u = DB.utensilsCatalog.find(x=>x.id===id);
       if(!u) return "";
       return `
         <div class="list-row fade-up" data-remove-utensil="${id}">
@@ -1317,7 +1180,7 @@
   }
 
   function renderUtensilsCatalog(){
-    $("#utensilsCatalog").innerHTML = DB.utensilsCatalog.map(u => {
+    $("#utensilsCatalog").innerHTML = DB.utensilsCatalog.map(u=>{
       const added = state.myUtensils.includes(u.id);
       return `
         <div class="list-row" data-toggle-utensil="${u.id}">
@@ -1337,31 +1200,36 @@
 
   function toggleUtensil(id){
     const idx = state.myUtensils.indexOf(id);
-    if(idx >= 0){
+    if(idx>=0){
       state.myUtensils.splice(idx,1);
-      toast("Removido", "Utensílio removido.");
+      toast("Removido","Utensílio removido.");
     }else{
       state.myUtensils.push(id);
-      const u = DB.utensilsCatalog.find(x => x.id === id);
+      const u = DB.utensilsCatalog.find(x=>x.id===id);
       toast("Adicionado", u ? u.name : "Utensílio");
     }
     scheduleSave();
     renderUtensilsPage();
   }
 
-  /* =================== Recipe detail (tags + subscribe only here) =================== */
+  /* =================== Recipe + Onde comprar -> Markets =================== */
   let playerTimer = null;
 
-  function openRecipe(id){
+  function openRecipe(id, opts={}){
     state.activeRecipeId = id;
     state.player.playing = false;
     state.player.progress = 0;
-    scheduleSave();
-    push("recipe", { recipeId:id });
+
+    push("recipe", {
+      recipeId:id,
+      fromSeasonal: !!opts.fromSeasonal,
+      seasonalIngredientId: opts.seasonalIngredientId || state.seasonalIngredientId
+    });
   }
 
   function renderRecipe(){
-    const id = currentRoute().params?.recipeId || state.activeRecipeId;
+    const params = currentRoute().params || {};
+    const id = params.recipeId || state.activeRecipeId;
     state.activeRecipeId = id;
 
     const r = getRecipe(id);
@@ -1391,16 +1259,25 @@
 
     const c = getCreator(r.creatorId);
     const subbed = !!state.subscriptions[c.id];
-    const chips = (r.tags || []).map(t => `<span class="chip small">${t}</span>`).join("");
+    const chips = (r.tags||[]).map(t=>`<span class="chip small">${t}</span>`).join("");
+
+    const showBuy =
+      !!params.fromSeasonal &&
+      r.ingredient === (params.seasonalIngredientId || DB.seasonal.id);
+
+    const buyInline = showBuy ? `
+      <div style="padding:0 24px 12px;">
+        <button class="btn-primary" id="buyInlineBtn">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          Onde comprar ${DB.seasonal.name}
+        </button>
+      </div>
+    ` : "";
 
     $("#recipeInfoWrap").innerHTML = `
-      <div class="section">
+      <div class="section" style="padding-bottom:10px;">
         <div style="font-size:22px; font-weight:1000; letter-spacing:-.4px; line-height:1.2;">${r.title}</div>
-
-        <div style="margin-top:8px;color:var(--gray-dark);font-weight:850;">
-          ${fmtViews(r.views)} visualizações • ${fmtAge(r.publishedDaysAgo)}
-        </div>
-
+        <div style="margin-top:8px;color:var(--gray-dark);font-weight:850;">${fmtViews(r.views)} visualizações • ${fmtAge(r.publishedDaysAgo)}</div>
         <div class="chip-group" style="margin-top:10px;">${chips}</div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;">
@@ -1413,23 +1290,25 @@
               <div style="margin-top:3px;color:var(--gray-dark);font-weight:800;">Criador</div>
             </div>
           </div>
-          <button class="btn-sub ${subbed ? "active":""}" data-subscribe="${c.id}">
+          <button class="btn-sub ${subbed?"active":""}" data-subscribe="${c.id}">
             ${subbed ? "Subscrito ✓" : "Subscrever"}
           </button>
         </div>
       </div>
 
+      ${buyInline}
+
       <div class="section">
         <div class="h2">Ingredientes</div>
         <div class="card-block">
-          ${(r.ingredients||[]).map(x => `<div style="padding:8px 0; font-weight:800; color:rgba(0,0,0,.72);">${x}</div>`).join("")}
+          ${(r.ingredients||[]).map(x=>`<div style="padding:8px 0; font-weight:800; color:rgba(0,0,0,.72);">${x}</div>`).join("")}
         </div>
       </div>
 
       <div class="section">
         <div class="h2">Receita</div>
         <div class="card-block">
-          ${(r.steps||[]).map((s,i) => `
+          ${(r.steps||[]).map((s,i)=>`
             <div class="step">
               <div class="n">${i+1}</div>
               <div class="t">${s}</div>
@@ -1441,23 +1320,31 @@
       <div style="height:10px;"></div>
     `;
 
+    if(showBuy){
+      const b = $("#buyInlineBtn");
+      if(b){
+        b.addEventListener("pointerup",(e)=>{
+          e.preventDefault();
+          push("markets", { ingredientId: params.seasonalIngredientId || DB.seasonal.id });
+        }, {passive:false});
+      }
+    }
+
     $("#playerToggle").addEventListener("pointerup", togglePlayer, {passive:true});
-    $("#playerToggle").addEventListener("click", (e) => { e.preventDefault(); togglePlayer(); });
+    $("#playerToggle").addEventListener("click",(e)=>{e.preventDefault(); togglePlayer();});
     updatePlayerUI();
   }
 
   function togglePlayer(){
     state.player.playing = !state.player.playing;
-
-    if(playerTimer) { clearInterval(playerTimer); playerTimer = null; }
-
+    if(playerTimer){ clearInterval(playerTimer); playerTimer=null; }
     if(state.player.playing){
-      playerTimer = setInterval(() => {
+      playerTimer = setInterval(()=>{
         state.player.progress = Math.min(100, state.player.progress + 2.5);
-        if(state.player.progress >= 100){
-          state.player.playing = false;
+        if(state.player.progress>=100){
+          state.player.playing=false;
           clearInterval(playerTimer);
-          playerTimer = null;
+          playerTimer=null;
         }
         updatePlayerUI();
       }, 250);
@@ -1468,16 +1355,13 @@
   }
 
   function updatePlayerUI(){
-    const bar = $("#playerBar");
-    const t = $("#playerTime");
-    const btn = $("#playerToggle");
+    const bar=$("#playerBar"), t=$("#playerTime"), btn=$("#playerToggle");
     if(!bar || !t || !btn) return;
 
     bar.style.width = `${state.player.progress}%`;
-
-    const seconds = Math.floor((state.player.progress / 100) * 60);
-    const mm = Math.floor(seconds / 60);
-    const ss = String(seconds % 60).padStart(2,"0");
+    const seconds = Math.floor((state.player.progress/100)*60);
+    const mm = Math.floor(seconds/60);
+    const ss = String(seconds%60).padStart(2,"0");
     t.textContent = `${mm}:${ss} • ${getRecipe(state.activeRecipeId)?.duration || ""}`;
 
     btn.innerHTML = state.player.playing
@@ -1496,31 +1380,25 @@
   function stockText(lvl){ return lvl==="alto"?"Stock Alto":lvl==="medio"?"Stock Médio":lvl==="baixo"?"Poucas unidades":"Sem info"; }
   function stockColor(lvl){ return lvl==="alto"?"var(--green)":lvl==="medio"?"#FF9F0A":lvl==="baixo"?"var(--accent)":"var(--gray-dark)"; }
 
-  function openMarkets(ingredientId){
-    push("markets", { ingredientId });
-  }
-
   function renderMarkets(){
-    const ingredientId = currentRoute().params?.ingredientId || state.seasonalIngredientId || "abobora";
-    const ing = getSeasonal(ingredientId) || getSeasonal("abobora");
+    const ingredientId = currentRoute().params?.ingredientId || DB.seasonal.id;
+    $("#marketsTopTitle").textContent = `Mercados • ${DB.seasonal.name}`;
+    $("#marketsTitle").textContent = `Mercados: ${DB.seasonal.name}`;
+    $("#marketsCaption").textContent = "Ordenado por stock e distância (recomendado no topo).";
+    $("#marketsHero").style.backgroundImage = `url('${DB.seasonal.heroImg}')`;
 
-    $("#marketsTopTitle").textContent = `Mercados • ${ing.name}`;
-    $("#marketsTitle").textContent = `Mercados: ${ing.name}`;
-    $("#marketsCaption").textContent = "Toca no primeiro recomendado para concluir a Task 3.";
-    $("#marketsHero").style.backgroundImage = `url('${ing.heroImg}')`;
-
-    const list = DB.markets.map(m => {
+    const list = DB.markets.map(m=>{
       const lvl = (m.stock && m.stock[ingredientId]) ? m.stock[ingredientId] : null;
       return { ...m, lvl, score: stockScore(lvl) };
-    }).sort((a,b) => (b.score - a.score) || (a.distanceM - b.distanceM));
+    }).sort((a,b)=>(b.score-a.score)||(a.distanceM-b.distanceM));
 
     const recommended = list[0]?.name || null;
 
-    $("#marketsList").innerHTML = list.map((m, idx) => {
+    $("#marketsList").innerHTML = list.map((m, idx)=>{
       const dist = fmtDist(m.distanceM);
-      const isTop = idx === 0;
+      const isTop = idx===0;
       return `
-        <div class="list-row fade-up" data-select-market="${m.name}" data-is-top="${isTop ? "1":"0"}" style="padding:14px 0;">
+        <div class="list-row fade-up" data-select-market="${m.name}" data-is-top="${isTop?"1":"0"}" style="padding:14px 0;">
           <div class="list-icon" style="${m.lvl==="alto" && isTop ? "background: var(--black); color: var(--white);" : ""}">
             <svg viewBox="0 0 24 24">
               <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
@@ -1528,8 +1406,8 @@
             </svg>
           </div>
           <div class="list-content">
-            <div class="list-title">${m.name}${(m.name === recommended) ? ` <span style="color: var(--gray-dark); font-weight:900; font-size:12px;">• Recomendado</span>` : ""}</div>
-            <div class="list-sub" style="color:${stockColor(m.lvl)}; font-weight:950;">● ${stockText(m.lvl)} (${ing.name})</div>
+            <div class="list-title">${m.name}${(m.name===recommended)?` <span style="color: var(--gray-dark); font-weight:900; font-size:12px;">• Recomendado</span>`:""}</div>
+            <div class="list-sub" style="color:${stockColor(m.lvl)}; font-weight:950;">● ${stockText(m.lvl)} (${DB.seasonal.name})</div>
           </div>
           <div style="text-align:right;">
             <div style="font-weight:1000; font-size:16px;">${dist}</div>
@@ -1541,305 +1419,239 @@
   }
 
   /* =================== Subscribe =================== */
+  function isTask2Exact(){
+    return REQUIRED_TASK2.every(k=>state.filters.has(k));
+  }
   function toggleSubscribe(creatorId){
     state.subscriptions[creatorId] = !state.subscriptions[creatorId];
     scheduleSave();
 
     const c = getCreator(creatorId);
-    const exact = isExactTask2Selection();
-
     if(state.subscriptions[creatorId]){
-      if(creatorId === "chen" && exact){
-        toast("Subscrito ✓", "Task 2 concluída");
-      }else{
-        toast("Subscrito ✓", c?.name || "—");
-      }
+      const extra = (creatorId==="chen" && isTask2Exact()) ? "Task 2 concluída" : (c?.name || "—");
+      toast("Subscrito ✓", extra);
     }else{
       toast("Subscrição removida", c?.name || "—");
     }
-
     showView(currentRoute().name);
   }
 
-  /* =================== Seasonal hub =================== */
-  function renderSeasonalHub(){
-    const currentId = state.seasonalIngredientId;
-    $("#seasonalHubList").innerHTML = DB.seasonalIngredients.map(i => {
-      const active = i.id === currentId;
-      return `
-        <div class="list-row" data-pick-seasonal="${i.id}">
-          <div class="list-icon" style="${active ? "background:#000;color:#fff;" : ""}">
-            <div style="font-size:22px;">${i.emoji}</div>
-          </div>
-          <div class="list-content">
-            <div class="list-title">${i.name}${active ? ` <span style="font-size:12px;color:var(--gray-dark);font-weight:900;">• atual</span>` : ""}</div>
-            <div class="list-sub">${i.note}</div>
-          </div>
-          <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  /* =================== Notification =================== */
+  /* =================== Notification -> Seasonal feed =================== */
   function showSeasonalNotification(){
-    const seasonal = getSeasonal("abobora");
-    $("#notiTitle").textContent = `Época da ${seasonal.name} ${seasonal.emoji}`;
-    $("#notiSub").textContent = `Abre para ver receitas filtradas e mercados com stock de ${seasonal.name}.`;
-    setTimeout(() => $("#systemNoti").classList.add("show"), 900);
+    $("#notiTitle").textContent = `Época da ${DB.seasonal.name} ${DB.seasonal.emoji}`;
+    $("#notiSub").textContent = `Abre para ver receitas filtradas por ${DB.seasonal.name} e mercados com stock.`;
+    setTimeout(()=>$("#systemNoti").classList.add("show"), 900);
   }
   function closeNotification(){
-    const el = $("#systemNoti");
+    const el=$("#systemNoti");
     el.classList.remove("show");
     el.classList.add("hide");
   }
   function activateSeasonalModeFromNoti(){
     closeNotification();
-    state.homeMode = "seasonal";
-    state.seasonalIngredientId = "abobora";
+    state.homeMode="seasonal";
+    state.seasonalIngredientId=DB.seasonal.id;
     scheduleSave();
     goTab("home");
-    const seasonal = getSeasonal("abobora");
-    toast("Época ativada", `Receitas filtradas por ${seasonal.name}.`);
+    toast("Época ativada", `Receitas filtradas por ${DB.seasonal.name}.`);
   }
 
   /* =================== Events =================== */
-  let lastPointerUpTs = 0;
-  function safeClickGuardedClick(){
-    const now = Date.now();
-    if(now - lastPointerUpTs < 380) return true;
-    return false;
-  }
+  let lastPointerUpTs=0;
+  function guarded(){ const now=Date.now(); return (now-lastPointerUpTs<320); }
 
   function bindEvents(){
     // Tab bar
-    const tabBar = $("#tabBar");
-    tabBar.addEventListener("pointerup", (e) => {
-      const btn = e.target.closest(".tab-btn");
+    const tabBar=$("#tabBar");
+    tabBar.addEventListener("pointerup",(e)=>{
+      const btn=e.target.closest(".tab-btn");
       if(!btn) return;
-      e.preventDefault();
-      e.stopPropagation();
-      lastPointerUpTs = Date.now();
+      e.preventDefault(); e.stopPropagation();
+      lastPointerUpTs=Date.now();
       goTab(btn.dataset.view);
-    }, {passive:false});
-    tabBar.addEventListener("click", (e) => {
-      if(safeClickGuardedClick()) return;
-      const btn = e.target.closest(".tab-btn");
+    },{passive:false});
+    tabBar.addEventListener("click",(e)=>{
+      if(guarded()) return;
+      const btn=e.target.closest(".tab-btn");
       if(!btn) return;
       e.preventDefault();
       goTab(btn.dataset.view);
     });
 
     // Home chips
-    $("#homeChips").addEventListener("pointerup", (e) => {
-      const chip = e.target.closest(".chip[data-home-mode]");
+    $("#homeChips").addEventListener("pointerup",(e)=>{
+      const chip=e.target.closest(".chip[data-home-mode]");
       if(!chip) return;
-      state.homeMode = chip.dataset.homeMode;
+      state.homeMode=chip.dataset.homeMode;
       scheduleSave();
       renderHome();
-    }, {passive:true});
+    },{passive:true});
 
-    // Época: open hub + markets
-    $("#openSeasonalHub").addEventListener("pointerup", (e) => {
-      e.preventDefault();
-      renderSeasonalHub();
-      openSheet("#sheet-seasonal");
-    }, {passive:false});
+    // Search input + history record
+    const input=$("#searchQueryInput");
+    const clearBtn=$("#clearSearch");
+    let debounce=null;
 
-    $("#openMarketsFromFeed").addEventListener("pointerup", (e) => {
-      e.preventDefault();
-      openMarkets(state.seasonalIngredientId || "abobora");
-    }, {passive:false});
-
-    $("#seasonalHubList").addEventListener("pointerup", (e) => {
-      const row = e.target.closest("[data-pick-seasonal]");
-      if(!row) return;
-      const id = row.dataset.pickSeasonal;
-      state.seasonalIngredientId = id;
-      state.homeMode = "seasonal";
-      scheduleSave();
-      closeSheets();
-      renderHome();
-      const ing = getSeasonal(id);
-      toast("Época", `${ing.name} selecionado.`);
-    }, {passive:true});
-
-    // Search input
-    const input = $("#searchQueryInput");
-    const clearBtn = $("#clearSearch");
-    let searchDebounce = null;
-
-    function setQuery(val, silent=false){
+    function setQuery(val, silent=true){
       state.searchQuery = val;
-      scheduleSave();
-      clearBtn.classList.toggle("show", normalize(val).length > 0);
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(() => applySearchRender(silent), 120);
+      clearBtn.classList.toggle("show", normalize(val).length>0);
+      clearTimeout(debounce);
+
+      // Enterprise: auto "commit" after user stops typing (adds to history)
+      debounce=setTimeout(()=>{
+        applySearchRender(silent);
+        if(!silent){
+          upsertHistory(state.searchQuery);
+        }else{
+          // still record if user typed and paused (feels natural)
+          upsertHistory(state.searchQuery);
+        }
+      }, 600);
     }
 
-    input.addEventListener("input", () => setQuery(input.value, true));
-    input.addEventListener("keydown", (e) => {
-      if(e.key === "Enter"){
+    input.addEventListener("input",()=>setQuery(input.value,true));
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter"){
         e.preventDefault();
         input.blur();
         applySearchRender(false);
+        upsertHistory(state.searchQuery);
       }
     });
 
-    clearBtn.addEventListener("pointerup", (e) => {
+    clearBtn.addEventListener("pointerup",(e)=>{
       e.preventDefault();
-      input.value = "";
+      input.value="";
       setQuery("", true);
       input.focus();
-    }, {passive:false});
+    },{passive:false});
 
-    // History click
-    $("#searchHistoryWrap").addEventListener("pointerup", (e) => {
-      const row = e.target.closest("[data-history-q]");
-      if(!row) return;
-      const q = row.dataset.historyQ;
+    // History interactions
+    $("#historyList").addEventListener("pointerup",(e)=>{
+      const rm=e.target.closest("[data-history-remove]");
+      if(rm){
+        e.preventDefault(); e.stopPropagation();
+        removeHistoryItem(rm.dataset.historyRemove);
+        return;
+      }
+      const item=e.target.closest("[data-history]");
+      if(!item) return;
+      const q=item.dataset.history || "";
       $("#searchQueryInput").value = q;
-      state.searchQuery = q;
-      scheduleSave();
-      applySearchRender(false);
-    }, {passive:true});
+      setQuery(q, false);
+    },{passive:false});
 
-    $("#clearHistoryBtn").addEventListener("pointerup", (e) => {
+    $("#historyClearAll").addEventListener("pointerup",(e)=>{
       e.preventDefault();
-      state.searchHistory = [];
-      scheduleSave();
-      renderHistory();
-      toast("Histórico limpo", "Pronto.");
-    }, {passive:false});
+      clearAllHistory();
+      toast("Histórico limpo","Pronto.");
+    },{passive:false});
 
     // Filters sheet open
-    $("#openFiltersBtn").addEventListener("pointerup", (e) => {
-      e.preventDefault();
-      openSheet("#sheet-filters");
-    }, {passive:false});
-    $("#openFiltersBtn").addEventListener("click", (e) => {
-      if(safeClickGuardedClick()) return;
-      e.preventDefault();
-      openSheet("#sheet-filters");
-    });
+    $("#openFiltersBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); openSheet("#sheet-filters"); },{passive:false});
+    $("#openFiltersBtn").addEventListener("click",(e)=>{ if(guarded()) return; e.preventDefault(); openSheet("#sheet-filters"); });
 
     // Filter chips
-    $$("#sheet-filters .filter-chip").forEach(ch => {
-      ch.addEventListener("pointerup", () => {
+    $$("#sheet-filters .filter-chip").forEach(ch=>{
+      ch.addEventListener("pointerup",()=>{
         ch.classList.toggle("active");
-        const key = ch.dataset.filter;
+        const key=ch.dataset.filter;
         if(ch.classList.contains("active")) state.filters.add(key);
         else state.filters.delete(key);
-        scheduleSave();
         updateFilterBadge();
-      }, {passive:true});
+      },{passive:true});
     });
 
-    $("#applyFilters").addEventListener("pointerup", (e) => {
+    $("#applyFilters").addEventListener("pointerup",(e)=>{
       e.preventDefault();
       closeSheets();
       applySearchRender(false);
-    }, {passive:false});
+    },{passive:false});
 
-    $("#clearFilters").addEventListener("pointerup", (e) => {
+    $("#clearFilters").addEventListener("pointerup",(e)=>{
       e.preventDefault();
       state.filters.clear();
-      $$("#sheet-filters .filter-chip").forEach(ch => ch.classList.remove("active"));
+      $$("#sheet-filters .filter-chip").forEach(ch=>ch.classList.remove("active"));
       updateFilterBadge();
-      scheduleSave();
-      toast("Filtros limpos", "Pronto.");
+      toast("Filtros limpos","Pronto.");
       applySearchRender(true);
-    }, {passive:false});
+    },{passive:false});
 
     // Profile navigation
-    $("#view-profile").addEventListener("pointerup", (e) => {
-      if(e.target.closest("[data-open-utensils-page]")) { e.preventDefault(); push("utensils"); return; }
-      if(e.target.closest("[data-open-about]")) { e.preventDefault(); push("about"); return; }
-      if(e.target.closest("[data-open-settings]")) { e.preventDefault(); push("settings"); return; }
-    }, {passive:false});
+    $("#view-profile").addEventListener("pointerup",(e)=>{
+      if(e.target.closest("[data-open-utensils-page]")){
+        e.preventDefault();
+        push("utensils");
+      }
+    },{passive:false});
 
-    // Utensils: open catalog sheet
-    $("#openUtensilsCatalog").addEventListener("pointerup", (e) => {
-      e.preventDefault();
-      openSheet("#sheet-utensils");
-    }, {passive:false});
-
-    // Overlay close
+    // Utensils sheet
+    $("#openUtensilsCatalog").addEventListener("pointerup",(e)=>{e.preventDefault(); openSheet("#sheet-utensils");},{passive:false});
     overlay.addEventListener("pointerup", closeSheets, {passive:true});
-    document.body.addEventListener("pointerup", (e) => {
-      if(e.target.closest("[data-close-sheet]")) closeSheets();
-    }, {passive:true});
+    document.body.addEventListener("pointerup",(e)=>{ if(e.target.closest("[data-close-sheet]")) closeSheets(); },{passive:true});
 
-    // Utensil catalog + list
-    $("#utensilsCatalog").addEventListener("pointerup", (e) => {
-      const row = e.target.closest("[data-toggle-utensil]");
+    $("#utensilsCatalog").addEventListener("pointerup",(e)=>{
+      const row=e.target.closest("[data-toggle-utensil]");
       if(!row) return;
       toggleUtensil(row.dataset.toggleUtensil);
-    }, {passive:true});
+    },{passive:true});
 
-    $("#utensilsList").addEventListener("pointerup", (e) => {
-      const row = e.target.closest("[data-remove-utensil]");
+    $("#utensilsList").addEventListener("pointerup",(e)=>{
+      const row=e.target.closest("[data-remove-utensil]");
       if(!row) return;
-      toggleUtensil(row.dataset.removeUtensil || row.dataset.removeUtensil || row.getAttribute("data-remove-utensil"));
-    }, {passive:true});
+      toggleUtensil(row.getAttribute("data-remove-utensil"));
+    },{passive:true});
 
-    // Global delegation (open recipe / subscribe)
-    document.body.addEventListener("pointerup", (e) => {
-      const subBtn = e.target.closest("[data-subscribe]");
+    // Global delegation: subscribe / open recipe
+    document.body.addEventListener("pointerup",(e)=>{
+      const subBtn=e.target.closest("[data-subscribe]");
       if(subBtn){
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         toggleSubscribe(subBtn.dataset.subscribe);
         return;
       }
-
       if(e.target.closest("[data-stop-open]")) return;
 
-      const card = e.target.closest("[data-open-recipe]");
+      const card=e.target.closest("[data-open-recipe]");
       if(card){
         e.preventDefault();
-        openRecipe(card.dataset.openRecipe);
+        const fromSeasonal = (state.homeMode==="seasonal" && currentRoute().name==="home");
+        openRecipe(card.dataset.openRecipe, { fromSeasonal, seasonalIngredientId: state.seasonalIngredientId });
       }
-    }, {passive:false});
+    },{passive:false});
 
     // Markets select
-    $("#marketsList").addEventListener("pointerup", (e) => {
-      const row = e.target.closest("[data-select-market]");
+    $("#marketsList").addEventListener("pointerup",(e)=>{
+      const row=e.target.closest("[data-select-market]");
       if(!row) return;
-      const isTop = row.dataset.isTop === "1";
-      if(isTop) toast("Mercado selecionado", "Task 3 concluída");
-      else toast("Mercado selecionado", row.dataset.selectMarket);
-    }, {passive:true});
+      const isTop=row.dataset.isTop==="1";
+      toast("Mercado selecionado", isTop ? "Task 3 concluída" : row.dataset.selectMarket);
+    },{passive:true});
 
     // Back buttons
-    $("#navBackRecipe").addEventListener("pointerup", (e) => {
+    $("#navBackRecipe").addEventListener("pointerup",(e)=>{
       e.preventDefault();
-      if(playerTimer){ clearInterval(playerTimer); playerTimer = null; }
-      state.player.playing = false;
-      scheduleSave();
+      if(playerTimer){ clearInterval(playerTimer); playerTimer=null; }
+      state.player.playing=false;
       pop();
-    }, {passive:false});
-
-    $("#navBackMarkets").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
-    $("#navBackUtensils").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
-    $("#navBackAbout").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
-    $("#navBackSettings").addEventListener("pointerup", (e) => { e.preventDefault(); pop(); }, {passive:false});
+    },{passive:false});
+    $("#navBackUtensils").addEventListener("pointerup",(e)=>{e.preventDefault(); pop();},{passive:false});
+    $("#navBackMarkets").addEventListener("pointerup",(e)=>{e.preventDefault(); pop();},{passive:false});
 
     // Notification
-    $("#notiClose").addEventListener("pointerup", (e) => { e.preventDefault(); closeNotification(); }, {passive:false});
-    $("#notiOpenSeasonal").addEventListener("pointerup", (e) => { e.preventDefault(); activateSeasonalModeFromNoti(); }, {passive:false});
+    $("#notiClose").addEventListener("pointerup",(e)=>{e.preventDefault(); closeNotification();},{passive:false});
+    $("#notiOpenSeasonal").addEventListener("pointerup",(e)=>{e.preventDefault(); activateSeasonalModeFromNoti();},{passive:false});
   }
 
   /* =================== init =================== */
   function init(){
-    // Restore initial view
-    showView(currentRoute().name || "home");
+    showView("home");
     renderProfile();
     renderSearch();
     showSeasonalNotification();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded",()=>{
     bindEvents();
     init();
   });
