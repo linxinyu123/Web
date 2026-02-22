@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>时间轴偏移器 — Pro</title>
+
+  <style>
+    :root{
+      --black:#000; --white:#fff;
+      --gray-light:#F2F2F7; --gray-mid:#E5E5EA; --gray-dark:#8E8E93;
+      --accent:#FF2D55; --green:#34C759; --blue:#007AFF; --orange:#FF9F0A;
+
+      --radius-xl:28px; --radius-lg:16px; --radius-sm:12px;
+      --shadow-lg:0 20px 40px rgba(0,0,0,.15);
+      --safe-top: env(safe-area-inset-top, 44px);
+      --safe-bottom: env(safe-area-inset-bottom, 34px);
+      --easing:cubic-bezier(.25,1,.5,1);
+      --divider:rgba(0,0,0,.06);
+      --glass: rgba(255,255,255,.92);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+      background:var(--white); color:var(--black);
+      width:100vw; height:100dvh; overflow:hidden;
+    }
+    svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* View */
+    .view{
+      position:absolute; inset:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-top:var(--safe-top);
+      padding-bottom:calc(130px + var(--safe-bottom));
+      background:var(--white);
+    }
+
+    /* Header */
+    .page-header{padding:24px 24px 16px}
+    .page-title{font-size:34px;font-weight:900;letter-spacing:-1px}
+    .page-subtitle{font-size:16px;color:var(--gray-dark);margin-top:6px;font-weight:650;line-height:1.35}
+
+    /* Layout */
+    .section{padding:0 24px 18px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 960px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    /* Cards */
+    .card{
+      background:var(--white);
+      border-radius:var(--radius-xl);
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      border:1px solid var(--divider);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:14px 16px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border-bottom:1px solid var(--divider);
+      background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.00));
+    }
+    .card-title{
+      font-size:16px; font-weight:950; letter-spacing:-.3px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .badge{
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      background:var(--gray-light);
+      border:1px solid var(--divider);
+      color:rgba(0,0,0,.72);
+      white-space:nowrap;
+    }
+    .card-body{padding:12px 16px 16px}
+
+    textarea{
+      width:100%;
+      min-height: 320px;
+      resize: vertical;
+      border-radius:18px;
+      border:1px solid var(--divider);
+      background:var(--gray-light);
+      padding:14px 14px;
+      outline:none;
+      font-size:14px;
+      line-height:1.55;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-weight:650;
+      color:rgba(0,0,0,.88);
+    }
+    textarea:focus{
+      border-color: rgba(0,122,255,.35);
+      box-shadow: 0 0 0 6px rgba(0,122,255,.10);
+      background:#fff;
+    }
+
+    /* Controls */
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .field{
+      display:flex; align-items:center; gap:8px;
+      background:var(--gray-light);
+      border:1px solid var(--divider);
+      border-radius:16px;
+      padding:10px 12px;
+    }
+    .field .lbl{
+      font-size:12px; font-weight:900; color:var(--gray-dark);
+      letter-spacing:-.1px;
+      white-space:nowrap;
+    }
+    input[type="number"]{
+      width:90px;
+      border:none; background:transparent;
+      font-size:16px; font-weight:950;
+      outline:none;
+      color:var(--black);
+    }
+    .chip-group{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+    .chip-group::-webkit-scrollbar{display:none}
+    .chip{
+      padding:10px 16px; background:var(--gray-light);
+      border-radius:999px;
+      font-size:13px; font-weight:850;
+      white-space:nowrap;
+      transition:.2s;
+      cursor:pointer;
+      user-select:none;
+      border:2px solid transparent;
+      touch-action:manipulation;
+    }
+    .chip.active{background:var(--black); color:var(--white)}
+    .chip:active{transform:scale(.98)}
+
+    /* Bottom action bar */
+    .action-bar{
+      position:fixed; left:0; right:0; bottom:0;
+      height:calc(94px + var(--safe-bottom));
+      padding: 10px 14px calc(10px + var(--safe-bottom));
+      background:var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top:1px solid var(--gray-mid);
+      display:flex;
+      gap:10px;
+      align-items:stretch;
+      z-index:9999;
+    }
+    .btn{
+      border:none;
+      border-radius:18px;
+      font-size:15px;
+      font-weight:950;
+      padding:16px 14px;
+      cursor:pointer;
+      touch-action:manipulation;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      user-select:none; -webkit-user-select:none;
+      transition: transform .12s var(--easing), filter .2s;
+      flex:1;
+      min-width: 0;
+      white-space:nowrap;
+    }
+    .btn:active{transform:scale(.98)}
+    .btn.primary{background:var(--black); color:var(--white)}
+    .btn.secondary{background:var(--gray-light); color:var(--black); border:1px solid var(--divider)}
+    .btn.ghost{background:transparent; color:var(--black); border:1px solid var(--divider)}
+    .btn.small{
+      padding:12px 12px;
+      border-radius:16px;
+      font-size:14px;
+      flex:0 0 auto;
+    }
+
+    /* Top quick bar (desktop friendly) */
+    .top-actions{
+      padding:0 24px 18px;
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .statline{
+      font-size:13px; font-weight:850; color:rgba(0,0,0,.64);
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--divider);display:inline-block}
+
+    /* Mini toast */
+    .mini-toast{
+      position:fixed;left:16px;right:16px;bottom:calc(104px + var(--safe-bottom));
+      background:rgba(20,20,20,.92);color:#fff;border-radius:18px;
+      padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+      box-shadow:0 20px 45px rgba(0,0,0,.35);
+      transform:translateY(140%);opacity:0;
+      transition:transform .28s var(--easing), opacity .28s;
+      z-index:12000;
+        pointer-events:none; /* ✅ 加这一行就好了 */
+    }
+    .mini-toast.show{transform:translateY(0);opacity:1}
+    .mini-toast .msg{font-weight:950;letter-spacing:-.2px}
+    .mini-toast .sub{color:rgba(255,255,255,.72);font-weight:750;font-size:13px;margin-top:2px}
+
+    /* Overlay + Sheet */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);
+      opacity:0;pointer-events:none;transition:.25s;z-index:10000;
+    }
+    .overlay.active{opacity:1;pointer-events:auto}
+    .bottom-sheet{
+      position:fixed;left:0;right:0;bottom:0;background:var(--white);
+      border-radius:32px 32px 0 0;
+      transform:translateY(100%);
+      transition:transform .3s var(--easing);
+      display:flex;flex-direction:column;max-height:88dvh;
+      box-shadow:var(--shadow-lg);z-index:10001;
+    }
+    .bottom-sheet.active{transform:translateY(0)}
+    .sheet-drag{width:40px;height:5px;background:var(--gray-mid);border-radius:4px;margin:12px auto}
+    .sheet-header{padding:10px 20px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .sheet-title{font-size:20px;font-weight:1000;letter-spacing:-.4px}
+    .sheet-content{padding:0 20px 22px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+    .sheet-row{
+      display:flex; align-items:center; gap:12px;
+      padding:14px 12px;
+      background:var(--gray-light);
+      border:1px solid var(--divider);
+      border-radius:16px;
+      margin-bottom:10px;
+    }
+    .sheet-row .k{font-weight:950; letter-spacing:-.2px; min-width:120px}
+    .sheet-row .v{flex:1; color:rgba(0,0,0,.68); font-weight:800; line-height:1.35}
+    .sheet-row .right{margin-left:auto}
+
+    /* Tiny helper */
+    .hint{
+      margin-top:10px;
+      font-size:13px;
+      color:rgba(0,0,0,.55);
+      font-weight:750;
+      line-height:1.35;
+    }
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .22s var(--easing)}
+  </style>
+</head>
+
+<body>
+
+  <!-- Mini toast -->
+  <div class="mini-toast" id="miniToast" aria-live="polite">
+    <div>
+      <div class="msg" id="miniMsg">完成</div>
+      <div class="sub" id="miniSub">—</div>
+    </div>
+    <div style="opacity:.85;">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+  </div>
+
+  <!-- Overlay + sheet -->
+  <div class="overlay" id="overlay"></div>
+  <div class="bottom-sheet" id="sheetSettings" role="dialog" aria-modal="true" aria-label="设置">
+    <div class="sheet-drag"></div>
+    <div class="sheet-header">
+      <div style="font-weight:950;color:var(--gray-dark);cursor:pointer;" id="btnResetSettings">重置</div>
+      <div class="sheet-title">设置</div>
+      <div style="font-weight:950;color:var(--gray-dark);cursor:pointer;" data-close-sheet>关闭</div>
+    </div>
+
+    <div class="sheet-content">
+      <div class="sheet-row">
+        <div class="k">识别格式</div>
+        <div class="v">仅处理括号内：<b>(m:ss)</b> / <b>(h:mm:ss)</b></div>
+      </div>
+
+      <div class="sheet-row" style="align-items:flex-start;">
+        <div class="k" style="padding-top:2px;">输出格式</div>
+        <div class="v">
+          <div class="chip-group" id="fmtChips" style="margin-top:4px;">
+            <div class="chip active" data-fmt="keep">保留原样</div>
+            <div class="chip" data-fmt="forceHours">强制显示小时</div>
+          </div>
+          <div class="hint" style="margin-top:8px;">
+            “保留原样”：原时间有小时就输出 <b>h:mm:ss</b>，否则输出 <b>m:ss</b>（分钟允许超过 59）。<br>
+            “强制显示小时”：统一输出 <b>h:mm:ss</b>。
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-row">
+        <div class="k">快捷键</div>
+        <div class="v">
+          <b>Ctrl/⌘ + Enter</b> 转换<br>
+          <b>Ctrl/⌘ + Shift + C</b> 复制输出
+        </div>
+      </div>
+
+      <div class="sheet-row">
+        <div class="k">隐私</div>
+        <div class="v">纯本地运行，不上传任何文本。</div>
+      </div>
+
+      <div class="sheet-row" style="margin-bottom:0;">
+        <div class="k">小提示</div>
+        <div class="v">支持负偏移（可减小时/分钟/秒），结果会自动夹到 0。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-main">
+    <div class="page-header">
+      <div class="page-title">时间轴偏移器</div>
+      <div class="page-subtitle">
+        粘贴文本 → 设定偏移（小时/分钟/秒） → 一键生成完整版。支持 <b>(m:ss)</b> 和 <b>(h:mm:ss)</b>。
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <div class="controls">
+        <div class="field" title="可输入负数做减法">
+          <div class="lbl">小时</div>
+          <input id="addH" type="number" value="0" step="1" inputmode="numeric" />
+        </div>
+        <div class="field" title="可输入负数做减法">
+          <div class="lbl">分钟</div>
+          <input id="addM" type="number" value="30" step="1" inputmode="numeric" />
+        </div>
+        <div class="field" title="可输入负数做减法">
+          <div class="lbl">秒</div>
+          <input id="addS" type="number" value="0" step="1" inputmode="numeric" />
+        </div>
+
+        <button class="btn secondary small" id="btnOpenSettings" type="button" aria-label="打开设置">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          设置
+        </button>
+      </div>
+
+      <div class="statline" id="stats">
+        <span>就绪</span><span class="dot"></span>
+        <span>识别：—</span><span class="dot"></span>
+        <span>耗时：—</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="grid">
+        <div class="card fade-up">
+          <div class="card-head">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              输入文本
+            </div>
+            <div class="badge" id="inCount">0 字</div>
+          </div>
+          <div class="card-body">
+            <textarea id="input" placeholder="把你的文本（包含 (0:29)、(26:52)、(1:02:03) 这种）粘贴到这里…"></textarea>
+            <div class="hint">
+              只会替换括号里的时间戳：<b>(m:ss)</b> / <b>(h:mm:ss)</b>。比如 <b>(0:19) + 30分钟 → (30:19)</b>。
+            </div>
+          </div>
+        </div>
+
+        <div class="card fade-up">
+          <div class="card-head">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M14 3h7v7"></path><path d="M10 14L21 3"></path><path d="M21 14v7h-7"></path><path d="M14 21L3 10"></path><path d="M3 14v7h7"></path><path d="M10 10L3 3"></path></svg>
+              输出（完整版）
+            </div>
+            <div class="badge" id="outCount">0 字</div>
+          </div>
+          <div class="card-body">
+            <textarea id="output" readonly placeholder="转换结果会显示在这里…"></textarea>
+            <div class="hint" id="fmtHint">输出格式：保留原样</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom action bar -->
+  <div class="action-bar">
+    <button class="btn primary" id="btnConvert" type="button">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      一键转换
+    </button>
+
+    <button class="btn secondary" id="btnCopy" type="button">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      复制输出
+    </button>
+
+    <button class="btn ghost" id="btnMore" type="button" aria-label="更多">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      更多
+    </button>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ========= DOM ========= */
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+  const output = $("output");
+  const inCount = $("inCount");
+  const outCount = $("outCount");
+  const stats = $("stats");
+  const fmtHint = $("fmtHint");
+
+  const addH = $("addH");
+  const addM = $("addM");
+  const addS = $("addS");
+
+  const btnConvert = $("btnConvert");
+  const btnCopy = $("btnCopy");
+  const btnMore = $("btnMore");
+  const btnOpenSettings = $("btnOpenSettings");
+
+  const overlay = $("overlay");
+  const sheetSettings = $("sheetSettings");
+  const btnResetSettings = $("btnResetSettings");
+
+  /* ========= Mini toast ========= */
+  function toast(msg, sub=""){
+    $("miniMsg").textContent = msg;
+    $("miniSub").textContent = sub || " ";
+    const el = $("miniToast");
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>el.classList.remove("show"), 1600);
+  }
+
+  /* ========= Bottom sheet ========= */
+  function openSheet(){
+    overlay.classList.add("active");
+    sheetSettings.classList.add("active");
+  }
+  function closeSheets(){
+    overlay.classList.remove("active");
+    sheetSettings.classList.remove("active");
+  }
+
+  overlay.addEventListener("pointerup", closeSheets, {passive:true});
+  document.body.addEventListener("pointerup", (e) => {
+    if(e.target.closest("[data-close-sheet]")) closeSheets();
+  }, {passive:true});
+
+  btnOpenSettings.addEventListener("pointerup", (e)=>{ e.preventDefault(); openSheet(); }, {passive:false});
+  btnOpenSettings.addEventListener("click", (e)=>{ e.preventDefault(); openSheet(); });
+
+  /* ========= Settings ========= */
+  const STORAGE_KEY = "timeline_shifter_pro_v1";
+  const state = {
+    fmt: "keep" // keep | forceHours
+  };
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const obj = JSON.parse(raw);
+      if(obj && (obj.fmt==="keep" || obj.fmt==="forceHours")) state.fmt = obj.fmt;
+    }catch(_){}
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({fmt: state.fmt})); }catch(_){}
+  }
+  function applyFmtUI(){
+    document.querySelectorAll("#fmtChips .chip").forEach(ch=>{
+      ch.classList.toggle("active", ch.dataset.fmt===state.fmt);
+    });
+    fmtHint.textContent = "输出格式：" + (state.fmt==="keep" ? "保留原样" : "强制显示小时");
+  }
+
+  document.getElementById("fmtChips").addEventListener("pointerup", (e)=>{
+    const chip = e.target.closest(".chip[data-fmt]");
+    if(!chip) return;
+    state.fmt = chip.dataset.fmt;
+    saveState();
+    applyFmtUI();
+    toast("已更新设置", fmtHint.textContent.replace("输出格式：",""));
+  }, {passive:true});
+
+  btnResetSettings.addEventListener("pointerup", (e)=>{
+    e.preventDefault();
+    state.fmt = "keep";
+    saveState();
+    applyFmtUI();
+    toast("已重置", "恢复默认设置");
+  }, {passive:false});
+
+  /* ========= Core: parsing & formatting =========
+     Match:
+       (m:ss) / (mm:ss)
+       (h:mm:ss) / (hh:mm:ss) ...
+     Seconds must be 2 digits.
+  */
+  const TIME_RE = /\((\d+):(\d{2})(?::(\d{2}))?\)/g;
+
+  function toSeconds(a, b, c){
+    if(c !== undefined){
+      const h = Number(a), m = Number(b), s = Number(c);
+      return h*3600 + m*60 + s;
+    }else{
+      const m = Number(a), s = Number(b);
+      return m*60 + s;
+    }
+  }
+
+  function fmtMSS(total){
+    total = Math.max(0, Math.floor(total));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${String(s).padStart(2,"0")}`;
+  }
+
+  function fmtHMMSS(total){
+    total = Math.max(0, Math.floor(total));
+    const h = Math.floor(total / 3600);
+    const rem = total % 3600;
+    const m = Math.floor(rem / 60);
+    const s = rem % 60;
+    return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+
+  function getOffsetSeconds(){
+    const h = Number(addH.value || 0);
+    const m = Number(addM.value || 0);
+    const s = Number(addS.value || 0);
+    return h*3600 + m*60 + s;
+  }
+
+  function convertText(text){
+    const t0 = performance.now();
+    const offset = getOffsetSeconds();
+
+    let count = 0;
+    const out = text.replace(TIME_RE, (full, a, b, c) => {
+      const hadHours = (c !== undefined);
+      const base = toSeconds(a, b, c);
+      const shifted = base + offset;
+      count++;
+
+      if(state.fmt === "forceHours"){
+        return `(${fmtHMMSS(shifted)})`;
+      }
+      // keep
+      return `(${hadHours ? fmtHMMSS(shifted) : fmtMSS(shifted)})`;
+    });
+
+    const t1 = performance.now();
+    return { out, count, ms: Math.max(0, t1 - t0), offset };
+  }
+
+  /* ========= Helpers ========= */
+  function updateCounts(){
+    inCount.textContent = `${(input.value||"").length} 字`;
+    outCount.textContent = `${(output.value||"").length} 字`;
+  }
+  function setStats(text){
+    stats.innerHTML = text;
+  }
+
+  async function copyOutput(){
+    const txt = output.value || "";
+    if(!txt){
+      toast("没有可复制的内容", "先转换一次");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(txt);
+      toast("已复制", "输出已到剪贴板");
+    }catch(_){
+      // fallback
+      output.focus();
+      output.select();
+      document.execCommand("copy");
+      toast("已复制", "（使用兼容模式）");
+    }
+  }
+
+  function downloadTxt(){
+    const txt = output.value || "";
+    if(!txt){
+      toast("没有可下载的内容", "先转换一次");
+      return;
+    }
+    const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,"-");
+    a.href = url;
+    a.download = `shifted-${stamp}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 500);
+    toast("已下载", "TXT 文件已保存");
+  }
+
+  function replaceInputWithOutput(){
+    if(!output.value){
+      toast("没有可覆盖的输出", "先转换一次");
+      return;
+    }
+    input.value = output.value;
+    updateCounts();
+    toast("已覆盖输入", "可以继续叠加偏移");
+  }
+
+  function clearAll(){
+    input.value = "";
+    output.value = "";
+    updateCounts();
+    setStats(`<span>就绪</span><span class="dot"></span><span>识别：—</span><span class="dot"></span><span>耗时：—</span>`);
+    toast("已清空", "输入与输出都清空了");
+  }
+
+  /* ========= More menu (simple actions via native confirm) ========= */
+  function openMore(){
+    const choice = prompt(
+`更多操作：
+1) 输出覆盖输入
+2) 下载输出为 TXT
+3) 清空
+（输入数字 1/2/3，或取消）`
+    );
+    if(choice === null) return;
+    if(choice.trim() === "1") replaceInputWithOutput();
+    else if(choice.trim() === "2") downloadTxt();
+    else if(choice.trim() === "3") clearAll();
+    else toast("未识别的选项", "请输入 1 / 2 / 3");
+  }
+
+  /* ========= Events ========= */
+  btnConvert.addEventListener("pointerup", (e)=>{
+    e.preventDefault();
+    const text = input.value || "";
+    if(!text.trim()){
+      toast("请输入文本", "把原文粘贴到输入框");
+      return;
+    }
+    const { out, count, ms, offset } = convertText(text);
+    output.value = out;
+    updateCounts();
+
+    const sign = offset >= 0 ? "+" : "";
+    const abs = Math.abs(offset);
+    const hh = Math.floor(abs/3600);
+    const mm = Math.floor((abs%3600)/60);
+    const ss = abs%60;
+
+    setStats(
+      `<span>完成</span><span class="dot"></span>
+       <span>识别：<b>${count}</b></span><span class="dot"></span>
+       <span>偏移：<b>${sign}${hh}h ${mm}m ${ss}s</b></span><span class="dot"></span>
+       <span>耗时：<b>${ms.toFixed(1)}ms</b></span>`
+    );
+
+    toast("转换完成", `处理 ${count} 个时间戳`);
+  }, {passive:false});
+
+  btnCopy.addEventListener("pointerup", (e)=>{ e.preventDefault(); copyOutput(); }, {passive:false});
+  btnCopy.addEventListener("click", (e)=>{ e.preventDefault(); copyOutput(); });
+
+  btnMore.addEventListener("pointerup", (e)=>{ e.preventDefault(); openMore(); }, {passive:false});
+  btnMore.addEventListener("click", (e)=>{ e.preventDefault(); openMore(); });
+
+  input.addEventListener("input", updateCounts);
+  output.addEventListener("input", updateCounts);
+
+  // keyboard shortcuts
+  document.addEventListener("keydown", (e)=>{
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+
+    if(mod && e.key === "Enter"){
+      e.preventDefault();
+      btnConvert.click();
+    }
+    if(mod && e.shiftKey && (e.key.toLowerCase() === "c")){
+      e.preventDefault();
+      copyOutput();
+    }
+  });
+
+  // Init
+  loadState();
+  applyFmtUI();
+  updateCounts();
+
+  // Friendly initial hint
+  setTimeout(()=>toast("提示", "可输入负数做减法；Ctrl/⌘+Enter 一键转换"), 650);
+
+})();
+</script>
+
+</body>
+</html>
