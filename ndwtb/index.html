@@ -1250,9 +1250,9 @@ video {
 
                 <div class="slider-row"><span>显示区域</span><input id="regionRange" type="range" min="25" max="100" step="25" value="100"><span id="regionValue">100%</span></div>
                 <div class="slider-row"><span>不透明度</span><input id="opacityRange" type="range" min="10" max="100" step="1" value="100"><span id="opacityValue">100%</span></div>
-                <div class="slider-row"><span>弹幕字号</span><input id="scaleRange" type="range" min="60" max="180" step="1" value="110"><span id="scaleValue">110%</span></div>
+                <div class="slider-row"><span>弹幕字号</span><input id="scaleRange" type="range" min="50" max="170" step="1" value="100"><span id="scaleValue">100%</span></div>
                 <div class="slider-row"><span>弹幕速度</span><input id="speedRange" type="range" min="60" max="160" step="1" value="100"><span id="speedValue">正常</span></div>
-                <div class="slider-row"><span>弹幕密度</span><input id="densityRange" type="range" min="20" max="100" step="5" value="90"><span id="densityValue">90%</span></div>
+                <div class="slider-row"><span>弹幕密度</span><input id="densityRange" type="range" min="20" max="100" step="5" value="100"><span id="densityValue">100%</span></div>
 
                 <div class="settings-actions">
                   <div style="display:flex; gap:8px;">
@@ -1315,7 +1315,7 @@ video {
 
       const CONFIG = {
         VIDEO_URL: 'https://necosimg.lestoy.com/ndwtb/index.m3u8',
-        DANMAKU_URL: 'https://necosimg.lestoy.com/ndwtb.xml',
+        DANMAKU_URL: 'https://necosimg.lestoy.com/1-2026%E6%88%91%E7%9A%84%E4%B8%96%E7%95%8C%E6%8B%9C%E5%B9%B4%E7%BA%AA-4K%20%E8%B6%85%E9%AB%98%E6%B8%85-AVC.ass',
         BACKTRACK_SEC: 26,
         STORAGE_KEY: 'enterpriseDanmakuPlayerPrefsV1',
         SPEED_OPTIONS: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
@@ -2019,14 +2019,10 @@ Dialogue: -1,0:00:13.00,0:00:20.00,Danmaku,,0000,0000,0000,,{\pos(960, 240)\an8\
           return (hash % 100) < this.settings.density * 100;
         }
 
-        getFontSize(item) {
-          const { height } = this.rect;
-          const baseScale = this.settings.scaleWithVideo
-            ? Math.max(0.78, Math.min(1.18, height / 720))
-            : 1;
-          const sourceSize = Number(item.size || 25);
-          return Math.max(16, Math.min(58, sourceSize * baseScale * this.settings.scale));
-        }
+    getFontSize(item) {
+  const sourceSize = Number(item.size || 25);
+  return Math.max(16, Math.min(58, sourceSize * this.settings.scale * 1.1));
+}
 
         getMeasure(item, fontSize) {
           const fontFamily = item.ass?.fontName
@@ -2079,8 +2075,8 @@ Dialogue: -1,0:00:13.00,0:00:20.00,Danmaku,,0000,0000,0000,,{\pos(960, 240)\an8\
         }
 
         clampY(y, nodeH, regionHeight, height) {
-          const topPad = 16;
-          const bottomPad = 12;
+          const topPad = 56;
+          const bottomPad = 48;
           let next = Math.max(topPad, Math.min(regionHeight - nodeH - bottomPad, y));
           if (this.settings.antiFace) {
             const faceTop = height * 0.38;
@@ -2811,7 +2807,7 @@ Dialogue: -1,0:00:13.00,0:00:20.00,Danmaku,,0000,0000,0000,,{\pos(960, 240)\an8\
             this.speedRange.value = '92';
             this.opacityRange.value = '92';
           } else {
-            this.scaleRange.value = '110';
+            this.scaleRange.value = '100';
             this.densityRange.value = '90';
             this.speedRange.value = '100';
             this.opacityRange.value = '100';
