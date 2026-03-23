@@ -726,7 +726,7 @@
 
                 <div class="slider-row"><span>显示区域</span><input id="regionRange" type="range" min="25" max="100" step="25" value="100"><span id="regionValue">100%</span></div>
                 <div class="slider-row"><span>不透明度</span><input id="opacityRange" type="range" min="10" max="100" step="1" value="100"><span id="opacityValue">100%</span></div>
-                <div class="slider-row"><span>弹幕字号</span><input id="scaleRange" type="range" min="50" max="150" step="1" value="82"><span id="scaleValue">82%</span></div>
+                <div class="slider-row"><span>弹幕字号</span><input id="scaleRange" type="range" min="50" max="150" step="1" value="100"><span id="scaleValue">100%</span></div>
                 <div class="slider-row"><span>弹幕速度</span><input id="speedRange" type="range" min="60" max="160" step="1" value="100"><span id="speedValue">正常</span></div>
                 <div class="slider-row"><span>弹幕密度</span><input id="densityRange" type="range" min="20" max="100" step="5" value="100"><span id="densityValue">100%</span></div>
 
@@ -784,7 +784,7 @@
   <script>
     const CONFIG = {
       VIDEO_URL: 'https://necosimg.lestoy.com/ndwtb/index.m3u8',
-      DANMAKU_URL: 'https://comment.bilibili.com/35937977476.xml',
+      DANMAKU_URL: 'https://necosimg.lestoy.com/ndwtb.xml',
       BACKTRACK_SEC: 24,
       DEFAULTS: {
         enabled: true,
@@ -1219,6 +1219,7 @@ class DanmakuEngine {
     this.cursor = 0;
     this.active = new Map();
     this.raf = 0;
+    this.edgePadding = 40;
     this.maxBacktrack = CONFIG?.BACKTRACK_SEC || 24;
     this.settings = JSON.parse(JSON.stringify(CONFIG?.DEFAULTS || {
       enabled: true,
@@ -1446,7 +1447,9 @@ class DanmakuEngine {
   }
 
   clampY(y, nodeH, regionHeight, height) {
-    let next = Math.max(0, Math.min(regionHeight - nodeH, y));
+    const topPad = 18;
+const bottomPad = 12;
+let next = Math.max(topPad, Math.min(regionHeight - nodeH - bottomPad, y));
 
     if (this.settings.antiFace) {
       const faceTop = height * 0.38;
@@ -1558,7 +1561,7 @@ class DanmakuEngine {
     else if (item.type === 'top') {
       const yRaw = this.getLaneY('top', laneCount, nodeH, regionHeight, now, item.duration, item.id, false);
       const y = this.clampY(yRaw, nodeH, regionHeight, height);
-      const x = Math.max(0, (width - nodeW) / 2);
+      const x = clamp((width - nodeW) / 2, this.edgePadding, width - nodeW - this.edgePadding);
 
       keyframes = [
         { transform: `translate(${x}px, ${y}px)`, opacity: progress === 0 ? 0 : node.style.opacity },
@@ -1571,7 +1574,7 @@ class DanmakuEngine {
     else if (item.type === 'bottom') {
       const yRaw = this.getLaneY('bottom', laneCount, nodeH, regionHeight, now, item.duration, item.id, true);
       const y = this.clampY(yRaw, nodeH, regionHeight, height);
-      const x = Math.max(0, (width - nodeW) / 2);
+      const x = clamp((width - nodeW) / 2, this.edgePadding, width - nodeW - this.edgePadding);
 
       keyframes = [
         { transform: `translate(${x}px, ${y}px)`, opacity: progress === 0 ? 0 : node.style.opacity },
@@ -1604,8 +1607,8 @@ class DanmakuEngine {
       }
       deadline = now + remaining;
 
-      const startX = width + 20;
-      const endX = -nodeW - 20;
+const startX = width - this.edgePadding;
+const endX = -nodeW + this.edgePadding;
       const yRaw = this.getLaneY('scroll', laneCount, nodeH, regionHeight, now, scrollDur, item.id, false);
       const y = this.clampY(yRaw, nodeH, regionHeight, height);
 
