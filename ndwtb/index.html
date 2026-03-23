@@ -48,7 +48,7 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  --app-bg-image: url("https://necosimg.lestoy.com/%E3%80%90%E5%93%B2%E9%A3%8E%E5%A3%81%E7%BA%B8%E3%80%91%E4%BA%8C%E6%AC%A1%E5%85%83-%E5%8A%A8%E7%94%BB%E8%A7%92%E8%89%B2.png");
+  --app-bg-image: url("https://necosimg.lestoy.com/%E3%80%90%E5%93%B2%E9%A3%8E%E5%A3%81%E7%BA%B8%E3%80%91%E4%B9%A1%E6%9D%91%E8%A1%97%E9%81%93-%E4%BA%8C%E6%AC%A1%E5%85%83.png");
 }
 
 * { box-sizing: border-box; }
@@ -72,6 +72,8 @@ body {
   overflow-x: hidden;
   position: relative;
   background: transparent;
+  padding-left: 5%;
+  padding-right: 5%;
 }
 
 body::before {
@@ -93,7 +95,7 @@ body::after {
     radial-gradient(circle at top left, rgba(255, 205, 225, .28), transparent 28%),
     radial-gradient(circle at top right, rgba(255, 225, 236, .26), transparent 26%),
     linear-gradient(180deg, rgba(255, 248, 251, .78), rgba(255, 240, 246, .90));
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(25px);
 }
 
 button,
@@ -111,16 +113,20 @@ button {
 .page {
   max-width: var(--app-max);
   margin: 0 auto;
-  padding: calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
+  padding: calc(56px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0,1fr) var(--right-width);
-  gap: 18px;
+  gap: 36px;
   align-items: start;
 }
-
+.main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
 .card {
   border: 1px solid rgba(255,255,255,.62);
   background:
@@ -3007,4 +3013,5 @@ iconExitFullscreen() {
   </script>
 </body>
 </html>
+
 
