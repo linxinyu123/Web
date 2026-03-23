@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Danmaku Player</title>
+  <style>
+    :root{
+      --bg:#f6f7f8;
+      --card:#fff;
+      --text:#18191c;
+      --sub:#61666d;
+      --line:#e3e5e7;
+      --brand:#00a1d6;
+      --brand-weak:#e8f7fc;
+      --shadow:0 8px 24px rgba(0,0,0,.06);
+      --radius:12px;
+      --dm-opacity:1;
+      --dm-region-mask:0%;
+      --right-width:368px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    button,input{font:inherit}
+    button{border:0;background:none;padding:0;color:inherit}
+    .page{max-width:1380px;margin:0 auto;padding:16px;padding-top: 50px;}
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) var(--right-width);
+      gap:20px;
+      align-items:start;
+    }
+    .main,.sidebar{min-width:0}
+    .card{
+      background:var(--card);
+      border:1px solid #eceef1;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .player-shell{overflow:hidden}
+    .player-frame{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      background:#000;
+      overflow:hidden;
+      user-select:none;
+    }
+    .player-frame.web-fullscreen{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      aspect-ratio:auto;
+      z-index:2000;
+      border-radius:0;
+    }
+    video{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;
+      background:#000;
+      outline:none;
+    }
+
+    .gradient-layer,
+    .safe-mask,
+    .danmaku-layer,
+    .message-layer,
+    .loading-layer,
+    .center-state,
+    .player-top-right,
+    .player-bottom,
+    .danmaku-settings{
+      position:absolute;
+      inset:0;
+    }
+
+    .gradient-layer{
+      z-index:3;
+      pointer-events:none;
+      background:
+        linear-gradient(180deg,rgba(0,0,0,.28) 0%,rgba(0,0,0,.04) 18%,rgba(0,0,0,.02) 62%,rgba(0,0,0,.64) 100%);
+    }
+    .safe-mask{
+      z-index:4;
+      display:none;
+      pointer-events:none;
+      background:
+        linear-gradient(180deg,
+          transparent 0%,
+          transparent 36%,
+          rgba(0,161,214,.08) 36%,
+          rgba(0,161,214,.08) 64%,
+          transparent 64%,
+          transparent 100%);
+    }
+    .safe-mask.show{display:block}
+
+    .danmaku-layer{
+      z-index:5;
+      overflow:hidden;
+      pointer-events:none;
+      opacity:var(--dm-opacity);
+      clip-path:inset(0 0 var(--dm-region-mask) 0);
+    }
+
+   .danmaku-item{
+  position:absolute;
+  left:0;
+  top:0;
+  white-space:pre;
+  will-change:transform,opacity;
+  transform-origin:left top;
+  pointer-events:none;
+  user-select:none;
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+  font-weight:700;
+  line-height:1.18;
+  letter-spacing:0;
+  text-shadow:
+    -1px -1px 0 rgba(0,0,0,.92),
+     0   -1px 0 rgba(0,0,0,.92),
+     1px -1px 0 rgba(0,0,0,.92),
+    -1px  0   0 rgba(0,0,0,.92),
+     1px  0   0 rgba(0,0,0,.92),
+    -1px  1px 0 rgba(0,0,0,.92),
+     0    1px 0 rgba(0,0,0,.92),
+     1px  1px 0 rgba(0,0,0,.92);
+}
+.danmaku-item.multiline{
+  white-space:normal;
+  text-align:center;
+}
+
+    .message-layer,
+    .loading-layer,
+    .center-state{
+      z-index:7;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+    }
+    .message-card{
+      max-width:min(84%,520px);
+      padding:18px 22px;
+      border-radius:16px;
+      color:#fff;
+      text-align:center;
+      background:rgba(16,18,23,.82);
+      border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(14px);
+      box-shadow:0 16px 40px rgba(0,0,0,.28);
+    }
+    .message-title{font-size:20px;font-weight:700;margin-bottom:8px}
+    .message-text{font-size:13px;line-height:1.7;color:rgba(255,255,255,.84)}
+
+    .loading-layer{
+      opacity:0;
+      transition:opacity .18s ease;
+      background:radial-gradient(circle,rgba(0,0,0,.22),rgba(0,0,0,.06) 38%,rgba(0,0,0,0) 68%);
+    }
+    .loading-layer.show{opacity:1}
+    .spinner{
+      width:52px;height:52px;border-radius:50%;
+      border:3px solid rgba(255,255,255,.22);
+      border-top-color:#fff;
+      animation:spin .8s linear infinite;
+    }
+
+    .center-badge{
+      width:86px;height:86px;border-radius:50%;
+      display:grid;place-items:center;
+      color:#fff;
+      background:rgba(0,0,0,.38);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(10px);
+      transform:scale(.88);
+      opacity:0;
+      transition:opacity .22s ease,transform .22s ease;
+    }
+    .center-badge.show{opacity:1;transform:scale(1)}
+    .center-badge svg{width:36px;height:36px;fill:currentColor}
+
+    .player-top-right{
+      inset:14px 14px auto auto;
+      z-index:9;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      width:auto;
+      height:auto;
+      transition:opacity .18s ease,transform .18s ease;
+    }
+    .top-pill{
+      height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:#fff;
+      background:rgba(0,0,0,.36);
+      border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(10px);
+      font-size:12px;
+      cursor:pointer;
+      transition:background .16s ease,transform .16s ease;
+    }
+    .top-pill:hover{background:rgba(255,255,255,.12)}
+
+    .player-bottom{
+      inset:auto 0 0 0;
+      z-index:10;
+      padding:0 14px 12px;
+      height:auto;
+      transition:opacity .18s ease,transform .18s ease;
+    }
+    .controls-box{
+      display:grid;
+      gap:10px;
+      pointer-events:auto;
+    }
+
+    .progress-wrap{
+      position:relative;
+      height:22px;
+      display:flex;
+      align-items:center;
+      cursor:pointer;
+      touch-action:none;
+    }
+    .progress-track,.progress-buffer,.progress-fill,.progress-thumb,
+    .volume-track,.volume-fill,.volume-thumb{position:absolute}
+    .progress-track{
+      left:0;right:0;height:3px;border-radius:999px;
+      background:rgba(255,255,255,.2);overflow:hidden;
+    }
+    .progress-buffer{
+      left:0;top:0;height:100%;width:0;background:rgba(255,255,255,.34)
+    }
+    .progress-fill{
+      left:0;top:0;height:100%;width:0;background:var(--brand)
+    }
+    .progress-thumb{
+      top:50%;left:0;width:14px;height:14px;
+      transform:translate(-50%,-50%);
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 0 0 4px rgba(255,255,255,.14);
+      transition:transform .12s ease,box-shadow .12s ease;
+    }
+    .progress-wrap:hover .progress-thumb,
+    .progress-wrap.dragging .progress-thumb{
+      transform:translate(-50%,-50%) scale(1.08);
+      box-shadow:0 0 0 6px rgba(255,255,255,.14);
+    }
+    .seek-preview{
+      position:absolute;
+      bottom:calc(100% + 8px);
+      transform:translateX(-50%);
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:12px;
+      color:#fff;
+      background:rgba(20,22,27,.94);
+      border:1px solid rgba(255,255,255,.1);
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .14s ease;
+    }
+    .progress-wrap.show-preview .seek-preview{opacity:1}
+
+    .control-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      min-height:38px;
+    }
+    .ctrl-left,.ctrl-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+
+    .icon-btn,.text-btn,.list-toggle,.menu-chip{
+      cursor:pointer;
+      user-select:none;
+    }
+    .icon-btn{
+      width:36px;height:36px;border-radius:8px;
+      display:grid;place-items:center;color:#fff;
+      transition:background .16s ease,transform .16s ease;
+    }
+    .icon-btn:hover,.text-btn:hover,.menu-chip:hover,.list-toggle:hover{
+      background:rgba(255,255,255,.12);
+    }
+    .icon-btn svg,.list-toggle svg{width:22px;height:22px;fill:currentColor}
+    .icon-btn.active,.text-btn.active{color:var(--brand)}
+
+    .time-label{
+      min-width:106px;
+      color:#fff;
+      font-size:14px;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .volume-wrap{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .volume-bar{
+      position:relative;
+      width:86px;
+      height:22px;
+      display:flex;
+      align-items:center;
+      cursor:pointer;
+      touch-action:none;
+    }
+    .volume-track{
+      left:0;right:0;height:3px;border-radius:999px;
+      background:rgba(255,255,255,.24);
+    }
+    .volume-fill{
+      left:0;height:3px;width:0;border-radius:999px;background:#fff;
+    }
+    .volume-thumb{
+      top:50%;left:0;width:12px;height:12px;border-radius:50%;
+      transform:translate(-50%,-50%);background:#fff;
+    }
+
+    .menu-chip,.text-btn{
+      height:34px;
+      padding:0 10px;
+      border-radius:8px;
+      display:inline-flex;
+      align-items:center;
+      color:#fff;
+      font-size:14px;
+      transition:background .16s ease;
+      white-space:nowrap;
+    }
+    .menu-chip{min-width:52px;justify-content:center}
+
+    .danmaku-settings{
+      inset:auto 14px 60px auto;
+      width:min(420px,calc(100vw - 28px));
+      z-index:12;
+      padding:16px;
+      border-radius:12px;
+      background:rgba(24,25,28,.96);
+      border:1px solid rgba(255,255,255,.1);
+      box-shadow:0 20px 48px rgba(0,0,0,.32);
+      backdrop-filter:blur(18px);
+      opacity:0;
+      pointer-events:none;
+      transform:translateY(8px) scale(.98);
+      transform-origin:bottom right;
+      transition:opacity .16s ease,transform .16s ease;
+      width:min(420px,calc(100vw - 28px));
+      height:auto;
+    }
+    .danmaku-settings.open{
+      opacity:1;
+      pointer-events:auto;
+      transform:translateY(0) scale(1);
+    }
+
+    .settings-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color:#fff;
+      font-size:14px;
+      margin-bottom:12px;
+    }
+    .settings-grid{display:grid;gap:12px}
+    .setting-tabs{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .setting-tab{
+      min-width:54px;
+      height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(255,255,255,.92);
+      background:rgba(255,255,255,.08);
+      cursor:pointer;
+      font-size:14px;
+      transition:background .16s ease,color .16s ease;
+    }
+    .setting-tab.active{
+      background:rgba(0,161,214,.96);
+      color:#fff;
+    }
+
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .check-item{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:rgba(255,255,255,.92);
+      font-size:14px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .checkbox{
+      width:16px;height:16px;border-radius:3px;
+      border:1px solid rgba(255,255,255,.36);
+      position:relative;flex:0 0 auto;
+    }
+    .checkbox.on{
+      background:var(--brand);
+      border-color:var(--brand);
+    }
+    .checkbox.on::after{
+      content:"";
+      position:absolute;
+      inset:2px 4px 4px 2px;
+      border:solid #fff;
+      border-width:0 2px 2px 0;
+      transform:rotate(45deg);
+    }
+
+    .slider-row{
+      display:grid;
+      grid-template-columns:74px 1fr 58px;
+      gap:12px;
+      align-items:center;
+      color:rgba(255,255,255,.92);
+      font-size:14px;
+    }
+    .slider-row input[type="range"]{
+      width:100%;
+      appearance:none;
+      background:transparent;
+      height:22px;
+      cursor:pointer;
+    }
+    .slider-row input[type="range"]::-webkit-slider-runnable-track{
+      height:4px;border-radius:999px;background:rgba(255,255,255,.18);
+    }
+    .slider-row input[type="range"]::-webkit-slider-thumb{
+      appearance:none;
+      width:16px;height:16px;margin-top:-6px;border-radius:50%;
+      background:#fff;box-shadow:0 0 0 4px rgba(0,161,214,.18);
+    }
+    .slider-row input[type="range"]::-moz-range-track{
+      height:4px;border-radius:999px;background:rgba(255,255,255,.18);
+    }
+    .slider-row input[type="range"]::-moz-range-thumb{
+      width:16px;height:16px;border-radius:50%;border:none;background:#fff;
+    }
+    .settings-actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding-top:4px;
+    }
+    .subtle-btn{
+      height:32px;
+      padding:0 12px;
+      border-radius:8px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      cursor:pointer;
+      color:rgba(255,255,255,.92);
+      background:rgba(255,255,255,.08);
+    }
+    .subtle-btn.primary{
+      background:var(--brand);
+      color:#fff;
+    }
+
+    .outside-bar{
+      margin-top:10px;
+      min-height:42px;
+      padding:0 14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      color:var(--sub);
+      font-size:14px;
+      background:var(--card);
+      border:1px solid #eceef1;
+      border-radius:10px;
+      box-shadow:var(--shadow);
+    }
+    .status-dot{
+      width:8px;height:8px;border-radius:50%;background:#2ac865;flex:0 0 auto;
+    }
+    .outside-text{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .outside-split{
+      width:4px;height:4px;border-radius:50%;background:#c9ccd0;
+    }
+
+    .sidebar{
+      position:sticky;
+      top:16px;
+    }
+    .list-card{
+      padding:14px;
+    }
+    .list-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .list-title{
+      font-size:20px;
+      font-weight:700;
+    }
+    .list-tools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--sub);
+      font-size:14px;
+    }
+    .list-toggle{
+      width:30px;height:30px;border-radius:8px;
+      display:grid;place-items:center;color:#61666d;
+      transition:background .16s ease,transform .16s ease;
+    }
+    .list-summary{
+      color:var(--sub);
+      font-size:13px;
+      margin-bottom:10px;
+    }
+    .danmaku-table{
+      border-top:1px solid var(--line);
+      padding-top:10px;
+    }
+    .table-head,.table-row{
+      display:grid;
+      grid-template-columns:62px minmax(0,1fr) 76px;
+      gap:10px;
+      align-items:center;
+    }
+    .table-head{
+      padding:0 6px 8px;
+      color:#9499a0;
+      font-size:13px;
+    }
+    .table-body{
+      max-height:620px;
+      overflow:auto;
+      padding-right:4px;
+      scrollbar-width:thin;
+      scrollbar-color:#d9dde3 transparent;
+    }
+    .table-body::-webkit-scrollbar{width:6px}
+    .table-body::-webkit-scrollbar-thumb{
+      background:#d9dde3;border-radius:999px;
+    }
+    .table-row{
+      min-height:40px;
+      padding:8px 6px;
+      border-radius:8px;
+      font-size:14px;
+      cursor:pointer;
+      transition:background .16s ease,color .16s ease;
+    }
+    .table-row:hover{background:#f6f7f8}
+    .table-row.active{background:#eaf7ff}
+    .col-time,.col-date{color:#61666d;font-variant-numeric:tabular-nums}
+    .col-text{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .list-empty{
+      height:120px;
+      display:grid;
+      place-items:center;
+      color:#9499a0;
+      font-size:14px;
+    }
+    .collapsed .table-head,
+    .collapsed .table-body,
+    .collapsed .list-summary{
+      display:none;
+    }
+    .collapsed .list-toggle{transform:rotate(180deg)}
+
+    .player-frame.hidden-ui .player-top-right,
+    .player-frame.hidden-ui .player-bottom,
+    .player-frame.hidden-ui .danmaku-settings{
+      opacity:0;
+      pointer-events:none;
+      transform:translateY(8px);
+    }
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media (max-width:1180px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{position:static}
+    }
+    @media (max-width:900px){
+      :root{--right-width:100%}
+      .page{padding:10px}
+      .volume-wrap{display:none}
+      .time-label{min-width:92px;font-size:13px}
+      .table-body{max-height:320px}
+      .outside-bar{font-size:13px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="layout">
+      <main class="main">
+        <section class="card player-shell">
+          <div class="player-frame" id="playerFrame">
+            <video id="video" playsinline preload="metadata" crossorigin="anonymous"></video>
+            <div class="safe-mask" id="safeMask"></div>
+            <div class="danmaku-layer" id="danmakuLayer"></div>
+            <div class="gradient-layer"></div>
+
+            <div class="message-layer" id="messageLayer">
+              <div class="message-card">
+                <div class="message-title">准备中</div>
+                <div class="message-text">正在加载视频与弹幕，请稍候。</div>
+              </div>
+            </div>
+
+            <div class="loading-layer" id="loadingLayer">
+              <div class="spinner"></div>
+            </div>
+
+            <div class="center-state">
+              <div class="center-badge" id="centerBadge"></div>
+            </div>
+
+            <div class="player-top-right" id="playerTopRight">
+              <button class="top-pill" id="topDmSwitch">弹幕开</button>
+              <button class="top-pill" id="topSettingsBtn">弹幕设置</button>
+            </div>
+
+            <div class="player-bottom" id="playerBottom">
+              <div class="controls-box">
+                <div class="progress-wrap" id="progressWrap">
+                  <div class="seek-preview" id="seekPreview">00:00</div>
+                  <div class="progress-track">
+                    <div class="progress-buffer" id="progressBuffer"></div>
+                    <div class="progress-fill" id="progressFill"></div>
+                  </div>
+                  <div class="progress-thumb" id="progressThumb"></div>
+                </div>
+
+                <div class="control-row">
+                  <div class="ctrl-left">
+                    <button class="icon-btn" id="playBtn" aria-label="播放或暂停"></button>
+                    <div class="time-label" id="timeLabel">00:00 / 00:00</div>
+                    <div class="volume-wrap">
+                      <button class="icon-btn" id="muteBtn" aria-label="静音"></button>
+                      <div class="volume-bar" id="volumeBar">
+                        <div class="volume-track"></div>
+                        <div class="volume-fill" id="volumeFill"></div>
+                        <div class="volume-thumb" id="volumeThumb"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="ctrl-right">
+                    <button class="menu-chip" id="speedBtn">1.0x</button>
+                    <button class="text-btn" id="dmToggleBtn">弹幕</button>
+                    <button class="text-btn" id="dmSettingsBtn">设置</button>
+                    <button class="icon-btn" id="webFullscreenBtn" aria-label="网页全屏"></button>
+                    <button class="icon-btn" id="fullscreenBtn" aria-label="全屏"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="danmaku-settings" id="settingsPanel">
+              <div class="settings-head">
+                <strong>弹幕设置</strong>
+                <span id="settingsMeta">已载入 0 条</span>
+              </div>
+
+              <div class="settings-grid">
+                <div class="setting-tabs">
+                  <button class="setting-tab active" data-filter="scroll">滚动</button>
+                  <button class="setting-tab active" data-filter="top">顶部</button>
+                  <button class="setting-tab active" data-filter="bottom">底部</button>
+                  <button class="setting-tab active" data-filter="color">彩色</button>
+                </div>
+
+                <div class="check-row">
+                  <label class="check-item"><span class="checkbox on" data-check="scaleWithVideo"></span><span>弹幕随屏幕缩放</span></label>
+                  <label class="check-item"><span class="checkbox on" data-check="smartOverlap"></span><span>防挡字幕</span></label>
+                  <label class="check-item"><span class="checkbox" data-check="antiFace"></span><span>智能防挡脸</span></label>
+                </div>
+
+                <div class="slider-row"><span>显示区域</span><input id="regionRange" type="range" min="25" max="100" step="25" value="100"><span id="regionValue">100%</span></div>
+                <div class="slider-row"><span>不透明度</span><input id="opacityRange" type="range" min="10" max="100" step="1" value="100"><span id="opacityValue">100%</span></div>
+                <div class="slider-row"><span>弹幕字号</span><input id="scaleRange" type="range" min="50" max="150" step="1" value="82"><span id="scaleValue">82%</span></div>
+                <div class="slider-row"><span>弹幕速度</span><input id="speedRange" type="range" min="60" max="160" step="1" value="100"><span id="speedValue">正常</span></div>
+                <div class="slider-row"><span>弹幕密度</span><input id="densityRange" type="range" min="20" max="100" step="5" value="100"><span id="densityValue">100%</span></div>
+
+                <div class="settings-actions">
+                  <button class="subtle-btn" id="dmResetBtn">恢复默认</button>
+                  <button class="subtle-btn primary" id="dmCloseBtn">完成</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="outside-bar" id="outsideBar">
+          <span class="status-dot" id="statusDot"></span>
+          <div class="outside-text">
+            <span id="statusText">准备播放。</span>
+            <span class="outside-split"></span>
+            <span id="outsideDmTotal">弹幕 0 条</span>
+            <span class="outside-split"></span>
+            <span id="outsideDmActive">屏上 0 条</span>
+          </div>
+        </div>
+      </main>
+
+      <aside class="sidebar">
+        <section class="card list-card" id="danmakuListCard">
+          <div class="list-header">
+            <div class="list-title">弹幕列表</div>
+            <div class="list-tools">
+              <span id="listCountText">0 条</span>
+              <button class="list-toggle" id="listToggle" aria-label="折叠或展开">
+                <svg viewBox="0 0 24 24"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="list-summary">
+            <span id="listSummaryText">等待弹幕载入</span>
+          </div>
+          <div class="danmaku-table">
+            <div class="table-head">
+              <div>时间</div>
+              <div>弹幕内容</div>
+              <div>发送</div>
+            </div>
+            <div class="table-body" id="danmakuTableBody">
+              <div class="list-empty">正在等待弹幕数据…</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+  <script>
+    const CONFIG = {
+      VIDEO_URL: 'https://necosimg.lestoy.com/ndwtb/index.m3u8',
+      DANMAKU_URL: 'https://comment.bilibili.com/35937977476.xml',
+      BACKTRACK_SEC: 24,
+      DEFAULTS: {
+        enabled: true,
+        opacity: 1,
+        scale: 0.78,
+        region: 1,
+        speed: 1,
+        density: 0.95,
+        antiFace: false,
+        smartOverlap: true,
+        scaleWithVideo: true,
+        preserveColor: true,
+        filters: { scroll: true, top: true, bottom: true }
+      }
+    };
+
+    const DEFAULT_XML_FALLBACK = String.raw`<i>
+<d p="1205.13000,1,25,16777215,1772690766,0,d5829a1e,2060238491601871872,10">以小窥大</d>
+<d p="656.72400,1,25,16777215,1772513811,0,7b419da1,2058754084710135040,9">医院为了赚钱常常建议做这些不必要的手术，但是却无人监管这种事情</d>
+<d p="842.39200,1,25,16777215,1772022696,0,bc1b8262,2054634311898461184,8">呵呵</d>
+<d p="1401.91800,1,25,16777215,1771640330,0,a7068d91,2051426793923301632,7">你自己当个医生试试看能做到哪一步</d>
+</i>`;
+
+    const DEFAULT_ASS_FALLBACK = String.raw`[Script Info]
+Title: 默认 ASS 弹幕
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: no
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Danmaku,黑体,36,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0.00,0.00,1,1.40,0.00,2,30,30,30,0
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: -1,0:00:03.00,0:00:11.00,Danmaku,,0000,0000,0000,,{\move(2145, 50, -225, 50)\3c&H000000}这是一条默认 ASS 弹幕
+Dialogue: -1,0:00:08.00,0:00:16.00,Danmaku,,0000,0000,0000,,{\move(2145, 110, -225, 110)\3c&H000000}支持直接把 ASS 地址写在代码里
+Dialogue: -1,0:00:13.00,0:00:21.00,Danmaku,,0000,0000,0000,,{\move(2145, 170, -225, 170)\3c&H000000}跳转后会按当前进度出现在正确位置`;
+
+    const $ = (id) => document.getElementById(id);
+    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const fmtTime = (sec) => {
+      if (!Number.isFinite(sec)) return '00:00';
+      sec = Math.max(0, sec);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      return h > 0
+        ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+        : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+
+    const escapeHtml = (text) => String(text ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+
+    const decodeXmlText = (text) => {
+      const el = document.createElement('textarea');
+      el.innerHTML = text;
+      return el.value;
+    };
+
+    const humanDate = (ts) => {
+      if (!ts) return '--';
+      const d = new Date(ts * 1000);
+      const MM = String(d.getMonth() + 1).padStart(2, '0');
+      const DD = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${MM}-${DD} ${hh}:${mm}`;
+    };
+
+    const estimateWidth = (text, fontSize) => {
+      const lines = String(text).split('\n');
+      const maxLine = lines.reduce((m, s) => Math.max(m, [...s].length), 0);
+      return Math.max(fontSize * 1.4, maxLine * fontSize * 0.56 + 18);
+    };
+
+    const colorToCss = (decimal) => {
+      const value = Number(decimal) >>> 0;
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return `rgb(${r}, ${g}, ${b})`;
+    };
+
+    function splitFields(line, expected) {
+      const out = [];
+      let current = '';
+      let count = 0;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === ',' && count < expected - 1) {
+          out.push(current);
+          current = '';
+          count++;
+        } else {
+          current += ch;
+        }
+      }
+      out.push(current);
+      return out;
+    }
+
+    function parseAssTime(text) {
+      const m = String(text || '').trim().match(/^(\d+):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?$/);
+      if (!m) return 0;
+      return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) + Number(`0.${(m[4] || '0').padEnd(2, '0')}`);
+    }
+
+    function parseAssBgrToRgb(assColor) {
+      let raw = String(assColor || '').trim().replace(/&H/ig, '').replace(/H/ig, '').replace(/&/g, '');
+      raw = raw.padStart(8, '0').slice(-8);
+      const b = parseInt(raw.slice(2, 4), 16);
+      const g = parseInt(raw.slice(4, 6), 16);
+      const r = parseInt(raw.slice(6, 8), 16);
+      return (r << 16) + (g << 8) + b;
+    }
+
+    function parseAssAlpha(text) {
+      const m = String(text || '').match(/&H([0-9A-Fa-f]{2})/);
+      if (!m) return 1;
+      return clamp(1 - parseInt(m[1], 16) / 255, 0, 1);
+    }
+
+    class XmlDanmakuParser {
+      static parse(xmlText) {
+        const xml = new DOMParser().parseFromString(String(xmlText || ''), 'application/xml');
+        if (xml.querySelector('parsererror')) throw new Error('XML 弹幕解析失败');
+        const items = [...xml.querySelectorAll('d')].map((node, index) => {
+          const p = (node.getAttribute('p') || '').split(',');
+          const mode = Number(p[1] || 1);
+          const type = XmlDanmakuParser.resolveType(mode);
+          const duration = (type === 'top' || type === 'bottom') ? 4.2 : 8.6;
+          return {
+            id: index,
+            source: 'xml',
+            time: Number(p[0] || 0),
+            duration,
+            mode,
+            size: Number(p[2] || 25),
+            color: Number(p[3] || 16777215),
+            timestamp: Number(p[4] || 0),
+            text: decodeXmlText(node.textContent || '').trim(),
+            type
+          };
+        }).filter(Boolean).filter((item) => item.text);
+        items.sort((a, b) => a.time - b.time || a.id - b.id);
+        return items;
+      }
+
+      static resolveType(mode) {
+        if (mode === 4) return 'bottom';
+        if (mode === 5) return 'top';
+        if (mode === 6) return 'reverse';
+        return 'scroll';
+      }
+    }
+
+    class AssDanmakuParser {
+      static parse(content) {
+        const source = String(content || '').replace(/^\uFEFF/, '');
+        const lines = source.split(/\r?\n/);
+        let section = '';
+        const scriptInfo = { PlayResX: 1920, PlayResY: 1080 };
+        let styleFormat = [];
+        let eventFormat = [];
+        const styles = {};
+        const items = [];
+
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line || line.startsWith(';')) continue;
+
+          const sec = line.match(/^\[(.+?)\]$/);
+          if (sec) {
+            section = sec[1];
+            continue;
+          }
+
+          if (section === 'Script Info') {
+            const idx = line.indexOf(':');
+            if (idx > -1) {
+              const key = line.slice(0, idx).trim();
+              const value = line.slice(idx + 1).trim();
+              scriptInfo[key] = value;
+            }
+            continue;
+          }
+
+          if (/^V4\+? Styles$/i.test(section)) {
+            if (line.startsWith('Format:')) {
+              styleFormat = line.slice(7).split(',').map(v => v.trim());
+            } else if (line.startsWith('Style:')) {
+              const values = splitFields(line.slice(6).trim(), styleFormat.length);
+              const style = {};
+              styleFormat.forEach((key, i) => style[key] = (values[i] ?? '').trim());
+              styles[style.Name || 'Default'] = style;
+            }
+            continue;
+          }
+
+          if (section === 'Events') {
+            if (line.startsWith('Format:')) {
+              eventFormat = line.slice(7).split(',').map(v => v.trim());
+            } else if (line.startsWith('Dialogue:')) {
+              const values = splitFields(line.slice(9).trim(), eventFormat.length);
+              const event = {};
+              eventFormat.forEach((key, i) => event[key] = (values[i] ?? '').trim());
+              const parsed = AssDanmakuParser.normalizeEvent(event, styles, scriptInfo, items.length);
+              if (parsed) items.push(parsed);
+            }
+          }
+        }
+
+        items.sort((a, b) => a.time - b.time || a.id - b.id);
+        return items;
+      }
+
+      static normalizeEvent(event, styles, scriptInfo, index) {
+        const style = styles[event.Style] || styles.Default || {};
+        const textInfo = AssDanmakuParser.parseText(event.Text || '');
+        if (!textInfo.text) return null;
+
+        const start = parseAssTime(event.Start || '0:00:00.00');
+        const end = parseAssTime(event.End || '0:00:05.00');
+        if (end <= start) return null;
+
+        const alignment = textInfo.alignment || Number(style.Alignment) || 2;
+        const color = parseAssBgrToRgb(textInfo.primaryColour || style.PrimaryColour || '&H00FFFFFF');
+        const alpha = textInfo.alpha ?? parseAssAlpha(textInfo.alphaRaw || '&H00');
+        const size = Number(textInfo.fontSize || style.Fontsize || 36);
+        const type = textInfo.move
+          ? 'scroll'
+          : textInfo.pos
+            ? 'fixed'
+            : (alignment >= 7 ? 'top' : (alignment <= 3 ? 'bottom' : 'scroll'));
+
+        return {
+          id: index,
+          source: 'ass',
+          time: start,
+          duration: end - start,
+          mode: 1,
+          size,
+          color,
+          alpha,
+          timestamp: 0,
+          text: textInfo.text,
+          type,
+          ass: {
+            playResX: Number(scriptInfo.PlayResX) || 1920,
+            playResY: Number(scriptInfo.PlayResY) || 1080,
+            move: textInfo.move || null,
+            pos: textInfo.pos || null,
+            alignment,
+            fontName: textInfo.fontName || style.Fontname || '',
+            outline: Number(textInfo.outline || style.Outline || 1.4),
+            marginV: Number(event.MarginV || style.MarginV || 0)
+          }
+        };
+      }
+
+      static parseText(rawText) {
+        const out = {};
+        let text = '';
+        let idx = 0;
+        const regex = /\{([^}]*)\}/g;
+        let match;
+        while ((match = regex.exec(rawText)) !== null) {
+          text += rawText.slice(idx, match.index);
+          AssDanmakuParser.applyTags(match[1], out);
+          idx = match.index + match[0].length;
+        }
+        text += rawText.slice(idx);
+        text = text.replace(/\\N/g, '\n').replace(/\\n/g, '\n').replace(/\\h/g, ' ').trim();
+        return { text, ...out };
+      }
+
+      static applyTags(tagBlock, out) {
+        const raw = String(tagBlock || '');
+        const getNum = (re) => {
+          const m = raw.match(re);
+          return m ? Number(m[1]) : null;
+        };
+
+        const move = raw.match(/\\move\(([^,]+),([^,]+),([^,]+),([^,\)]+)(?:,([^,]+),([^\)]+))?\)/i);
+        if (move) {
+          out.move = {
+            x1: Number(move[1]), y1: Number(move[2]),
+            x2: Number(move[3]), y2: Number(move[4]),
+            t1: move[5] ? Number(move[5]) : null,
+            t2: move[6] ? Number(move[6]) : null
+          };
+        }
+
+        const pos = raw.match(/\\pos\(([^,]+),([^\)]+)\)/i);
+        if (pos) out.pos = { x: Number(pos[1]), y: Number(pos[2]) };
+
+        const fs = getNum(/\\fs([\d.]+)/i);
+        if (fs !== null) out.fontSize = fs;
+
+        const an = getNum(/\\an(\d+)/i);
+        if (an !== null) out.alignment = an;
+
+        const bord = getNum(/\\bord([\d.]+)/i);
+        if (bord !== null) out.outline = bord;
+
+        const fn = raw.match(/\\fn([^\\]+)/i);
+        if (fn) out.fontName = fn[1].trim();
+
+        const c = raw.match(/\\(?:1?c|c)(&H[0-9A-Fa-f]+&?)/i);
+        if (c) out.primaryColour = c[1];
+
+        const a1 = raw.match(/\\1a(&H[0-9A-Fa-f]{2}&?)/i);
+        if (a1) {
+          out.alphaRaw = a1[1];
+          out.alpha = parseAssAlpha(a1[1]);
+        } else {
+          const a = raw.match(/\\alpha(&H[0-9A-Fa-f]{2}&?)/i);
+          if (a) {
+            out.alphaRaw = a[1];
+            out.alpha = parseAssAlpha(a[1]);
+          }
+        }
+      }
+    }
+
+    class HlsController {
+      constructor(video) {
+        this.video = video;
+        this.hls = null;
+        this.lastMode = 'video';
+      }
+
+      destroy() {
+        if (this.hls) {
+          try { this.hls.destroy(); } catch (_) {}
+          this.hls = null;
+        }
+      }
+
+      async load(url, onError) {
+        this.destroy();
+        const clean = String(url || '').trim();
+        if (!clean) throw new Error('视频地址为空');
+
+        const canNativeHls = !!this.video.canPlayType('application/vnd.apple.mpegurl');
+        const isM3u8 = /\.m3u8($|[?#])/i.test(clean) || /m3u8/i.test(clean);
+
+        if (isM3u8 && window.Hls && Hls.isSupported()) {
+          this.lastMode = 'hls.js';
+
+          return await new Promise((resolve, reject) => {
+            const hls = new Hls({
+              enableWorker: true,
+              capLevelToPlayerSize: true,
+              maxBufferLength: 40,
+              lowLatencyMode: false,
+              manifestLoadingMaxRetry: 2,
+              levelLoadingMaxRetry: 2,
+              fragLoadingMaxRetry: 2
+            });
+
+            let settled = false;
+            this.hls = hls;
+
+            const fail = (message) => {
+              if (settled) return;
+              settled = true;
+              this.destroy();
+              onError?.(message);
+              reject(new Error(message));
+            };
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              if (settled) return;
+              settled = true;
+              resolve('m3u8');
+            });
+
+            hls.on(Hls.Events.ERROR, (_, data) => {
+              if (!data || !data.fatal) return;
+
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                fail(`视频网络错误：${data.details || '请检查 m3u8/ts 跨域或地址是否可访问。'}`);
+              } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                try {
+                  hls.recoverMediaError();
+                } catch (_) {
+                  fail(`视频解码错误：${data.details || '浏览器无法继续处理该 HLS。'}`);
+                }
+              } else {
+                fail(`视频流加载失败：${data.details || '未知 HLS 致命错误。'}`);
+              }
+            });
+
+            try {
+              hls.loadSource(clean);
+              hls.attachMedia(this.video);
+            } catch (err) {
+              fail(`HLS 初始化失败：${err.message || err}`);
+            }
+          });
+        }
+
+        if (isM3u8 && canNativeHls) {
+          this.lastMode = 'native-hls';
+          this.video.src = clean;
+          return 'm3u8';
+        }
+
+        this.lastMode = 'file';
+        this.video.src = clean;
+        return clean.split('.').pop()?.toLowerCase() || 'video';
+      }
+    }
+
+class DanmakuEngine {
+  constructor({ video, layer, safeMask, onActiveChange }) {
+    this.video = video;
+    this.layer = layer;
+    this.safeMask = safeMask;
+    this.onActiveChange = onActiveChange;
+    this.items = [];
+    this.cursor = 0;
+    this.active = new Map();
+    this.raf = 0;
+    this.maxBacktrack = CONFIG?.BACKTRACK_SEC || 24;
+    this.settings = JSON.parse(JSON.stringify(CONFIG?.DEFAULTS || {
+      enabled: true,
+      opacity: 1,
+      scale: 0.82,
+      region: 1,
+      speed: 1,
+      density: 1,
+      antiFace: false,
+      smartOverlap: true,
+      scaleWithVideo: true,
+      preserveColor: true,
+      filters: { scroll: true, top: true, bottom: true }
+    }));
+    this.trackState = { scroll: [], reverse: [], top: [], bottom: [] };
+    this.resizeObserver = new ResizeObserver(() => this.resync());
+    this.resizeObserver.observe(layer);
+  }
+
+  destroy() {
+    cancelAnimationFrame(this.raf);
+    this.resizeObserver.disconnect();
+    this.clear();
+  }
+
+  setItems(items) {
+    this.items = items || [];
+    let maxDur = 8;
+    for (const item of this.items) {
+      if (Number.isFinite(item.duration)) maxDur = Math.max(maxDur, item.duration);
+    }
+    this.maxBacktrack = Math.max(8, Math.min(30, maxDur + 2));
+    this.resync();
+  }
+
+  updateSettings(next) {
+    this.settings = {
+      ...this.settings,
+      ...next,
+      filters: { ...this.settings.filters, ...(next.filters || {}) }
+    };
+    this.layer.style.setProperty('--dm-opacity', this.settings.enabled ? String(this.settings.opacity) : '0');
+    this.layer.style.setProperty('--dm-region-mask', `${100 - Math.round(this.settings.region * 100)}%`);
+    this.safeMask.classList.toggle('show', this.settings.antiFace);
+    this.resync();
+  }
+
+  clear() {
+    for (const item of this.active.values()) {
+      item.animation?.cancel();
+      item.node.remove();
+    }
+    this.active.clear();
+    this.onActiveChange?.(0);
+  }
+
+  start() {
+    const loop = () => {
+      this.tick();
+      this.raf = requestAnimationFrame(loop);
+    };
+    cancelAnimationFrame(this.raf);
+    this.raf = requestAnimationFrame(loop);
+  }
+
+  resync() {
+    this.clear();
+    this.trackState = { scroll: [], reverse: [], top: [], bottom: [] };
+    const now = this.video.currentTime || 0;
+    const idx = this.items.findIndex(item => item.time >= now - this.maxBacktrack);
+    this.cursor = idx === -1 ? this.items.length : idx;
+  }
+
+  onPause() {
+    for (const item of this.active.values()) item.animation.pause();
+  }
+
+  onPlay() {
+    for (const item of this.active.values()) item.animation.play();
+  }
+
+  tick() {
+    this.clearExpired();
+    if (!this.settings.enabled || !this.items.length) return;
+
+    const now = this.video.currentTime || 0;
+    const lookAhead = 0.2;
+
+    while (this.cursor < this.items.length && this.items[this.cursor].time <= now + lookAhead) {
+      const item = this.items[this.cursor];
+      this.spawn(item, now);
+      this.cursor += 1;
+    }
+  }
+
+  clearExpired() {
+    const now = this.video.currentTime || 0;
+    for (const [id, item] of [...this.active.entries()]) {
+      if (item.deadline <= now + 0.01) {
+        item.animation?.cancel();
+        item.node.remove();
+        this.active.delete(id);
+      }
+    }
+    this.onActiveChange?.(this.active.size);
+  }
+
+  allowItem(item) {
+    if (item.type === 'scroll' || item.type === 'reverse' || item.type === 'fixed') {
+      return this.settings.filters.scroll;
+    }
+    if (item.type === 'top') return this.settings.filters.top;
+    if (item.type === 'bottom') return this.settings.filters.bottom;
+    return true;
+  }
+
+  passDensity(item) {
+    if (this.settings.density >= 0.99) return true;
+    let hash = 0;
+    const text = `${item.id}_${item.text}`;
+    for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+    return (hash % 100) < this.settings.density * 100;
+  }
+
+  getRect() {
+    const rect = this.layer.getBoundingClientRect();
+    return {
+      width: rect.width || 1280,
+      height: rect.height || 720
+    };
+  }
+
+  getFontSize(item, height) {
+    const baseScale = this.settings.scaleWithVideo
+      ? Math.max(0.76, Math.min(1.12, height / 720))
+      : 1;
+    const sourceSize = Number(item.size || 25);
+    return Math.max(14, Math.min(56, sourceSize * baseScale * this.settings.scale));
+  }
+
+  buildNode(item, fontSize) {
+    const node = document.createElement('div');
+    const multiline = String(item.text).includes('\n');
+    node.className = `danmaku-item${multiline ? ' multiline' : ''}`;
+    node.innerHTML = String(item.text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+
+    node.style.fontSize = `${fontSize}px`;
+    node.style.opacity = String(Math.max(0, Math.min(1, (item.alpha ?? 1) * this.settings.opacity)));
+    node.style.color = this.settings.preserveColor ? colorToCss(item.color) : '#ffffff';
+    node.style.left = '0px';
+    node.style.top = '0px';
+    node.style.transform = 'translate(0px,0px)';
+
+    if (item.ass?.fontName) {
+      node.style.fontFamily = `"${item.ass.fontName}","Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif`;
+    } else {
+      node.style.fontFamily = `"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif`;
+    }
+
+    if (item.ass?.outline) {
+      const o = Math.max(1, Math.min(3.2, item.ass.outline * 0.9));
+      node.style.textShadow = `
+        ${-o}px ${-o}px 0 rgba(0,0,0,.92),
+         0    ${-o}px 0 rgba(0,0,0,.92),
+        ${o}px ${-o}px 0 rgba(0,0,0,.92),
+        ${-o}px 0 0 rgba(0,0,0,.92),
+        ${o}px 0 0 rgba(0,0,0,.92),
+        ${-o}px ${o}px 0 rgba(0,0,0,.92),
+         0 ${o}px 0 rgba(0,0,0,.92),
+        ${o}px ${o}px 0 rgba(0,0,0,.92)
+      `;
+    }
+
+    return node;
+  }
+
+  measureNode(node) {
+    const rect = node.getBoundingClientRect();
+    return {
+      width: Math.max(1, rect.width),
+      height: Math.max(1, rect.height)
+    };
+  }
+
+  getAnchorOffset(alignment, nodeW, nodeH) {
+    const an = Number(alignment || 2);
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // 水平
+    if ([1, 4, 7].includes(an)) {
+      offsetX = 0;
+    } else if ([2, 5, 8].includes(an)) {
+      offsetX = -nodeW / 2;
+    } else {
+      offsetX = -nodeW;
+    }
+
+    // 垂直
+    if ([7, 8, 9].includes(an)) {
+      offsetY = 0;
+    } else if ([4, 5, 6].includes(an)) {
+      offsetY = -nodeH / 2;
+    } else {
+      offsetY = -nodeH;
+    }
+
+    return { offsetX, offsetY };
+  }
+
+  clampBox(x, y, nodeW, nodeH, width, regionHeight) {
+    let nx = x;
+    let ny = y;
+
+    nx = Math.max(0, Math.min(width - nodeW, nx));
+    ny = Math.max(0, Math.min(regionHeight - nodeH, ny));
+
+    return { x: nx, y: ny };
+  }
+
+  clampY(y, nodeH, regionHeight, height) {
+    let next = Math.max(0, Math.min(regionHeight - nodeH, y));
+
+    if (this.settings.antiFace) {
+      const faceTop = height * 0.38;
+      const faceBottom = height * 0.64;
+      if (next + nodeH > faceTop && next < faceBottom) {
+        next = Math.max(0, faceTop - nodeH - 8);
+      }
+    }
+
+    return Math.max(0, Math.min(regionHeight - nodeH, next));
+  }
+
+  getLaneY(bucket, laneCount, nodeH, regionHeight, nowTime, duration, itemId, fromBottom = false) {
+    const pool = this.trackState[bucket];
+    const gap = 6;
+    const step = nodeH + gap;
+
+    if (!this.settings.smartOverlap) {
+      const lane = Math.floor(Math.random() * laneCount);
+      return fromBottom
+        ? regionHeight - nodeH - lane * step
+        : lane * step;
+    }
+
+    for (let lane = 0; lane < laneCount; lane++) {
+      if (!pool[lane] || pool[lane] <= nowTime) {
+        pool[lane] = nowTime + duration * 0.86;
+        return fromBottom
+          ? regionHeight - nodeH - lane * step
+          : lane * step;
+      }
+    }
+
+    const lane = itemId % laneCount;
+    pool[lane] = nowTime + duration * 0.8;
+    return fromBottom
+      ? regionHeight - nodeH - lane * step
+      : lane * step;
+  }
+
+  spawn(item, now) {
+    if (this.active.has(item.id)) return;
+    if (!this.allowItem(item) || !this.passDensity(item)) return;
+    if (!item.text || !String(item.text).trim()) return;
+
+    const { width, height } = this.getRect();
+    const regionHeight = height * this.settings.region;
+    const fontSize = this.getFontSize(item, height);
+
+    const elapsed = Math.max(0, Math.min(item.duration || 0, now - item.time));
+    const progress = Math.max(0, Math.min(1, elapsed / Math.max(item.duration || 0.001, 0.001)));
+    let remaining = (item.duration || 8.6) - elapsed;
+    if (remaining <= 0.03) return;
+
+    const node = this.buildNode(item, fontSize);
+    this.layer.appendChild(node);
+
+    const box = this.measureNode(node);
+    const nodeW = box.width;
+    const nodeH = box.height;
+
+    const laneCount = Math.max(1, Math.floor(regionHeight / (nodeH + 6)));
+
+    let keyframes = [];
+    let deadline = now + remaining;
+
+    // ASS move
+    if (item.source === 'ass' && item.ass?.move) {
+      const sx = width / item.ass.playResX;
+      const sy = height / item.ass.playResY;
+
+      const x1 = item.ass.move.x1 * sx;
+      const y1 = item.ass.move.y1 * sy;
+      const x2 = item.ass.move.x2 * sx;
+      const y2 = item.ass.move.y2 * sy;
+
+      const currentX = lerp(x1, x2, progress);
+      const currentY = lerp(y1, y2, progress);
+
+      const p1 = this.clampBox(currentX, currentY, nodeW, nodeH, width, regionHeight);
+      const p2 = this.clampBox(x2, y2, nodeW, nodeH, width, regionHeight);
+
+      keyframes = [
+        { transform: `translate(${p1.x}px, ${p1.y}px)` },
+        { transform: `translate(${p2.x}px, ${p2.y}px)` }
+      ];
+    }
+
+    // ASS pos / 普通 fixed
+    else if (item.source === 'ass' && item.ass?.pos) {
+      const sx = width / item.ass.playResX;
+      const sy = height / item.ass.playResY;
+      const alignment = item.ass.alignment || 2;
+
+      const anchorX = item.ass.pos.x * sx;
+      const anchorY = item.ass.pos.y * sy;
+      const { offsetX, offsetY } = this.getAnchorOffset(alignment, nodeW, nodeH);
+
+      const p = this.clampBox(anchorX + offsetX, anchorY + offsetY, nodeW, nodeH, width, regionHeight);
+
+      keyframes = [
+        { transform: `translate(${p.x}px, ${p.y}px)`, opacity: progress === 0 ? 0 : node.style.opacity },
+        { transform: `translate(${p.x}px, ${p.y}px)`, opacity: node.style.opacity, offset: 0.12 },
+        { transform: `translate(${p.x}px, ${p.y}px)`, opacity: node.style.opacity, offset: 0.88 },
+        { transform: `translate(${p.x}px, ${p.y}px)`, opacity: 0 }
+      ];
+    }
+
+    else if (item.type === 'top') {
+      const yRaw = this.getLaneY('top', laneCount, nodeH, regionHeight, now, item.duration, item.id, false);
+      const y = this.clampY(yRaw, nodeH, regionHeight, height);
+      const x = Math.max(0, (width - nodeW) / 2);
+
+      keyframes = [
+        { transform: `translate(${x}px, ${y}px)`, opacity: progress === 0 ? 0 : node.style.opacity },
+        { transform: `translate(${x}px, ${y}px)`, opacity: node.style.opacity, offset: 0.12 },
+        { transform: `translate(${x}px, ${y}px)`, opacity: node.style.opacity, offset: 0.88 },
+        { transform: `translate(${x}px, ${y}px)`, opacity: 0 }
+      ];
+    }
+
+    else if (item.type === 'bottom') {
+      const yRaw = this.getLaneY('bottom', laneCount, nodeH, regionHeight, now, item.duration, item.id, true);
+      const y = this.clampY(yRaw, nodeH, regionHeight, height);
+      const x = Math.max(0, (width - nodeW) / 2);
+
+      keyframes = [
+        { transform: `translate(${x}px, ${y}px)`, opacity: progress === 0 ? 0 : node.style.opacity },
+        { transform: `translate(${x}px, ${y}px)`, opacity: node.style.opacity, offset: 0.12 },
+        { transform: `translate(${x}px, ${y}px)`, opacity: node.style.opacity, offset: 0.88 },
+        { transform: `translate(${x}px, ${y}px)`, opacity: 0 }
+      ];
+    }
+
+    else if (item.type === 'reverse') {
+      const startX = -nodeW - 20;
+      const endX = width + 20;
+      const yRaw = this.getLaneY('reverse', laneCount, nodeH, regionHeight, now, item.duration, item.id, false);
+      const y = this.clampY(yRaw, nodeH, regionHeight, height);
+
+      const currentX = lerp(startX, endX, progress);
+
+      keyframes = [
+        { transform: `translate(${currentX}px, ${y}px)` },
+        { transform: `translate(${endX}px, ${y}px)` }
+      ];
+    }
+
+    else {
+      const scrollDur = item.duration || 8.6;
+      remaining = scrollDur - elapsed;
+      if (remaining <= 0.03) {
+        node.remove();
+        return;
+      }
+      deadline = now + remaining;
+
+      const startX = width + 20;
+      const endX = -nodeW - 20;
+      const yRaw = this.getLaneY('scroll', laneCount, nodeH, regionHeight, now, scrollDur, item.id, false);
+      const y = this.clampY(yRaw, nodeH, regionHeight, height);
+
+      const currentX = lerp(startX, endX, Math.max(0, Math.min(1, elapsed / scrollDur)));
+
+      keyframes = [
+        { transform: `translate(${currentX}px, ${y}px)` },
+        { transform: `translate(${endX}px, ${y}px)` }
+      ];
+    }
+
+    const animation = node.animate(keyframes, {
+      duration: Math.max(80, remaining / Math.max(0.1, this.video.playbackRate) * 1000),
+      easing: 'linear',
+      fill: 'forwards'
+    });
+
+    if (this.video.paused) animation.pause();
+
+    animation.onfinish = () => {
+      node.remove();
+      this.active.delete(item.id);
+      this.onActiveChange?.(this.active.size);
+    };
+
+    this.active.set(item.id, { node, animation, deadline });
+    this.onActiveChange?.(this.active.size);
+  }
+}
+
+
+    class DanmakuList {
+      constructor({ body, summaryText }) {
+        this.body = body;
+        this.summaryText = summaryText;
+        this.items = [];
+        this.rows = [];
+      }
+
+      setItems(items, onClickRow) {
+        this.items = items || [];
+        this.rows = [];
+
+        if (!this.items.length) {
+          this.body.innerHTML = '<div class="list-empty">暂无弹幕数据</div>';
+          this.summaryText.textContent = '暂无弹幕';
+          return;
+        }
+
+        this.summaryText.textContent = `共 ${this.items.length} 条，点击任意一条可跳到对应时间。`;
+        this.body.innerHTML = this.items.map((item) => `
+          <div class="table-row" data-id="${item.id}">
+            <div class="col-time">${fmtTime(item.time)}</div>
+            <div class="col-text">${escapeHtml(item.text)}</div>
+            <div class="col-date">${humanDate(item.timestamp)}</div>
+          </div>
+        `).join('');
+
+        this.rows = [...this.body.querySelectorAll('.table-row')];
+        this.rows.forEach((row) => {
+          row.addEventListener('click', () => {
+            const item = this.items.find(v => v.id === Number(row.dataset.id));
+            if (item) onClickRow(item);
+          });
+        });
+      }
+
+      updateCurrent(time) {
+        if (!this.items.length || !this.rows.length) return;
+        let target = -1;
+        for (let i = 0; i < this.items.length; i++) {
+          if (this.items[i].time <= time + 0.01) target = i;
+          else break;
+        }
+        this.rows.forEach(row => row.classList.remove('active'));
+        if (target >= 0) {
+          const row = this.rows[target];
+          row?.classList.add('active');
+          const rowTop = row.offsetTop;
+          const rowBottom = rowTop + row.offsetHeight;
+          const viewTop = this.body.scrollTop;
+          const viewBottom = viewTop + this.body.clientHeight;
+          if (rowTop < viewTop || rowBottom > viewBottom) {
+            this.body.scrollTop = rowTop - this.body.clientHeight * 0.35;
+          }
+        }
+      }
+    }
+
+    class PlayerApp {
+      constructor() {
+        this.video = $('video');
+        this.playerFrame = $('playerFrame');
+        this.safeMask = $('safeMask');
+        this.danmakuLayer = $('danmakuLayer');
+        this.loadingLayer = $('loadingLayer');
+        this.messageLayer = $('messageLayer');
+        this.centerBadge = $('centerBadge');
+
+        this.progressWrap = $('progressWrap');
+        this.progressBuffer = $('progressBuffer');
+        this.progressFill = $('progressFill');
+        this.progressThumb = $('progressThumb');
+        this.seekPreview = $('seekPreview');
+        this.timeLabel = $('timeLabel');
+
+        this.playBtn = $('playBtn');
+        this.muteBtn = $('muteBtn');
+        this.volumeBar = $('volumeBar');
+        this.volumeFill = $('volumeFill');
+        this.volumeThumb = $('volumeThumb');
+        this.speedBtn = $('speedBtn');
+        this.dmToggleBtn = $('dmToggleBtn');
+        this.dmSettingsBtn = $('dmSettingsBtn');
+        this.topSettingsBtn = $('topSettingsBtn');
+        this.topDmSwitch = $('topDmSwitch');
+        this.webFullscreenBtn = $('webFullscreenBtn');
+        this.fullscreenBtn = $('fullscreenBtn');
+
+        this.settingsPanel = $('settingsPanel');
+        this.dmCloseBtn = $('dmCloseBtn');
+        this.dmResetBtn = $('dmResetBtn');
+        this.settingsMeta = $('settingsMeta');
+
+        this.regionRange = $('regionRange');
+        this.opacityRange = $('opacityRange');
+        this.scaleRange = $('scaleRange');
+        this.speedRange = $('speedRange');
+        this.densityRange = $('densityRange');
+        this.regionValue = $('regionValue');
+        this.opacityValue = $('opacityValue');
+        this.scaleValue = $('scaleValue');
+        this.speedValue = $('speedValue');
+        this.densityValue = $('densityValue');
+
+        this.statusText = $('statusText');
+        this.statusDot = $('statusDot');
+        this.outsideDmTotal = $('outsideDmTotal');
+        this.outsideDmActive = $('outsideDmActive');
+
+        this.listCountText = $('listCountText');
+        this.listSummaryText = $('listSummaryText');
+        this.listToggle = $('listToggle');
+        this.listCard = $('danmakuListCard');
+
+        this.state = {
+          controlsHideTimer: 0,
+          clickTimer: 0,
+          seeking: false,
+          adjustingVolume: false,
+          webFullscreen: false,
+          activeDanmaku: 0,
+          danmakuItems: [],
+          lastVolume: this.video.volume || 1,
+          settings: JSON.parse(JSON.stringify(CONFIG.DEFAULTS))
+        };
+
+        this.hls = new HlsController(this.video);
+        this.engine = new DanmakuEngine({
+          video: this.video,
+          layer: this.danmakuLayer,
+          safeMask: this.safeMask,
+          onActiveChange: (count) => {
+            this.state.activeDanmaku = count;
+            this.outsideDmActive.textContent = `屏上 ${count} 条`;
+          }
+        });
+        this.list = new DanmakuList({
+          body: $('danmakuTableBody'),
+          summaryText: this.listSummaryText
+        });
+
+        this.bindEvents();
+        this.renderIcons();
+        this.syncSettingsUI();
+        this.updateVolumeUI();
+        this.updateTimeUI();
+        this.engine.start();
+        this.load();
+      }
+
+      bindEvents() {
+        this.video.addEventListener('play', () => {
+          this.renderIcons();
+          this.showCenter('play');
+          this.engine.onPlay();
+          this.hideMessage();
+          this.armHideControls();
+        });
+
+        this.video.addEventListener('pause', () => {
+          this.renderIcons();
+          this.showCenter('pause');
+          this.engine.onPause();
+          this.showControls(true);
+        });
+
+        this.video.addEventListener('timeupdate', () => {
+          this.updateTimeUI();
+          this.list.updateCurrent(this.video.currentTime || 0);
+        });
+
+        this.video.addEventListener('durationchange', () => {
+          this.updateTimeUI();
+        });
+
+        this.video.addEventListener('progress', () => this.updateBufferUI());
+        this.video.addEventListener('volumechange', () => this.updateVolumeUI());
+
+        this.video.addEventListener('ratechange', () => {
+          this.speedBtn.textContent = `${this.video.playbackRate.toFixed(2).replace(/\.00$/, '.0').replace(/0$/, '')}x`;
+          this.engine.resync();
+        });
+
+        this.video.addEventListener('seeking', () => {
+          this.setLoading(true);
+          this.engine.resync();
+        });
+
+        this.video.addEventListener('seeked', () => {
+          this.setLoading(false);
+          this.engine.resync();
+        });
+
+        this.video.addEventListener('waiting', () => this.setLoading(true));
+        this.video.addEventListener('playing', () => this.setLoading(false));
+
+        this.video.addEventListener('canplay', () => {
+          this.setLoading(false);
+          this.hideMessage();
+          this.setStatus('视频与弹幕已就绪。', 'success');
+        });
+
+        this.video.addEventListener('error', () => {
+          this.setLoading(false);
+          this.showMessage('加载失败', '视频地址可能失效，或者浏览器被跨域策略拦截。');
+          this.setStatus('视频加载失败。', 'error');
+        });
+
+        this.playBtn.addEventListener('click', () => this.togglePlay());
+        this.muteBtn.addEventListener('click', () => this.toggleMute());
+        this.dmToggleBtn.addEventListener('click', () => this.toggleDanmaku());
+        this.topDmSwitch.addEventListener('click', () => this.toggleDanmaku());
+
+        this.dmSettingsBtn.addEventListener('click', () => this.toggleSettings());
+        this.topSettingsBtn.addEventListener('click', () => this.toggleSettings());
+        this.dmCloseBtn.addEventListener('click', () => this.closeSettings());
+        this.dmResetBtn.addEventListener('click', () => this.resetDanmakuSettings());
+
+        this.webFullscreenBtn.addEventListener('click', () => this.toggleWebFullscreen());
+        this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+
+        this.listToggle.addEventListener('click', () => this.listCard.classList.toggle('collapsed'));
+
+        this.progressWrap.addEventListener('pointerdown', (e) => this.startSeek(e));
+        this.progressWrap.addEventListener('pointermove', (e) => this.moveSeek(e));
+        this.progressWrap.addEventListener('pointerup', (e) => this.endSeek(e));
+        this.progressWrap.addEventListener('pointercancel', (e) => this.endSeek(e));
+        this.progressWrap.addEventListener('mousemove', (e) => this.showSeekPreview(e.clientX));
+        this.progressWrap.addEventListener('mouseleave', () => this.progressWrap.classList.remove('show-preview'));
+
+        this.volumeBar.addEventListener('pointerdown', (e) => this.startVolume(e));
+        this.volumeBar.addEventListener('pointermove', (e) => this.moveVolume(e));
+        this.volumeBar.addEventListener('pointerup', (e) => this.endVolume(e));
+        this.volumeBar.addEventListener('pointercancel', (e) => this.endVolume(e));
+
+        [this.regionRange, this.opacityRange, this.scaleRange, this.speedRange, this.densityRange].forEach((input) => {
+          input.addEventListener('input', () => this.applySettingsFromUI());
+        });
+
+        [...document.querySelectorAll('[data-filter]')].forEach((tab) => {
+          tab.addEventListener('click', () => {
+            tab.classList.toggle('active');
+            this.applySettingsFromUI();
+          });
+        });
+
+        [...document.querySelectorAll('[data-check]')].forEach((box) => {
+          box.addEventListener('click', () => {
+            box.classList.toggle('on');
+            this.applySettingsFromUI();
+          });
+        });
+
+        this.playerFrame.addEventListener('pointermove', () => this.showControls(true));
+        this.playerFrame.addEventListener('pointerleave', () => this.armHideControls());
+        this.playerFrame.addEventListener('mousemove', () => this.showControls(true));
+        this.playerFrame.addEventListener('touchstart', () => this.showControls(true), { passive: true });
+
+        this.playerFrame.addEventListener('click', (e) => {
+          if (
+            e.target.closest('.player-bottom') ||
+            e.target.closest('.player-top-right') ||
+            e.target.closest('.danmaku-settings') ||
+            e.target.closest('.message-card')
+          ) return;
+          clearTimeout(this.state.clickTimer);
+          this.state.clickTimer = setTimeout(() => this.togglePlay(), 220);
+        });
+
+        this.playerFrame.addEventListener('dblclick', (e) => {
+          if (
+            e.target.closest('.player-bottom') ||
+            e.target.closest('.player-top-right') ||
+            e.target.closest('.danmaku-settings') ||
+            e.target.closest('.message-card')
+          ) return;
+          clearTimeout(this.state.clickTimer);
+          this.toggleFullscreen();
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('#settingsPanel') && !e.target.closest('#dmSettingsBtn') && !e.target.closest('#topSettingsBtn')) {
+            this.closeSettings();
+          }
+        });
+
+        document.addEventListener('keydown', (e) => this.handleKeydown(e));
+        document.addEventListener('fullscreenchange', () => this.renderIcons());
+      }
+
+      async load() {
+        this.showMessage('准备中', '正在加载视频与弹幕。');
+        this.setLoading(true);
+
+        try {
+          await this.hls.load(CONFIG.VIDEO_URL, (msg) => {
+            this.setStatus(msg, 'error');
+            this.showMessage('视频加载失败', msg);
+          });
+        } catch (err) {
+          this.setLoading(false);
+          this.setStatus(err.message || '视频加载失败', 'error');
+          this.showMessage('视频加载失败', err.message || '请检查视频地址。');
+          return;
+        }
+
+        try {
+          const payload = await this.fetchDanmakuText();
+          const items = this.parseDanmakuPayload(payload);
+          this.state.danmakuItems = items;
+          this.engine.setItems(items);
+          this.list.setItems(items, (item) => { this.video.currentTime = item.time; });
+          this.settingsMeta.textContent = `已载入 ${items.length} 条`;
+          this.listCountText.textContent = `${items.length} 条`;
+          this.outsideDmTotal.textContent = `弹幕 ${items.length} 条`;
+        } catch (err) {
+          this.list.setItems([], () => {});
+          this.settingsMeta.textContent = '弹幕载入失败';
+          this.outsideDmTotal.textContent = '弹幕 0 条';
+          this.setStatus(err.message || '弹幕加载失败', 'warning');
+        }
+
+        if (this.hls.lastMode !== 'hls.js') this.video.load();
+        this.video.play().catch(() => {});
+      }
+
+      async fetchDanmakuText() {
+        try {
+          const res = await fetch(CONFIG.DANMAKU_URL, { mode: 'cors' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.text();
+        } catch (err) {
+          const fallback = /\.ass($|[?#])/i.test(CONFIG.DANMAKU_URL) ? DEFAULT_ASS_FALLBACK : DEFAULT_XML_FALLBACK;
+          this.setStatus(`弹幕文件获取失败，已回退到内置示例。原因：${err.message}`, 'warning');
+          return fallback;
+        }
+      }
+
+      parseDanmakuPayload(payload) {
+        const source = String(payload || '').trim();
+        if (!source) return [];
+        const isAss = /^\[Script Info\]/i.test(source) || /^\[V4/i.test(source) || /\nDialogue:/i.test(source);
+        return isAss ? AssDanmakuParser.parse(source) : XmlDanmakuParser.parse(source);
+      }
+
+      updateTimeUI() {
+        const current = this.video.currentTime || 0;
+        const duration = this.video.duration || 0;
+        if (!this.state.seeking) {
+          const ratio = duration ? current / duration : 0;
+          this.progressFill.style.width = `${ratio * 100}%`;
+          this.progressThumb.style.left = `${ratio * 100}%`;
+          this.timeLabel.textContent = `${fmtTime(current)} / ${fmtTime(duration)}`;
+        }
+      }
+
+      updateBufferUI() {
+        const duration = this.video.duration || 0;
+        if (!duration || !this.video.buffered?.length) {
+          this.progressBuffer.style.width = '0%';
+          return;
+        }
+        const end = this.video.buffered.end(this.video.buffered.length - 1);
+        this.progressBuffer.style.width = `${clamp(end / duration, 0, 1) * 100}%`;
+      }
+
+      updateVolumeUI() {
+        const volume = this.video.muted ? 0 : this.video.volume;
+        const pct = clamp(volume, 0, 1) * 100;
+        this.volumeFill.style.width = `${pct}%`;
+        this.volumeThumb.style.left = `${pct}%`;
+        this.renderIcons();
+      }
+
+      startSeek(e) {
+        this.state.seeking = true;
+        this.progressWrap.classList.add('dragging');
+        this.progressWrap.setPointerCapture(e.pointerId);
+        this.showSeekPreview(e.clientX, true);
+      }
+
+      moveSeek(e) {
+        if (!this.state.seeking) return;
+        this.showSeekPreview(e.clientX, true);
+      }
+
+      endSeek(e) {
+        if (!this.state.seeking) return;
+        const { time } = this.showSeekPreview(e.clientX, true);
+        this.video.currentTime = time || 0;
+        this.state.seeking = false;
+        this.progressWrap.classList.remove('dragging');
+        this.progressWrap.classList.remove('show-preview');
+        this.updateTimeUI();
+      }
+
+      showSeekPreview(clientX, commit = false) {
+        const rect = this.progressWrap.getBoundingClientRect();
+        const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+        const time = ratio * (this.video.duration || 0);
+        this.seekPreview.textContent = fmtTime(time);
+        this.seekPreview.style.left = `${ratio * 100}%`;
+        this.progressWrap.classList.add('show-preview');
+        if (commit) {
+          this.progressFill.style.width = `${ratio * 100}%`;
+          this.progressThumb.style.left = `${ratio * 100}%`;
+          this.timeLabel.textContent = `${fmtTime(time)} / ${fmtTime(this.video.duration || 0)}`;
+        }
+        return { ratio, time };
+      }
+
+      startVolume(e) {
+        this.state.adjustingVolume = true;
+        this.volumeBar.setPointerCapture(e.pointerId);
+        this.adjustVolume(e.clientX);
+      }
+
+      moveVolume(e) {
+        if (!this.state.adjustingVolume) return;
+        this.adjustVolume(e.clientX);
+      }
+
+      endVolume(e) {
+        if (!this.state.adjustingVolume) return;
+        this.adjustVolume(e.clientX);
+        this.state.adjustingVolume = false;
+      }
+
+      adjustVolume(clientX) {
+        const rect = this.volumeBar.getBoundingClientRect();
+        const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+        this.video.volume = ratio;
+        this.video.muted = ratio === 0;
+        if (ratio > 0) this.state.lastVolume = ratio;
+      }
+
+      togglePlay() {
+        if (this.video.paused) this.video.play().catch(() => {});
+        else this.video.pause();
+      }
+
+      toggleMute() {
+        if (this.video.muted || this.video.volume === 0) {
+          this.video.muted = false;
+          this.video.volume = this.state.lastVolume || 1;
+        } else {
+          this.state.lastVolume = this.video.volume || 1;
+          this.video.muted = true;
+        }
+      }
+
+      toggleDanmaku() {
+        this.state.settings.enabled = !this.state.settings.enabled;
+        this.engine.updateSettings(this.state.settings);
+        this.syncSettingsUI();
+      }
+
+      toggleSettings() {
+        this.settingsPanel.classList.toggle('open');
+        this.showControls(true);
+      }
+
+      closeSettings() {
+        this.settingsPanel.classList.remove('open');
+      }
+
+      resetDanmakuSettings() {
+        this.regionRange.value = '100';
+        this.opacityRange.value = '100';
+        this.scaleRange.value = '82';
+        this.speedRange.value = '100';
+        this.densityRange.value = '100';
+
+        document.querySelectorAll('[data-filter="scroll"],[data-filter="top"],[data-filter="bottom"],[data-filter="color"]').forEach(el => el.classList.add('active'));
+        document.querySelectorAll('[data-check="scaleWithVideo"],[data-check="smartOverlap"]').forEach(el => el.classList.add('on'));
+        const antiFace = document.querySelector('[data-check="antiFace"]');
+        if (antiFace) antiFace.classList.remove('on');
+
+        this.applySettingsFromUI();
+      }
+
+      applySettingsFromUI() {
+        const filters = {
+          scroll: document.querySelector('[data-filter="scroll"]')?.classList.contains('active') ?? true,
+          top: document.querySelector('[data-filter="top"]')?.classList.contains('active') ?? true,
+          bottom: document.querySelector('[data-filter="bottom"]')?.classList.contains('active') ?? true
+        };
+
+        this.state.settings = {
+          ...this.state.settings,
+          opacity: Number(this.opacityRange.value) / 100,
+          scale: Number(this.scaleRange.value) / 100,
+          region: Number(this.regionRange.value) / 100,
+          speed: Number(this.speedRange.value) / 100,
+          density: Number(this.densityRange.value) / 100,
+          antiFace: document.querySelector('[data-check="antiFace"]')?.classList.contains('on') ?? false,
+          smartOverlap: document.querySelector('[data-check="smartOverlap"]')?.classList.contains('on') ?? true,
+          scaleWithVideo: document.querySelector('[data-check="scaleWithVideo"]')?.classList.contains('on') ?? true,
+          preserveColor: document.querySelector('[data-filter="color"]')?.classList.contains('active') ?? true,
+          filters
+        };
+
+        this.engine.updateSettings(this.state.settings);
+        this.syncSettingsUI();
+      }
+
+      syncSettingsUI() {
+        this.regionValue.textContent = `${this.regionRange.value}%`;
+        this.opacityValue.textContent = `${this.opacityRange.value}%`;
+        this.scaleValue.textContent = `${this.scaleRange.value}%`;
+        this.densityValue.textContent = `${this.densityRange.value}%`;
+
+        const speedNum = Number(this.speedRange.value);
+        this.speedValue.textContent =
+          speedNum <= 70 ? '较慢' :
+          speedNum < 115 ? '正常' :
+          speedNum < 140 ? '较快' : '很快';
+
+        this.topDmSwitch.textContent = `弹幕${this.state.settings.enabled ? '开' : '关'}`;
+        this.dmToggleBtn.classList.toggle('active', this.state.settings.enabled);
+        this.renderIcons();
+      }
+
+      async toggleFullscreen() {
+        try {
+          if (!document.fullscreenElement) await this.playerFrame.requestFullscreen();
+          else await document.exitFullscreen();
+        } catch (_) {}
+        this.renderIcons();
+      }
+
+      toggleWebFullscreen() {
+        this.state.webFullscreen = !this.state.webFullscreen;
+        this.playerFrame.classList.toggle('web-fullscreen', this.state.webFullscreen);
+        document.body.style.overflow = this.state.webFullscreen ? 'hidden' : '';
+        this.renderIcons();
+        this.engine.resync();
+      }
+
+      handleKeydown(e) {
+        if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          this.togglePlay();
+        } else if (e.key === 'ArrowLeft') {
+          this.video.currentTime = Math.max(0, (this.video.currentTime || 0) - 5);
+        } else if (e.key === 'ArrowRight') {
+          this.video.currentTime = Math.min(this.video.duration || Infinity, (this.video.currentTime || 0) + 5);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          this.video.volume = clamp((this.video.muted ? 0 : this.video.volume) + 0.05, 0, 1);
+          this.video.muted = false;
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          this.video.volume = clamp((this.video.muted ? 0 : this.video.volume) - 0.05, 0, 1);
+          if (this.video.volume <= 0) this.video.muted = true;
+        } else if (e.key.toLowerCase() === 'f') {
+          this.toggleFullscreen();
+        } else if (e.key.toLowerCase() === 'm') {
+          this.toggleMute();
+        } else if (e.key.toLowerCase() === 'd') {
+          this.toggleDanmaku();
+        }
+      }
+
+      showControls(armTimer = false) {
+        this.playerFrame.classList.remove('hidden-ui');
+        if (armTimer) this.armHideControls();
+      }
+
+      armHideControls() {
+        clearTimeout(this.state.controlsHideTimer);
+        if (this.video.paused || this.settingsPanel.classList.contains('open')) {
+          this.playerFrame.classList.remove('hidden-ui');
+          return;
+        }
+        this.state.controlsHideTimer = setTimeout(() => {
+          if (!this.video.paused && !this.state.seeking && !this.state.adjustingVolume && !this.settingsPanel.classList.contains('open')) {
+            this.playerFrame.classList.add('hidden-ui');
+          }
+        }, 2400);
+      }
+
+      setLoading(show) {
+        this.loadingLayer.classList.toggle('show', !!show);
+      }
+
+      showCenter(type) {
+        this.centerBadge.innerHTML = type === 'play' ? this.iconPlay() : this.iconPause();
+        this.centerBadge.classList.add('show');
+        clearTimeout(this.centerBadge._timer);
+        this.centerBadge._timer = setTimeout(() => this.centerBadge.classList.remove('show'), 420);
+      }
+
+      showMessage(title, text) {
+        this.messageLayer.style.display = 'grid';
+        this.messageLayer.innerHTML = `<div class="message-card"><div class="message-title">${escapeHtml(title)}</div><div class="message-text">${escapeHtml(text)}</div></div>`;
+      }
+
+      hideMessage() {
+        this.messageLayer.style.display = 'none';
+      }
+
+      setStatus(text, type = 'success') {
+        this.statusText.textContent = text;
+        this.statusDot.style.background =
+          type === 'success' ? '#2ac865' :
+          type === 'warning' ? '#ffb21f' : '#ff5b6a';
+      }
+
+      renderIcons() {
+        const playing = !this.video.paused && !this.video.ended;
+        this.playBtn.innerHTML = playing ? this.iconPause() : this.iconPlay();
+        this.muteBtn.innerHTML = this.video.muted || this.video.volume === 0 ? this.iconMute() : this.iconVolume();
+        this.webFullscreenBtn.innerHTML = this.state.webFullscreen ? this.iconExitWebFullscreen() : this.iconWebFullscreen();
+        this.fullscreenBtn.innerHTML = document.fullscreenElement ? this.iconExitFullscreen() : this.iconFullscreen();
+      }
+
+      iconPlay() { return `<svg viewBox="0 0 24 24"><path d="M8 5.14v13.72c0 .77.84 1.25 1.5.86l10.2-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z"/></svg>`; }
+      iconPause() { return `<svg viewBox="0 0 24 24"><path d="M7 5.5A1.5 1.5 0 0 1 8.5 4h1A1.5 1.5 0 0 1 11 5.5v13A1.5 1.5 0 0 1 9.5 20h-1A1.5 1.5 0 0 1 7 18.5zm6 0A1.5 1.5 0 0 1 14.5 4h1A1.5 1.5 0 0 1 17 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 13 18.5z"/></svg>`; }
+      iconVolume() { return `<svg viewBox="0 0 24 24"><path d="M4 9.5A1.5 1.5 0 0 1 5.5 8H9l4.53-3.62A1 1 0 0 1 15 5.16v13.68a1 1 0 0 1-1.47.84L9 16H5.5A1.5 1.5 0 0 1 4 14.5zm12.16-2.9a1 1 0 0 1 1.4.11 8.37 8.37 0 0 1 0 10.58 1 1 0 0 1-1.5-1.32 6.37 6.37 0 0 0 0-7.94 1 1 0 0 1 .1-1.43z"/></svg>`; }
+      iconMute() { return `<svg viewBox="0 0 24 24"><path d="M4 9.5A1.5 1.5 0 0 1 5.5 8H9l4.53-3.62A1 1 0 0 1 15 5.16v13.68a1 1 0 0 1-1.47.84L9 16H5.5A1.5 1.5 0 0 1 4 14.5zM18.7 8.3a1 1 0 0 1 0 1.4L16.4 12l2.3 2.3a1 1 0 0 1-1.4 1.4L15 13.4l-2.3 2.3a1 1 0 1 1-1.4-1.4l2.3-2.3-2.3-2.3a1 1 0 0 1 1.4-1.4l2.3 2.3 2.3-2.3a1 1 0 0 1 1.4 0z"/></svg>`; }
+      iconFullscreen() { return `<svg viewBox="0 0 24 24"><path d="M5 10V6.5A1.5 1.5 0 0 1 6.5 5H10v2H7v3zm9-5h3.5A1.5 1.5 0 0 1 19 6.5V10h-2V7h-3zM7 14v3h3v2H6.5A1.5 1.5 0 0 1 5 17.5V14zm10 0h2v3.5A1.5 1.5 0 0 1 17.5 19H14v-2h3z"/></svg>`; }
+      iconExitFullscreen() { return `<svg viewBox="0 0 24 24"><path d="M8 4h2v3h3v2H8.5A1.5 1.5 0 0 1 7 7.5V4zm8 0h1.5A1.5 1.5 0 0 1 19 5.5V9h-2V7h-3V5zm-8 16H6.5A1.5 1.5 0 0 1 5 18.5V15h2v2h3v2zm9-5h2v3.5A1.5 1.5 0 0 1 17.5 20H14v-2h3z"/></svg>`; }
+      iconWebFullscreen() { return `<svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zm2 1v11h12v-11z"/></svg>`; }
+      iconExitWebFullscreen() { return `<svg viewBox="0 0 24 24"><path d="M7 7h10v10H7zm-3-1.5A1.5 1.5 0 0 1 5.5 4H8v2H6v2H4zm16 0V8h-2V6h-2V4h2.5A1.5 1.5 0 0 1 20 5.5zM6 18h2v2H5.5A1.5 1.5 0 0 1 4 18.5V16h2zm12-2h2v2.5A1.5 1.5 0 0 1 18.5 20H16v-2h2z"/></svg>`; }
+    }
+
+    window.playerApp = new PlayerApp();
+  </script>
+</body>
+</html>
