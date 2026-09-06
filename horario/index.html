@@ -91,19 +91,363 @@
   .card { background: #fff; border-radius: 12px; box-shadow: var(--card-shadow); padding: 14px 14px 12px; margin: 10px 4px; }
   .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
   .title { font-size: 16px; font-weight: 700; line-height: 1.2; color: #24292f; }
-  .room { font-weight: 700; color: #8a94a1; min-width: 54px; text-align: right; }
-  .time { margin-top: 10px; font-size: 14px; color: #5f6b7a; }
+  .room {
+    font-weight: 700;
+    color: #8a94a1;
+    min-width: 54px;
+    text-align: right;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .room:hover { opacity: .78; }
+  .room:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
 
-  /* 正在上课高亮 */
-  .card.ongoing { background: var(--ongoing-bg); border: 1px solid var(--ongoing-text); }
-  .card.ongoing .title, .card.ongoing .time, .card.ongoing .room { color: var(--ongoing-text); }
-  .badge { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 999px; background: var(--ongoing-text); color: #fff; margin-left: 8px; }
+  /* ===== Fénix 官方教室位置 / Blueprint 弹窗 ===== */
+  .room-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    place-items: center;
+    padding: clamp(10px, 2vw, 24px);
+    background: rgba(15, 23, 42, .58);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overscroll-behavior: contain;
+  }
+  .room-modal.open { display: grid; }
 
-  /* 即将开始（仅今日显示且仅一张卡） */
-  .card.upcoming { background: var(--upcoming-bg); border: 1px dashed var(--upcoming-text); }
-  .card.upcoming .title, .card.upcoming .time, .card.upcoming .room { color: var(--upcoming-text); }
+  .room-sheet {
+    width: min(1120px, 96vw);
+    height: min(900px, 94dvh);
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,.08);
+    border-radius: 22px;
+    box-shadow: 0 28px 90px rgba(0,0,0,.32);
+    overflow: hidden;
+    animation: roomSheetIn .18s ease-out;
+  }
+  @keyframes roomSheetIn {
+    from { transform: translateY(12px) scale(.985); opacity: .55; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
 
-  .empty { text-align: center; color: #6b7682; padding: 20px 12px 24px; font-size: 14px; }
+  .room-grabber { display: none; }
+
+  .room-sheet-head {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #edf0f4;
+    background: rgba(255,255,255,.96);
+  }
+  .room-sheet-title {
+    margin: 0;
+    min-width: 0;
+    font-size: clamp(18px, 2.2vw, 23px);
+    color: #20262e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .room-close {
+    flex: 0 0 auto;
+    border: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f2f4f7;
+    color: #536170;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .room-close:hover { background: #e9edf2; }
+  .room-close:active { transform: scale(.96); }
+
+  .room-breadcrumb {
+    margin: 0;
+    padding: 13px 16px;
+    background: #f5f8fc;
+    color: #253b59;
+    font-size: clamp(13px, 1.5vw, 15px);
+    line-height: 1.55;
+    font-weight: 700;
+    word-break: break-word;
+    border-bottom: 1px solid #e8edf3;
+  }
+  .room-breadcrumb .arrow {
+    color: #8a97a8;
+    padding: 0 6px;
+  }
+
+  .blueprint-card {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .blueprint-topline {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px 8px 16px;
+    border-bottom: 1px solid #e8edf3;
+    background: #fff;
+  }
+  .blueprint-heading {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+  }
+  .blueprint-label {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    color: #344054;
+  }
+  .blueprint-source {
+    min-width: 0;
+    font-size: 11px;
+    color: #8b96a5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .blueprint-tools {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .blueprint-tool {
+    border: 1px solid #dbe2ea;
+    min-width: 38px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 9px;
+    background: #fff;
+    color: #344054;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .blueprint-tool:hover { background: #f7f9fb; border-color: #cbd5e1; }
+  .blueprint-tool:active { transform: scale(.96); }
+  .blueprint-tool.icon { padding: 0; font-size: 18px; }
+  .blueprint-tool.primary {
+    border-color: #b7d4fa;
+    background: #eef6ff;
+    color: #0069df;
+  }
+
+  .blueprint-wrap {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+      linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+      linear-gradient(-45deg, transparent 75%, #f8fafc 75%),
+      #fff;
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+  .blueprint-wrap.dragging { cursor: grabbing; }
+
+  .blueprint-img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: block;
+    max-width: calc(100% - 28px);
+    max-height: calc(100% - 28px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    background: #fff;
+    transform-origin: center center;
+    will-change: transform;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  .blueprint-loading,
+  .blueprint-error {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 28px;
+    color: #758293;
+    font-size: 13px;
+    line-height: 1.65;
+    text-align: center;
+    background: rgba(255,255,255,.92);
+    z-index: 2;
+  }
+  .blueprint-error { display: none; }
+  .blueprint-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #0069df;
+    font-weight: 750;
+    text-decoration: none;
+  }
+
+  .zoom-badge {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 3;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: rgba(17,24,39,.72);
+    color: #fff;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .room-meta {
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 16px 12px;
+    border-top: 1px solid #edf0f4;
+    background: #fff;
+    color: #7c8795;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  /* 不显示任何弹窗/查看器滚动条，但保留必要的系统滚动能力 */
+  .room-sheet,
+  .blueprint-wrap {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .room-sheet::-webkit-scrollbar,
+  .blueprint-wrap::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
+  /* 平板 */
+  @media (max-width: 900px) {
+    .room-modal { padding: 10px; }
+    .room-sheet {
+      width: 100%;
+      height: min(94dvh, 860px);
+      border-radius: 18px;
+    }
+    .blueprint-source { display: none; }
+  }
+
+  /* 手机：占满屏幕，不出现右侧滚动条 */
+  @media (max-width: 600px) {
+    .room-modal {
+      padding: 0;
+      place-items: stretch;
+      background: #fff;
+    }
+    .room-sheet {
+      width: 100vw;
+      height: 100dvh;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+    }
+    .room-grabber { display: none; }
+    .room-sheet-head {
+      min-height: 56px;
+      padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+    }
+    .room-close {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+    }
+    .room-breadcrumb {
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .blueprint-topline {
+      min-height: 48px;
+      padding: 6px 8px 6px 12px;
+    }
+    .blueprint-label { font-size: 12px; }
+    .blueprint-tools { gap: 4px; }
+    .blueprint-tool {
+      min-width: 34px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .blueprint-tool.icon { padding: 0; font-size: 17px; }
+    .blueprint-tool .desktop-label { display: none; }
+    .blueprint-img {
+      max-width: calc(100% - 16px);
+      max-height: calc(100% - 16px);
+    }
+    .room-meta {
+      min-height: 0;
+      padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+      font-size: 11px;
+    }
+    .zoom-badge { right: 8px; bottom: 8px; }
+  }
+
+  /* 横屏手机 / 矮屏：压缩顶部信息，最大化图纸面积 */
+  @media (max-height: 560px) and (orientation: landscape) {
+    .room-sheet {
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0;
+    }
+    .room-sheet-head { min-height: 46px; padding: 5px 10px; }
+    .room-breadcrumb { padding: 6px 10px; font-size: 12px; }
+    .blueprint-topline { min-height: 42px; padding: 4px 8px 4px 10px; }
+    .room-meta { display: none; }
+  }
+
 </style>
 </head>
 <body>
@@ -124,6 +468,64 @@
 
   <!-- 内容区（横向滑动容器将由 JS 注入） -->
   <div id="page" class="page" role="tabpanel" aria-live="polite"></div>
+
+<!-- Fénix 官方教室位置与 Blueprint -->
+<div id="roomModal" class="room-modal" aria-hidden="true">
+  <div class="room-sheet" role="dialog" aria-modal="true" aria-labelledby="roomSheetTitle">
+    <div class="room-grabber"></div>
+
+    <div class="room-sheet-head">
+      <h2 id="roomSheetTitle" class="room-sheet-title">教室位置</h2>
+      <button id="roomClose" class="room-close" type="button" aria-label="关闭">×</button>
+    </div>
+
+    <div id="roomBreadcrumb" class="room-breadcrumb"></div>
+
+    <div id="blueprintCard" class="blueprint-card">
+      <div class="blueprint-topline">
+        <div class="blueprint-heading">
+          <span class="blueprint-label">官方楼层图示</span>
+          <span class="blueprint-source">Fénix · Instituto Superior Técnico</span>
+        </div>
+
+        <div class="blueprint-tools" aria-label="图纸查看工具">
+          <button id="zoomOutBtn" class="blueprint-tool icon" type="button" aria-label="缩小" title="缩小">−</button>
+          <button id="fitBtn" class="blueprint-tool primary" type="button" aria-label="适应窗口" title="适应窗口">
+            <span class="desktop-label">适应</span><span aria-hidden="true"> ⤢</span>
+          </button>
+          <button id="zoomInBtn" class="blueprint-tool icon" type="button" aria-label="放大" title="放大">＋</button>
+          <button id="fullscreenBtn" class="blueprint-tool icon" type="button" aria-label="全屏" title="全屏">⛶</button>
+          <button id="openOriginalBtn" class="blueprint-tool icon" type="button" aria-label="打开官方原图" title="打开官方原图">↗</button>
+        </div>
+      </div>
+
+      <div id="blueprintWrap" class="blueprint-wrap" aria-label="可缩放和拖动的 Fénix 官方 Blueprint">
+        <div id="blueprintLoading" class="blueprint-loading">正在加载官方 Blueprint…</div>
+
+        <img id="blueprintImg"
+             class="blueprint-img"
+             alt="Fénix 官方教室 Blueprint"
+             draggable="false"
+             style="display:none" />
+
+        <div id="blueprintError" class="blueprint-error">
+          <div>
+            官方图示暂时无法加载。<br>
+            <a id="blueprintLink" class="blueprint-link" target="_blank" rel="noopener noreferrer">
+              直接打开 Fénix 官方 Blueprint
+            </a>
+          </div>
+        </div>
+
+        <div id="zoomBadge" class="zoom-badge" aria-hidden="true">100%</div>
+      </div>
+    </div>
+
+    <div class="room-meta">
+      鼠标：滚轮缩放、拖动平移、双击放大。触屏：双指缩放、单指拖动。图示来自 Fénix 官方 API。
+    </div>
+  </div>
+</div>
 
 <script>
 /** 3/30 起（按里斯本本地时间显示：仍然是 08:30，不写 Z） */
@@ -159,6 +561,403 @@ const schedule = {
     { title: 'Cálculo Diferencial e Integral III',  type: 'Teórico-Prática', room: 'QA02.4', start: '17:30', end: '19:00' },
   ],
 };
+
+/* ======= Fénix 官方教室位置 / Blueprint ======= */
+const ROOM_INFO = {
+  'LT5': {
+    campus: 'Alameda',
+    building: 'Torre Norte',
+    floor: '4',
+    spaceId: '2448131363031'
+  },
+  'GA2': {
+    campus: 'Alameda',
+    building: 'Pavilhão Central',
+    floor: '0',
+    spaceId: '2448131362333'
+  },
+  'EA1': {
+    campus: 'Alameda',
+    building: 'Torre Norte',
+    floor: '0',
+    spaceId: '2448131362971'
+  },
+  'VA3': {
+    campus: 'Alameda',
+    building: 'Edifício de Civil',
+    floor: '-1',
+    spaceId: '2448131361602'
+  },
+  'E1': {
+    campus: 'Alameda',
+    building: 'Torre Norte',
+    floor: '-1',
+    spaceId: '2448131362952'
+  },
+  'F3': {
+    campus: 'Alameda',
+    building: 'Pavilhão de Informática I',
+    floor: '1',
+    spaceId: '2448131363676'
+  },
+  'EA2': {
+    campus: 'Alameda',
+    building: 'Torre Norte',
+    floor: '0',
+    spaceId: '2448131362979'
+  },
+  'Q4.2': {
+    campus: 'Alameda',
+    building: 'Torre Sul',
+    floor: '4',
+    spaceId: '2448131362738'
+  },
+  'Q4.7': {
+    campus: 'Alameda',
+    building: 'Torre Sul',
+    floor: '4',
+    spaceId: '2448131362743'
+  },
+  'V1.12': {
+    campus: 'Alameda',
+    building: 'Edifício de Civil',
+    floor: '1',
+    spaceId: '2448131361715'
+  },
+  'QA02.1': {
+    campus: 'Alameda',
+    building: 'Torre Sul',
+    floor: '-2',
+    spaceId: '2448131362613'
+  },
+  'QA02.4': {
+    campus: 'Alameda',
+    building: 'Torre Sul',
+    floor: '-2',
+    spaceId: '2448131362616'
+  }
+};
+
+function blueprintUrl(spaceId) {
+  return `https://fenix.tecnico.ulisboa.pt/api/fenix/v1/spaces/${spaceId}/blueprint?format=jpeg`;
+}
+
+let blueprintState = {
+  scale: 1,
+  x: 0,
+  y: 0,
+  minScale: 1,
+  maxScale: 6,
+  url: '',
+  pointers: new Map(),
+  dragStart: null,
+  pinchStart: null,
+  lastTap: 0
+};
+
+function clamp(v, min, max) {
+  return Math.min(max, Math.max(min, v));
+}
+
+function applyBlueprintTransform() {
+  const img = document.getElementById('blueprintImg');
+  const badge = document.getElementById('zoomBadge');
+  if (!img) return;
+
+  img.style.transform =
+    `translate(-50%, -50%) translate3d(${blueprintState.x}px, ${blueprintState.y}px, 0) scale(${blueprintState.scale})`;
+
+  if (badge) badge.textContent = `${Math.round(blueprintState.scale * 100)}%`;
+}
+
+function resetBlueprintView() {
+  blueprintState.scale = 1;
+  blueprintState.x = 0;
+  blueprintState.y = 0;
+  blueprintState.pointers.clear();
+  blueprintState.dragStart = null;
+  blueprintState.pinchStart = null;
+  applyBlueprintTransform();
+}
+
+function zoomBlueprint(factor, clientX = null, clientY = null) {
+  const wrap = document.getElementById('blueprintWrap');
+  if (!wrap) return;
+
+  const oldScale = blueprintState.scale;
+  const newScale = clamp(oldScale * factor, blueprintState.minScale, blueprintState.maxScale);
+  if (Math.abs(newScale - oldScale) < 0.0001) return;
+
+  // 以鼠标/触点所在位置为中心缩放
+  if (clientX != null && clientY != null) {
+    const rect = wrap.getBoundingClientRect();
+    const px = clientX - (rect.left + rect.width / 2);
+    const py = clientY - (rect.top + rect.height / 2);
+    const ratio = newScale / oldScale;
+
+    blueprintState.x = px - (px - blueprintState.x) * ratio;
+    blueprintState.y = py - (py - blueprintState.y) * ratio;
+  }
+
+  blueprintState.scale = newScale;
+  applyBlueprintTransform();
+}
+
+function openRoomInfo(roomName) {
+  const info = ROOM_INFO[roomName];
+  if (!info) return;
+
+  const modal = document.getElementById('roomModal');
+  const img = document.getElementById('blueprintImg');
+  const loading = document.getElementById('blueprintLoading');
+  const error = document.getElementById('blueprintError');
+  const link = document.getElementById('blueprintLink');
+  const url = blueprintUrl(info.spaceId);
+
+  blueprintState.url = url;
+  resetBlueprintView();
+
+  document.getElementById('roomSheetTitle').textContent = `教室 ${roomName}`;
+  document.getElementById('roomBreadcrumb').innerHTML =
+    `<span>Campus ${info.campus}</span>` +
+    `<span class="arrow">➧</span>` +
+    `<span>Building ${info.building}</span>` +
+    `<span class="arrow">➧</span>` +
+    `<span>Floor ${info.floor}</span>`;
+
+  loading.style.display = 'grid';
+  error.style.display = 'none';
+  img.style.display = 'none';
+  img.removeAttribute('src');
+  link.href = url;
+
+  img.onload = () => {
+    loading.style.display = 'none';
+    error.style.display = 'none';
+    img.style.display = 'block';
+    resetBlueprintView();
+  };
+
+  img.onerror = () => {
+    loading.style.display = 'none';
+    img.style.display = 'none';
+    error.style.display = 'grid';
+  };
+
+  img.src = url;
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRoomInfo() {
+  const modal = document.getElementById('roomModal');
+  if (!modal) return;
+
+  blueprintState.pointers.clear();
+  blueprintState.dragStart = null;
+  blueprintState.pinchStart = null;
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function installBlueprintViewer() {
+  const wrap = document.getElementById('blueprintWrap');
+  const card = document.getElementById('blueprintCard');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const fitBtn = document.getElementById('fitBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const openOriginalBtn = document.getElementById('openOriginalBtn');
+
+  if (!wrap) return;
+
+  zoomInBtn.addEventListener('click', () => zoomBlueprint(1.25));
+  zoomOutBtn.addEventListener('click', () => zoomBlueprint(0.8));
+  fitBtn.addEventListener('click', resetBlueprintView);
+
+  openOriginalBtn.addEventListener('click', () => {
+    if (blueprintState.url) {
+      window.open(blueprintState.url, '_blank', 'noopener,noreferrer');
+    }
+  });
+
+  fullscreenBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (card.requestFullscreen) await card.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+      }
+    } catch (_) {
+      // 某些浏览器/file:// 场景禁用 Fullscreen API 时，仍可正常缩放查看
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    fullscreenBtn.textContent = document.fullscreenElement ? '⤫' : '⛶';
+    fullscreenBtn.setAttribute('aria-label', document.fullscreenElement ? '退出全屏' : '全屏');
+    setTimeout(resetBlueprintView, 80);
+  });
+
+  // 桌面滚轮缩放（以指针为中心）
+  wrap.addEventListener('wheel', (e) => {
+    if (document.getElementById('blueprintImg').style.display === 'none') return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.13 : 0.885;
+    zoomBlueprint(factor, e.clientX, e.clientY);
+  }, { passive: false });
+
+  // 双击 / 双击触控放大
+  wrap.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    if (blueprintState.scale > 1.8) {
+      resetBlueprintView();
+    } else {
+      zoomBlueprint(2, e.clientX, e.clientY);
+    }
+  });
+
+  // Pointer Events：鼠标拖动 + 单指拖动 + 双指捏合
+  wrap.addEventListener('pointerdown', (e) => {
+    if (document.getElementById('blueprintImg').style.display === 'none') return;
+
+    wrap.setPointerCapture?.(e.pointerId);
+    blueprintState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    wrap.classList.add('dragging');
+
+    if (blueprintState.pointers.size === 1) {
+      blueprintState.dragStart = {
+        pointerX: e.clientX,
+        pointerY: e.clientY,
+        x: blueprintState.x,
+        y: blueprintState.y
+      };
+      blueprintState.pinchStart = null;
+    } else if (blueprintState.pointers.size === 2) {
+      const pts = [...blueprintState.pointers.values()];
+      const dx = pts[1].x - pts[0].x;
+      const dy = pts[1].y - pts[0].y;
+      const rect = wrap.getBoundingClientRect();
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+
+      blueprintState.pinchStart = {
+        distance: Math.hypot(dx, dy) || 1,
+        scale: blueprintState.scale,
+        x: blueprintState.x,
+        y: blueprintState.y,
+        midX,
+        midY,
+        localMidX: midX - (rect.left + rect.width / 2),
+        localMidY: midY - (rect.top + rect.height / 2)
+      };
+      blueprintState.dragStart = null;
+    }
+  });
+
+  wrap.addEventListener('pointermove', (e) => {
+    if (!blueprintState.pointers.has(e.pointerId)) return;
+
+    blueprintState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (blueprintState.pointers.size === 1 && blueprintState.dragStart) {
+      const p = [...blueprintState.pointers.values()][0];
+      blueprintState.x =
+        blueprintState.dragStart.x + (p.x - blueprintState.dragStart.pointerX);
+      blueprintState.y =
+        blueprintState.dragStart.y + (p.y - blueprintState.dragStart.pointerY);
+      applyBlueprintTransform();
+      return;
+    }
+
+    if (blueprintState.pointers.size === 2 && blueprintState.pinchStart) {
+      const pts = [...blueprintState.pointers.values()];
+      const dx = pts[1].x - pts[0].x;
+      const dy = pts[1].y - pts[0].y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const newScale = clamp(
+        blueprintState.pinchStart.scale * distance / blueprintState.pinchStart.distance,
+        blueprintState.minScale,
+        blueprintState.maxScale
+      );
+
+      const rect = wrap.getBoundingClientRect();
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      const localX = midX - (rect.left + rect.width / 2);
+      const localY = midY - (rect.top + rect.height / 2);
+      const ratio = newScale / blueprintState.pinchStart.scale;
+
+      blueprintState.x =
+        localX - (blueprintState.pinchStart.localMidX - blueprintState.pinchStart.x) * ratio;
+      blueprintState.y =
+        localY - (blueprintState.pinchStart.localMidY - blueprintState.pinchStart.y) * ratio;
+      blueprintState.scale = newScale;
+      applyBlueprintTransform();
+    }
+  });
+
+  function finishPointer(e) {
+    blueprintState.pointers.delete(e.pointerId);
+
+    if (blueprintState.pointers.size === 0) {
+      blueprintState.dragStart = null;
+      blueprintState.pinchStart = null;
+      wrap.classList.remove('dragging');
+      return;
+    }
+
+    // 双指缩放结束后剩下一根手指，平滑切换为单指拖动
+    if (blueprintState.pointers.size === 1) {
+      const p = [...blueprintState.pointers.values()][0];
+      blueprintState.dragStart = {
+        pointerX: p.x,
+        pointerY: p.y,
+        x: blueprintState.x,
+        y: blueprintState.y
+      };
+      blueprintState.pinchStart = null;
+    }
+  }
+
+  wrap.addEventListener('pointerup', finishPointer);
+  wrap.addEventListener('pointercancel', finishPointer);
+  wrap.addEventListener('lostpointercapture', (e) => {
+    if (blueprintState.pointers.has(e.pointerId)) finishPointer(e);
+  });
+
+  // 键盘辅助：+/-/0，方便桌面端和无障碍操作
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('roomModal');
+    if (!modal.classList.contains('open')) return;
+
+    if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      zoomBlueprint(1.25);
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      zoomBlueprint(0.8);
+    } else if (e.key === '0') {
+      e.preventDefault();
+      resetBlueprintView();
+    }
+  });
+
+  // 旋转设备 / 改变窗口后重置到适应窗口，避免图纸跑出视野
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const modal = document.getElementById('roomModal');
+      if (modal.classList.contains('open')) resetBlueprintView();
+    }, 140);
+  });
+}
+
 /* ======= 统一按葡萄牙里斯本时区判断 ======= */
 const TZ = 'Europe/Lisbon';
 function nowLisbon() { return new Date(new Date().toLocaleString('en-US', { timeZone: TZ })); }
@@ -307,6 +1106,24 @@ function renderSlide(dayKey, autoFocus=true){
     const room = document.createElement('div');
     room.className = 'room';
     room.textContent = item.room;
+    room.setAttribute('role', 'button');
+    room.setAttribute('tabindex', '0');
+    room.setAttribute('title', `查看 ${item.room} 的位置和官方图示`);
+    room.setAttribute('aria-label', `查看教室 ${item.room} 的位置和官方图示`);
+
+    room.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      openRoomInfo(item.room);
+    });
+
+    room.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openRoomInfo(item.room);
+      }
+    });
 
     row.appendChild(title);
     row.appendChild(room);
@@ -518,6 +1335,25 @@ function init(){
 
   // 安装滑动手势
   installSwipe();
+
+  // Fénix 教室详情弹窗
+  const roomModal = document.getElementById('roomModal');
+  const roomClose = document.getElementById('roomClose');
+
+  roomClose.addEventListener('click', closeRoomInfo);
+
+  roomModal.addEventListener('click', (e) => {
+    if (e.target === roomModal) closeRoomInfo();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && roomModal.classList.contains('open')) {
+      closeRoomInfo();
+    }
+  });
+
+  // 安装企业级 Blueprint 缩放 / 拖动 / 触控 / 全屏查看器
+  installBlueprintViewer();
 
   // 启动时钟与自动刷新
   startClock();
