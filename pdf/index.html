@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Dual PDF Enterprise Reader</title>
+<style>
+:root{
+  --bg:#0a0d11;
+  --panel:#0f141a;
+  --panel2:#151b23;
+  --line:#28323d;
+  --line2:#344252;
+  --text:#eef3f8;
+  --muted:#92a0af;
+  --accent:#4d97ff;
+  --toolbar-h:48px;
+  --page-gap:14px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+  font:14px/1.35 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}
+button{
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--text);
+  border-radius:8px;
+  min-height:32px;
+  padding:5px 9px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+button:hover{border-color:var(--line2);background:#1a222c}
+button:active{transform:translateY(1px)}
+button[aria-pressed="true"]{background:#17345e;border-color:#2e6fbe;color:#e7f2ff}
+button:disabled{opacity:.45;cursor:not-allowed}
+input{
+  border:1px solid var(--line);
+  background:#0a0f14;
+  color:var(--text);
+  border-radius:7px;
+  outline:none;
+}
+input:focus{border-color:var(--accent)}
+.app{height:100%;display:grid;grid-template-rows:var(--toolbar-h) 1fr}
+.topbar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) max-content minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  padding:6px 9px;
+  border-bottom:1px solid var(--line);
+  background:rgba(15,20,26,.98);
+  backdrop-filter:blur(10px);
+  z-index:20;
+  min-width:0;
+}
+.sidebar{
+  display:grid;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+  overflow:hidden;
+}
+.leftbar{
+  grid-template-columns:max-content minmax(70px,1fr) max-content max-content;
+}
+.rightbar{
+  grid-template-columns:max-content max-content minmax(70px,1fr) max-content;
+}
+.centerbar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.filename{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:650;
+  min-width:0;
+}
+.leftbar .filename{text-align:left}
+.rightbar .filename{text-align:right}
+.pagegroup,.zoomgroup{
+  display:flex;align-items:center;gap:4px;white-space:nowrap;
+}
+.pagegroup input{
+  width:52px;
+  height:32px;
+  padding:4px 6px;
+  text-align:center;
+}
+.zoomvalue{
+  min-width:55px;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.main{
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 6px minmax(0,1fr);
+  background:#090c10;
+}
+.divider{
+  position:relative;
+  background:var(--line);
+  cursor:col-resize;
+}
+.divider::after{content:"";position:absolute;inset:0 -5px}
+.pane{min-width:0;min-height:0;position:relative;background:var(--panel)}
+.viewer{
+  width:100%;height:100%;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  background:#0c1015;
+}
+.viewer::-webkit-scrollbar{display:none;width:0;height:0}
+.viewer.dragging{outline:2px solid var(--accent);outline-offset:-2px}
+.pages{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:var(--page-gap);
+  padding:10px 12px 60px;
+}
+.empty{
+  margin:auto;
+  max-width:430px;
+  padding:30px;
+  color:var(--muted);
+  border:1px dashed #3a4654;
+  border-radius:14px;
+  background:#10161d;
+  text-align:center;
+}
+.empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:8px}
+.page{
+  position:relative;
+  flex:0 0 auto;
+  background:white;
+  box-shadow:0 6px 28px rgba(0,0,0,.35);
+  overflow:hidden;
+}
+.page canvas{display:block;width:100%;height:100%}
+.placeholder{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#7e8790;
+  background:#f2f4f6;
+  user-select:none;
+  font-size:12px;
+}
+.status{
+  position:absolute;
+  left:10px;
+  bottom:10px;
+  z-index:12;
+  max-width:65%;
+  padding:4px 7px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(10,14,19,.72);
+  color:#aeb8c3;
+  border-radius:6px;
+  font-size:11px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .15s;
+}
+.pane:hover .status{opacity:1}
+.loading{
+  position:fixed;
+  inset:var(--toolbar-h) 0 0;
+  display:grid;
+  place-items:center;
+  background:rgba(7,10,14,.62);
+  z-index:50;
+  pointer-events:none;
+}
+.loading[hidden]{display:none}
+.toast{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  max-width:min(460px,calc(100vw - 28px));
+  border:1px solid var(--line);
+  background:#161d26;
+  color:var(--text);
+  border-radius:10px;
+  padding:10px 12px;
+  box-shadow:0 12px 34px rgba(0,0,0,.38);
+  z-index:100;
+  display:none;
+}
+.toast.show{display:block}
+.toast.error{border-color:#783f3f}
+
+@media (max-width:1400px){
+  .topbar{gap:7px;padding-inline:7px}
+  button{padding-inline:7px}
+  .sidebar{gap:4px}
+  .centerbar{gap:4px}
+  .pagegroup input{width:46px}
+  .zoomvalue{min-width:48px}
+}
+@media (max-width:1150px){
+  .filename{display:none}
+  .leftbar{grid-template-columns:max-content max-content max-content}
+  .rightbar{grid-template-columns:max-content max-content max-content}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <!-- LEFT: outer -> inner -->
+    <div class="sidebar leftbar">
+      <button id="openLeft" title="打开左侧 PDF">左 PDF</button>
+      <div class="filename" id="leftName">左侧未打开文件</div>
+
+      <div class="pagegroup">
+        <button data-nav="prev" data-side="left" title="上一页">‹</button>
+        <input id="leftPage" value="0" inputmode="numeric" aria-label="左侧页码">
+        <span id="leftTotal">/ 0</span>
+        <button data-nav="next" data-side="left" title="下一页">›</button>
+      </div>
+
+      <div class="zoomgroup">
+        <button data-zoom="out" data-side="left" title="左侧缩小">−</button>
+        <button class="zoomvalue" id="leftZoom" data-zoom="reset" data-side="left" title="左侧恢复 100%">100%</button>
+        <button data-zoom="in" data-side="left" title="左侧放大">＋</button>
+        <button data-zoom="fit" data-side="left" title="左侧适合宽度">适宽</button>
+      </div>
+    </div>
+
+    <!-- GLOBAL -->
+    <div class="centerbar">
+      <button id="syncScroll" aria-pressed="false">同步滚动</button>
+      <button id="syncPage" aria-pressed="false">同步页码</button>
+      <button id="syncZoom" aria-pressed="false">联动缩放</button>
+    </div>
+
+    <!-- RIGHT: inner -> outer, mirror -->
+    <div class="sidebar rightbar">
+      <div class="zoomgroup">
+        <button data-zoom="fit" data-side="right" title="右侧适合宽度">适宽</button>
+        <button data-zoom="out" data-side="right" title="右侧缩小">−</button>
+        <button class="zoomvalue" id="rightZoom" data-zoom="reset" data-side="right" title="右侧恢复 100%">100%</button>
+        <button data-zoom="in" data-side="right" title="右侧放大">＋</button>
+      </div>
+
+      <div class="pagegroup">
+        <button data-nav="prev" data-side="right" title="上一页">‹</button>
+        <input id="rightPage" value="0" inputmode="numeric" aria-label="右侧页码">
+        <span id="rightTotal">/ 0</span>
+        <button data-nav="next" data-side="right" title="下一页">›</button>
+      </div>
+
+      <div class="filename" id="rightName">右侧未打开文件</div>
+      <button id="openRight" title="打开右侧 PDF">右 PDF</button>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <section class="pane">
+      <div class="viewer" id="leftViewer"><div class="pages" id="leftPages"></div></div>
+      <div class="status" id="leftStatus"></div>
+    </section>
+    <div class="divider" id="divider"></div>
+    <section class="pane">
+      <div class="viewer" id="rightViewer"><div class="pages" id="rightPages"></div></div>
+      <div class="status" id="rightStatus"></div>
+    </section>
+  </main>
+</div>
+
+<input id="leftFile" type="file" accept="application/pdf,.pdf" hidden>
+<input id="rightFile" type="file" accept="application/pdf,.pdf" hidden>
+<div class="loading" id="loading" hidden>正在解析 PDF…</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs";
+
+const $ = s => document.querySelector(s);
+
+const CFG = Object.freeze({
+  MIN_SCALE: 0.30,
+  MAX_SCALE: 5.00,
+  DEFAULT_SCALE: 1.00,
+  ZOOM_STEP: 1.15,
+  DPR_CAP: 2.0,
+  IO_MARGIN: "1400px 0px",
+  RELEASE_DISTANCE_VIEWPORTS: 4,
+  MAX_RENDER_JOBS: Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) >> 1)),
+  BUILD_BATCH: 32
+});
+
+const appState = {
+  activeSide: "left",
+  syncScroll: false,
+  syncPage: false,
+  syncZoom: false,
+  scrollLock: false
+};
+
+class PriorityRenderQueue {
+  constructor(limit){
+    this.limit = limit;
+    this.active = 0;
+    this.jobs = [];
+    this.serial = 0;
+  }
+  add(fn, priority=0){
+    return new Promise((resolve,reject)=>{
+      this.jobs.push({fn,priority,resolve,reject,serial:this.serial++});
+      this.jobs.sort((a,b)=>b.priority-a.priority || a.serial-b.serial);
+      this.pump();
+    });
+  }
+  pump(){
+    while(this.active < this.limit && this.jobs.length){
+      const item = this.jobs.shift();
+      this.active++;
+      Promise.resolve()
+        .then(item.fn)
+        .then(item.resolve,item.reject)
+        .finally(()=>{ this.active--; this.pump(); });
+    }
+  }
+}
+const renderQueue = new PriorityRenderQueue(CFG.MAX_RENDER_JOBS);
+
+class PdfPane {
+  constructor(side){
+    this.side = side;
+    this.otherSide = side === "left" ? "right" : "left";
+
+    this.viewer = $(`#${side}Viewer`);
+    this.pagesEl = $(`#${side}Pages`);
+    this.nameEl = $(`#${side}Name`);
+    this.pageInput = $(`#${side}Page`);
+    this.totalEl = $(`#${side}Total`);
+    this.zoomEl = $(`#${side}Zoom`);
+    this.statusEl = $(`#${side}Status`);
+
+    this.file = null;
+    this.pdf = null;
+    this.loadingTask = null;
+    this.generation = 0;
+    this.scale = CFG.DEFAULT_SCALE;
+    this.currentPage = 0;
+    this.models = [];
+    this.io = null;
+    this.scrollRaf = 0;
+    this.resizeRaf = 0;
+
+    this.viewer.addEventListener("pointerdown", ()=> appState.activeSide = side);
+    this.viewer.addEventListener("scroll", ()=>this.onScroll(), {passive:true});
+    this.viewer.addEventListener("wheel", e=>this.onWheel(e), {passive:false});
+    this.pageInput.addEventListener("change", ()=>this.goToPage(+this.pageInput.value || 1, true));
+    this.pageInput.addEventListener("keydown", e=>{
+      if(e.key==="Enter"){ e.preventDefault(); this.pageInput.blur(); }
+    });
+
+    this.installDrop();
+    this.showEmpty();
+  }
+
+  other(){ return panes[this.otherSide]; }
+
+  showEmpty(){
+    this.pagesEl.innerHTML = `<div class="empty">
+      <strong>${this.side==="left"?"打开左侧 PDF":"打开右侧 PDF"}</strong>
+      点击顶部按钮，或将 PDF 拖入这一侧。<br>
+      文件由浏览器本地读取，本页面不包含上传接口。
+    </div>`;
+    this.statusEl.textContent = "";
+  }
+
+  installDrop(){
+    let depth=0;
+    this.viewer.addEventListener("dragenter",e=>{
+      e.preventDefault(); depth++; this.viewer.classList.add("dragging");
+    });
+    this.viewer.addEventListener("dragover",e=>e.preventDefault());
+    this.viewer.addEventListener("dragleave",()=>{
+      depth=Math.max(0,depth-1);
+      if(depth===0) this.viewer.classList.remove("dragging");
+    });
+    this.viewer.addEventListener("drop",e=>{
+      e.preventDefault(); depth=0; this.viewer.classList.remove("dragging");
+      const f=[...e.dataTransfer.files].find(x=>x.type==="application/pdf" || /\.pdf$/i.test(x.name));
+      if(f) this.loadFile(f);
+    });
+  }
+
+  async loadFile(file){
+    if(!file) return;
+    const generation = ++this.generation;
+    appState.activeSide = this.side;
+
+    try{
+      await this.destroyDocument(false);
+
+      this.file=file;
+      this.nameEl.textContent=file.name;
+      this.nameEl.title=file.name;
+      this.setStatus(`读取 ${formatBytes(file.size)}…`);
+      setLoading(true);
+
+      const data = new Uint8Array(await file.arrayBuffer());
+      if(generation!==this.generation) return;
+
+      this.loadingTask = pdfjsLib.getDocument({
+        data,
+        isEvalSupported:false,
+        stopAtErrors:false,
+        useWorkerFetch:true
+      });
+      this.pdf = await this.loadingTask.promise;
+      if(generation!==this.generation) return;
+
+      this.currentPage = this.pdf.numPages ? 1 : 0;
+      this.pageInput.value = String(this.currentPage);
+      this.totalEl.textContent = `/ ${this.pdf.numPages}`;
+      this.scale = CFG.DEFAULT_SCALE;
+      this.updateZoomUI();
+
+      await this.buildModels(generation);
+      if(generation!==this.generation) return;
+
+      this.installIntersectionObserver();
+      this.observeAll();
+      this.updateCurrentPage();
+      this.renderNearViewport();
+
+      this.setStatus(`${this.pdf.numPages} 页 · ${formatBytes(file.size)}`);
+      toast(`${this.side==="left"?"左侧":"右侧"}已打开：${file.name}`);
+    }catch(err){
+      console.error(err);
+      this.pdf=null;
+      this.pageInput.value="0";
+      this.totalEl.textContent="/ 0";
+      this.setStatus("加载失败");
+      this.showEmpty();
+      toast(`无法打开 ${file.name}：${err?.message || err}`, true);
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  async buildModels(generation){
+    this.pagesEl.replaceChildren();
+    this.models = new Array(this.pdf.numPages);
+    let frag=document.createDocumentFragment();
+
+    for(let n=1;n<=this.pdf.numPages;n++){
+      if(generation!==this.generation) return;
+
+      const page = await this.pdf.getPage(n);
+      const base = page.getViewport({scale:1});
+      const el=document.createElement("div");
+      el.className="page";
+      el.dataset.page=String(n);
+
+      const ph=document.createElement("div");
+      ph.className="placeholder";
+      ph.textContent=`第 ${n} 页`;
+      el.appendChild(ph);
+
+      const model={
+        n,
+        baseW:base.width,
+        baseH:base.height,
+        page,
+        el,
+        canvas:null,
+        renderTask:null,
+        rendering:false,
+        renderedScale:0,
+        ticket:0
+      };
+      this.models[n-1]=model;
+      this.applyPageSize(model);
+      frag.appendChild(el);
+
+      if(n % CFG.BUILD_BATCH===0){
+        this.pagesEl.appendChild(frag);
+        frag=document.createDocumentFragment();
+        await nextFrame();
+      }
+    }
+    this.pagesEl.appendChild(frag);
+  }
+
+  applyPageSize(model){
+    model.el.style.width=`${model.baseW*this.scale}px`;
+    model.el.style.height=`${model.baseH*this.scale}px`;
+  }
+
+  installIntersectionObserver(){
+    this.io?.disconnect();
+    this.io = new IntersectionObserver(entries=>{
+      const vr=this.viewer.getBoundingClientRect();
+      const center=vr.top+vr.height/2;
+
+      for(const entry of entries){
+        const m=this.models[Number(entry.target.dataset.page)-1];
+        if(!m) continue;
+
+        if(entry.isIntersecting){
+          const r=entry.boundingClientRect;
+          const distance=Math.abs((r.top+r.bottom)/2-center);
+          const priority=Math.max(1, 100000-Math.round(distance));
+          this.ensureRendered(m,priority);
+        }else{
+          this.releaseIfFar(m);
+        }
+      }
+    },{
+      root:this.viewer,
+      rootMargin:CFG.IO_MARGIN,
+      threshold:0.01
+    });
+  }
+
+  observeAll(){
+    for(const m of this.models) this.io.observe(m.el);
+  }
+
+  async ensureRendered(model,priority=1){
+    if(!this.pdf || model.rendering) return;
+    if(model.canvas && Math.abs(model.renderedScale-this.scale)<0.0001) return;
+
+    const generation=this.generation;
+    const scale=this.scale;
+    const ticket=++model.ticket;
+    model.rendering=true;
+
+    try{
+      await renderQueue.add(async()=>{
+        if(generation!==this.generation || ticket!==model.ticket || !model.el.isConnected) return;
+
+        if(model.renderTask){
+          try{model.renderTask.cancel()}catch{}
+        }
+
+        const cssViewport=model.page.getViewport({scale});
+        const dpr=Math.min(window.devicePixelRatio || 1, CFG.DPR_CAP);
+        const renderViewport=model.page.getViewport({scale:scale*dpr});
+
+        let canvas=model.canvas;
+        if(!canvas){
+          canvas=document.createElement("canvas");
+          model.canvas=canvas;
+          model.el.appendChild(canvas);
+        }
+
+        canvas.width=Math.max(1,Math.floor(renderViewport.width));
+        canvas.height=Math.max(1,Math.floor(renderViewport.height));
+        canvas.style.width=`${cssViewport.width}px`;
+        canvas.style.height=`${cssViewport.height}px`;
+
+        const ctx=canvas.getContext("2d",{alpha:false,desynchronized:true});
+        model.renderTask=model.page.render({
+          canvasContext:ctx,
+          viewport:renderViewport,
+          intent:"display",
+          background:"rgb(255,255,255)"
+        });
+
+        await model.renderTask.promise;
+        if(generation!==this.generation || ticket!==model.ticket) return;
+
+        model.renderedScale=scale;
+        model.el.querySelector(".placeholder")?.remove();
+      },priority);
+    }catch(err){
+      if(err?.name!=="RenderingCancelledException") console.warn("Render failed",this.side,model.n,err);
+    }finally{
+      model.rendering=false;
+      model.renderTask=null;
+    }
+  }
+
+  releaseIfFar(model){
+    if(!model.canvas) return;
+    const vr=this.viewer.getBoundingClientRect();
+    const r=model.el.getBoundingClientRect();
+    const limit=vr.height*CFG.RELEASE_DISTANCE_VIEWPORTS;
+    const far=(r.bottom < vr.top-limit) || (r.top > vr.bottom+limit);
+    if(!far) return;
+
+    model.ticket++;
+    try{model.renderTask?.cancel()}catch{}
+    model.renderTask=null;
+    model.rendering=false;
+
+    model.canvas.width=1;
+    model.canvas.height=1;
+    model.canvas.remove();
+    model.canvas=null;
+    model.renderedScale=0;
+
+    if(!model.el.querySelector(".placeholder")){
+      const ph=document.createElement("div");
+      ph.className="placeholder";
+      ph.textContent=`第 ${model.n} 页`;
+      model.el.appendChild(ph);
+    }
+  }
+
+  renderNearViewport(){
+    if(!this.pdf) return;
+    const vr=this.viewer.getBoundingClientRect();
+    const center=vr.top+vr.height/2;
+
+    for(const m of this.models){
+      const r=m.el.getBoundingClientRect();
+      if(r.bottom >= vr.top-1200 && r.top <= vr.bottom+1200){
+        const dist=Math.abs((r.top+r.bottom)/2-center);
+        this.ensureRendered(m,Math.max(1,100000-Math.round(dist)));
+      }
+    }
+  }
+
+  setScale(next,{anchorClientY=null,propagate=true}={}){
+    if(!this.pdf) return;
+    next=clamp(next,CFG.MIN_SCALE,CFG.MAX_SCALE);
+    if(Math.abs(next-this.scale)<0.0001) return;
+
+    const oldScale=this.scale;
+    const vr=this.viewer.getBoundingClientRect();
+    const anchorY=anchorClientY ?? (vr.top+vr.height/2);
+    const anchorOffset=anchorY-vr.top;
+    const logicalY=(this.viewer.scrollTop+anchorOffset)/oldScale;
+
+    this.scale=next;
+
+    for(const m of this.models){
+      m.ticket++;
+      try{m.renderTask?.cancel()}catch{}
+      m.renderTask=null;
+      m.rendering=false;
+      m.renderedScale=0;
+      this.applyPageSize(m);
+    }
+
+    this.updateZoomUI();
+
+    requestAnimationFrame(()=>{
+      this.viewer.scrollTop=Math.max(0,logicalY*this.scale-anchorOffset);
+      this.renderNearViewport();
+      this.updateCurrentPage();
+    });
+
+    if(propagate && appState.syncZoom && this.other().pdf){
+      this.other().setScale(next,{propagate:false});
+    }
+  }
+
+  fitWidth({propagate=true}={}){
+    if(!this.pdf || !this.models.length) return;
+    const maxW=Math.max(...this.models.map(m=>m.baseW));
+    const available=Math.max(160,this.viewer.clientWidth-28);
+    this.setScale(available/maxW,{propagate});
+  }
+
+  updateZoomUI(){
+    this.zoomEl.textContent=`${Math.round(this.scale*100)}%`;
+  }
+
+  goToPage(n,propagate=true){
+    if(!this.pdf) return;
+    n=clamp(Math.round(n),1,this.pdf.numPages);
+    const m=this.models[n-1];
+    this.viewer.scrollTo({top:Math.max(0,m.el.offsetTop-8),behavior:"auto"});
+    this.currentPage=n;
+    this.pageInput.value=String(n);
+    this.ensureRendered(m,200000);
+
+    if(propagate && appState.syncPage && this.other().pdf){
+      this.other().goToPage(n,false);
+    }
+  }
+
+  updateCurrentPage(){
+    if(!this.models.length) return;
+    const vr=this.viewer.getBoundingClientRect();
+    const probe=vr.top+Math.min(150,vr.height*.25);
+
+    let best=1;
+    let bestDist=Infinity;
+    for(const m of this.models){
+      const r=m.el.getBoundingClientRect();
+      const dist=(r.top<=probe && r.bottom>=probe)
+        ? 0
+        : Math.min(Math.abs(r.top-probe),Math.abs(r.bottom-probe));
+      if(dist<bestDist){bestDist=dist;best=m.n}
+      if(r.top>vr.bottom+400) break;
+    }
+
+    if(best!==this.currentPage){
+      this.currentPage=best;
+      this.pageInput.value=String(best);
+    }
+  }
+
+  onScroll(){
+    if(!this.pdf) return;
+    cancelAnimationFrame(this.scrollRaf);
+    this.scrollRaf=requestAnimationFrame(()=>{
+      this.updateCurrentPage();
+      this.renderNearViewport();
+
+      if(appState.syncScroll && !appState.scrollLock && this.other().pdf){
+        appState.scrollLock=true;
+        const ownMax=Math.max(1,this.viewer.scrollHeight-this.viewer.clientHeight);
+        const ratio=this.viewer.scrollTop/ownMax;
+        const ov=this.other().viewer;
+        ov.scrollTop=ratio*Math.max(0,ov.scrollHeight-ov.clientHeight);
+        requestAnimationFrame(()=>appState.scrollLock=false);
+      }
+    });
+  }
+
+  onWheel(e){
+    if(!(e.ctrlKey || e.metaKey) || !this.pdf) return;
+    e.preventDefault();
+    const factor=Math.exp(-e.deltaY*0.00135);
+    this.setScale(this.scale*factor,{anchorClientY:e.clientY,propagate:true});
+  }
+
+  onResize(){
+    cancelAnimationFrame(this.resizeRaf);
+    this.resizeRaf=requestAnimationFrame(()=>this.renderNearViewport());
+  }
+
+  setStatus(text){ this.statusEl.textContent=text }
+
+  async destroyDocument(resetUI=true){
+    this.io?.disconnect();
+    this.io=null;
+
+    for(const m of this.models){
+      m.ticket++;
+      try{m.renderTask?.cancel()}catch{}
+      if(m.canvas){
+        m.canvas.width=1;m.canvas.height=1;
+      }
+    }
+    this.models=[];
+
+    if(this.loadingTask){
+      try{await this.loadingTask.destroy()}catch{}
+      this.loadingTask=null;
+    }
+    this.pdf=null;
+
+    if(resetUI){
+      this.file=null;
+      this.nameEl.textContent=`${this.side==="left"?"左":"右"}侧未打开文件`;
+      this.pageInput.value="0";
+      this.totalEl.textContent="/ 0";
+      this.scale=CFG.DEFAULT_SCALE;
+      this.updateZoomUI();
+      this.showEmpty();
+    }
+  }
+}
+
+const panes={
+  left:new PdfPane("left"),
+  right:new PdfPane("right")
+};
+
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)) }
+function nextFrame(){ return new Promise(r=>requestAnimationFrame(r)) }
+function formatBytes(n){
+  const units=["B","KB","MB","GB"];
+  let v=n,i=0;
+  while(v>=1024 && i<units.length-1){v/=1024;i++}
+  return `${i===0 || v>=10 ? v.toFixed(0) : v.toFixed(1)} ${units[i]}`;
+}
+
+function setLoading(v){ $("#loading").hidden=!v }
+let toastTimer=0;
+function toast(msg,error=false){
+  const el=$("#toast");
+  el.textContent=msg;
+  el.className=`toast show${error?" error":""}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.className="toast",3200);
+}
+
+$("#openLeft").onclick=()=>$("#leftFile").click();
+$("#openRight").onclick=()=>$("#rightFile").click();
+
+$("#leftFile").onchange=e=>{
+  const f=e.target.files?.[0];
+  if(f) panes.left.loadFile(f);
+  e.target.value="";
+};
+$("#rightFile").onchange=e=>{
+  const f=e.target.files?.[0];
+  if(f) panes.right.loadFile(f);
+  e.target.value="";
+};
+
+for(const id of ["syncScroll","syncPage","syncZoom"]){
+  $(`#${id}`).onclick=()=>{
+    appState[id]=!appState[id];
+    $(`#${id}`).setAttribute("aria-pressed",String(appState[id]));
+  };
+}
+
+document.addEventListener("click",e=>{
+  const nav=e.target.closest("[data-nav]");
+  if(nav){
+    const p=panes[nav.dataset.side];
+    const delta=nav.dataset.nav==="next"?1:-1;
+    p.goToPage((p.currentPage||1)+delta,true);
+    return;
+  }
+
+  const zoom=e.target.closest("[data-zoom]");
+  if(zoom){
+    const p=panes[zoom.dataset.side];
+    appState.activeSide=zoom.dataset.side;
+    const op=zoom.dataset.zoom;
+    if(op==="in") p.setScale(p.scale*CFG.ZOOM_STEP,{propagate:true});
+    else if(op==="out") p.setScale(p.scale/CFG.ZOOM_STEP,{propagate:true});
+    else if(op==="reset") p.setScale(1,{propagate:true});
+    else if(op==="fit") p.fitWidth({propagate:true});
+  }
+});
+
+document.addEventListener("keydown",e=>{
+  const tag=document.activeElement?.tagName || "";
+  if(tag==="INPUT" || tag==="TEXTAREA") return;
+
+  const p=panes[appState.activeSide];
+  if((e.ctrlKey || e.metaKey) && (e.key==="+" || e.key==="=")){
+    e.preventDefault(); p.setScale(p.scale*CFG.ZOOM_STEP,{propagate:true});
+  }else if((e.ctrlKey || e.metaKey) && e.key==="-"){
+    e.preventDefault(); p.setScale(p.scale/CFG.ZOOM_STEP,{propagate:true});
+  }else if((e.ctrlKey || e.metaKey) && e.key==="0"){
+    e.preventDefault(); p.setScale(1,{propagate:true});
+  }else if(e.key==="PageDown"){
+    e.preventDefault(); p.goToPage((p.currentPage||1)+1,true);
+  }else if(e.key==="PageUp"){
+    e.preventDefault(); p.goToPage((p.currentPage||1)-1,true);
+  }
+});
+
+/* Splitter */
+const main=$("#main"), divider=$("#divider");
+let resizing=false;
+divider.addEventListener("pointerdown",e=>{
+  resizing=true;
+  divider.setPointerCapture(e.pointerId);
+  document.body.style.userSelect="none";
+});
+divider.addEventListener("pointermove",e=>{
+  if(!resizing) return;
+  const r=main.getBoundingClientRect();
+  let ratio=(e.clientX-r.left)/r.width;
+  ratio=clamp(ratio,.20,.80);
+  main.style.gridTemplateColumns=`minmax(0,${ratio}fr) 6px minmax(0,${1-ratio}fr)`;
+});
+divider.addEventListener("pointerup",()=>{
+  resizing=false;
+  document.body.style.userSelect="";
+  panes.left.onResize();
+  panes.right.onResize();
+});
+
+/* Element-size responsive refresh, not window-only resize polling. */
+const ro=new ResizeObserver(()=>{
+  requestAnimationFrame(()=>{
+    panes.left.onResize();
+    panes.right.onResize();
+  });
+});
+ro.observe(main);
+
+window.addEventListener("beforeunload",()=>{
+  panes.left.destroyDocument(false);
+  panes.right.destroyDocument(false);
+});
+</script>
+</body>
+</html>
