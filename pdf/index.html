@@ -5,278 +5,232 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>Dual PDF Enterprise Reader</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/web/pdf_viewer.css">
 <style>
-:root{
-  --bg:#0a0d11;
-  --panel:#0f141a;
-  --panel2:#151b23;
-  --line:#28323d;
-  --line2:#344252;
-  --text:#eef3f8;
-  --muted:#92a0af;
-  --accent:#4d97ff;
-  --toolbar-h:48px;
-  --page-gap:14px;
+:root {
+  --bg: #090d12; --panel: #0f151c; --panel-2: #141c25; --panel-3: #192431;
+  --line: #253342; --line-2: #35475b; --text: #f1f5f9; --muted: #91a0b2;
+  --accent: #5b9cff; --accent-2: #86b8ff; --danger: #ff7a7a; --success: #70d6a3;
+  --topbar-h: 52px; --pane-toolbar-h: 44px; --divider-w: 6px; --radius: 9px;
+  --shadow: 0 18px 46px rgba(0,0,0,.35);
 }
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
-  font:14px/1.35 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,input{font:inherit}
-button{
-  border:1px solid var(--line);
-  background:var(--panel2);
-  color:var(--text);
-  border-radius:8px;
-  min-height:32px;
-  padding:5px 9px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-button:hover{border-color:var(--line2);background:#1a222c}
-button:active{transform:translateY(1px)}
-button[aria-pressed="true"]{background:#17345e;border-color:#2e6fbe;color:#e7f2ff}
-button:disabled{opacity:.45;cursor:not-allowed}
-input{
-  border:1px solid var(--line);
-  background:#0a0f14;
-  color:var(--text);
-  border-radius:7px;
-  outline:none;
-}
-input:focus{border-color:var(--accent)}
-.app{height:100%;display:grid;grid-template-rows:var(--toolbar-h) 1fr}
-.topbar{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) max-content minmax(0,1fr);
-  align-items:center;
-  gap:10px;
-  padding:6px 9px;
-  border-bottom:1px solid var(--line);
-  background:rgba(15,20,26,.98);
-  backdrop-filter:blur(10px);
-  z-index:20;
-  min-width:0;
-}
-.sidebar{
-  display:grid;
-  align-items:center;
-  gap:6px;
-  min-width:0;
-  overflow:hidden;
-}
-.leftbar{
-  grid-template-columns:max-content minmax(70px,1fr) max-content max-content;
-}
-.rightbar{
-  grid-template-columns:max-content max-content minmax(70px,1fr) max-content;
-}
-.centerbar{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:5px;
-  white-space:nowrap;
-}
-.filename{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-weight:650;
-  min-width:0;
-}
-.leftbar .filename{text-align:left}
-.rightbar .filename{text-align:right}
-.pagegroup,.zoomgroup{
-  display:flex;align-items:center;gap:4px;white-space:nowrap;
-}
-.pagegroup input{
-  width:52px;
-  height:32px;
-  padding:4px 6px;
-  text-align:center;
-}
-.zoomvalue{
-  min-width:55px;
-  text-align:center;
-  font-variant-numeric:tabular-nums;
-}
-.main{
-  min-height:0;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 6px minmax(0,1fr);
-  background:#090c10;
-}
-.divider{
-  position:relative;
-  background:var(--line);
-  cursor:col-resize;
-}
-.divider::after{content:"";position:absolute;inset:0 -5px}
-.pane{min-width:0;min-height:0;position:relative;background:var(--panel)}
-.viewer{
-  width:100%;height:100%;
-  overflow:auto;
-  overscroll-behavior:contain;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
-  background:#0c1015;
-}
-.viewer::-webkit-scrollbar{display:none;width:0;height:0}
-.viewer.dragging{outline:2px solid var(--accent);outline-offset:-2px}
-.pages{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:var(--page-gap);
-  padding:10px 12px 60px;
-}
-.empty{
-  margin:auto;
-  max-width:430px;
-  padding:30px;
-  color:var(--muted);
-  border:1px dashed #3a4654;
-  border-radius:14px;
-  background:#10161d;
-  text-align:center;
-}
-.empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:8px}
-.page{
-  position:relative;
-  flex:0 0 auto;
-  background:white;
-  box-shadow:0 6px 28px rgba(0,0,0,.35);
-  overflow:hidden;
-}
-.page canvas{display:block;width:100%;height:100%}
-.placeholder{
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  color:#7e8790;
-  background:#f2f4f6;
-  user-select:none;
-  font-size:12px;
-}
-.status{
-  position:absolute;
-  left:10px;
-  bottom:10px;
-  z-index:12;
-  max-width:65%;
-  padding:4px 7px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(10,14,19,.72);
-  color:#aeb8c3;
-  border-radius:6px;
-  font-size:11px;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .15s;
-}
-.pane:hover .status{opacity:1}
-.loading{
-  position:fixed;
-  inset:var(--toolbar-h) 0 0;
-  display:grid;
-  place-items:center;
-  background:rgba(7,10,14,.62);
-  z-index:50;
-  pointer-events:none;
-}
-.loading[hidden]{display:none}
-.toast{
-  position:fixed;
-  right:14px;
-  bottom:14px;
-  max-width:min(460px,calc(100vw - 28px));
-  border:1px solid var(--line);
-  background:#161d26;
-  color:var(--text);
-  border-radius:10px;
-  padding:10px 12px;
-  box-shadow:0 12px 34px rgba(0,0,0,.38);
-  z-index:100;
-  display:none;
-}
-.toast.show{display:block}
-.toast.error{border-color:#783f3f}
 
-@media (max-width:1400px){
-  .topbar{gap:7px;padding-inline:7px}
-  button{padding-inline:7px}
-  .sidebar{gap:4px}
-  .centerbar{gap:4px}
-  .pagegroup input{width:46px}
-  .zoomvalue{min-width:48px}
+* { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font: 14px/1.35 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input { font: inherit; }
+button { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 8px; min-height: 32px; padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: border-color .12s, background .12s, color .12s, transform .05s; }
+button:hover { border-color: var(--line-2); background: #1a2531; }
+button:active { transform: translateY(1px); }
+button[aria-pressed="true"], button.active { background: #17345e; border-color: #3d7ed4; color: #eef6ff; }
+button:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+input { border: 1px solid var(--line); background: #091018; color: var(--text); border-radius: 7px; outline: none; }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255,.15); }
+.icon-btn { width: 34px; padding: 0; display: inline-grid; place-items: center; font-size: 17px; }
+.primary { background: #1d5ca8; border-color: #377dce; }
+.primary:hover { background: #2369bd; }
+
+.app { height: 100%; display: grid; grid-template-rows: var(--topbar-h) 1fr; }
+.topbar { display: grid; grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr); align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: rgba(13,19,26,.97); backdrop-filter: blur(14px); z-index: 40; }
+.brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(145deg, #1d64bc, #253d61); font-weight: 800; letter-spacing: -.03em; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.brand-copy { min-width: 0; }
+.brand-title { font-weight: 760; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.global-tools { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: #0b1118; }
+.global-tools button { min-height: 30px; border-color: transparent; background: transparent; }
+.global-tools button:hover { background: var(--panel-3); border-color: transparent; }
+.global-tools button[aria-pressed="true"] { background: #17345e; color: #eaf3ff; border-color: #2d69b0; }
+.top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+.session-hint { font-size: 11px; color: var(--muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) var(--divider-w) minmax(0, 1fr); background: #070a0e; }
+.divider { position: relative; background: #1d2834; cursor: col-resize; z-index: 6; }
+.divider::before { content: ""; position: absolute; inset: 0 -7px; }
+.divider::after { content: ""; position: absolute; left: 2px; top: 42%; bottom: 42%; width: 2px; border-radius: 2px; background: #5a6c80; opacity: .7; }
+.pane { min-width: 0; min-height: 0; display: grid; grid-template-rows: var(--pane-toolbar-h) 1fr; position: relative; background: var(--panel); }
+.pane-toolbar { min-width: 0; display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: #101720; z-index: 8; }
+.file-button { max-width: min(38vw, 330px); display: flex; align-items: center; gap: 7px; min-width: 0; }
+.file-button .file-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.file-button .file-dot { width: 7px; height: 7px; border-radius: 50%; background: #5d6a79; flex: 0 0 auto; }
+.pane.loaded .file-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(112,214,163,.1); }
+.toolbar-spacer { flex: 1; min-width: 4px; }
+.tool-group { display: flex; align-items: center; gap: 3px; padding: 2px; border: 1px solid #202d3a; border-radius: 8px; background: #0c1219; }
+.tool-group button { min-height: 28px; height: 28px; padding: 3px 7px; background: transparent; border-color: transparent; }
+.tool-group button:hover { background: #1a2531; }
+.page-input { width: 46px; height: 28px; text-align: center; padding: 3px 5px; }
+.counter, .zoom-label { font-variant-numeric: tabular-nums; color: #cdd7e1; font-size: 12px; white-space: nowrap; }
+.zoom-label { min-width: 46px; text-align: center; }
+
+.viewer { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; background: #0b1016; position: relative; touch-action: none; }
+.viewer.drag-over { outline: 2px solid var(--accent); outline-offset: -2px; }
+.viewer.hand-ready, .viewer.ctrl-pan-ready { cursor: grab; }
+.viewer.panning { cursor: grabbing; user-select: none; }
+
+.pages { position: relative; min-width: 100%; min-height: 100%; overflow: visible; }
+.pages.empty-surface { width: 100% !important; height: 100% !important; display: grid; place-items: center; }
+.page-plane {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px 80px;
+  transform-origin: 0 0;
+  contain: layout style;
+  will-change: transform;
 }
-@media (max-width:1150px){
-  .filename{display:none}
-  .leftbar{grid-template-columns:max-content max-content max-content}
-  .rightbar{grid-template-columns:max-content max-content max-content}
+.page {
+  position: relative;
+  flex: 0 0 auto;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(0,0,0,.38);
+  overflow: hidden;
+  contain: strict;
+  content-visibility: auto;
 }
+.page canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transform-origin: 0 0;
+  image-rendering: auto;
+}
+.page .textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 1;
+  line-height: 1;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 2;
+  user-select: text;
+  cursor: text;
+}
+
+.page .textLayer span, .page .textLayer br { color: transparent; position: absolute; white-space: pre; transform-origin: 0 0; cursor: text; }
+.page .textLayer .mirror-selected { background: rgba(70,145,255,.34) !important; border-radius: 2px; box-shadow: 0 0 0 1px rgba(70,145,255,.08) inset; }
+.page .textLayer ::selection { background: rgba(70,145,255,.42); }
+.placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: #7b8794; background: linear-gradient(180deg, #f5f7f9, #eef1f4); user-select: none; font-size: 12px; z-index: 0; }
+.page-no { position: absolute; right: 7px; bottom: 6px; z-index: 3; background: rgba(0,0,0,.42); color: #fff; border-radius: 5px; padding: 2px 5px; font-size: 10px; opacity: 0; pointer-events: none; }
+.page:hover .page-no { opacity: .7; }
+.status { position: absolute; left: 10px; bottom: 10px; z-index: 12; max-width: 72%; padding: 5px 8px; border: 1px solid rgba(255,255,255,.08); background: rgba(10,14,19,.78); color: #aeb8c3; border-radius: 7px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.pane:hover .status { opacity: 1; }
+.selection-tools { position: fixed; z-index: 100; display: flex; align-items: center; gap: 5px; padding: 5px; border: 1px solid #35506d; background: rgba(16,24,33,.96); border-radius: 10px; box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+.selection-tools[hidden] { display: none; }
+.selection-tools .selection-state { font-size: 11px; color: #b7c7d8; padding: 0 5px; max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selection-tools button { min-height: 28px; padding: 4px 7px; }
+.history-drawer { position: fixed; top: 0; right: 0; height: 100%; width: min(420px, 92vw); z-index: 120; display: grid; grid-template-rows: 56px 1fr auto; background: #0d141c; border-left: 1px solid var(--line); box-shadow: -22px 0 50px rgba(0,0,0,.38); transform: translateX(102%); transition: transform .2s ease; }
+.history-drawer.open { transform: none; }
+.drawer-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.drawer-head strong { font-size: 15px; }
+.drawer-head .spacer { flex: 1; }
+.history-list { overflow: auto; padding: 9px; }
+.history-empty { padding: 30px 18px; text-align: center; color: var(--muted); }
+.history-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px; border: 1px solid #22303d; border-radius: 10px; background: #111923; margin-bottom: 8px; }
+.history-meta { min-width: 0; }
+.history-name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.history-actions { display: flex; align-items: center; gap: 4px; }
+.history-actions button { min-height: 28px; padding: 3px 7px; font-size: 12px; }
+.drawer-foot { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); line-height: 1.55; }
+.drawer-backdrop { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,.32); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+.loading { position: fixed; inset: var(--topbar-h) 0 0; display: grid; place-items: center; background: rgba(7,10,14,.58); z-index: 90; pointer-events: none; backdrop-filter: blur(2px); }
+.loading[hidden] { display: none; }
+.loading-card { padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: #111923; box-shadow: var(--shadow); color: #dbe6f0; }
+.toast { position: fixed; right: 14px; bottom: 14px; max-width: min(470px, calc(100vw - 28px)); border: 1px solid var(--line); background: #161f29; color: var(--text); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); z-index: 140; display: none; }
+.toast.show { display: block; }
+.toast.error { border-color: #7b4141; color: #ffe2e2; }
+.kbd { display: inline-block; border: 1px solid #435163; border-bottom-color: #62748a; border-radius: 4px; padding: 0 4px; background: #111922; color: #c8d3df; font-size: 10px; }
+.empty { margin: auto; max-width: 430px; padding: 34px 28px; color: var(--muted); border: 1px dashed #35465a; border-radius: 14px; background: #101720; text-align: center; box-shadow: 0 12px 34px rgba(0,0,0,.18); }
+.empty strong { display: block; color: var(--text); font-size: 17px; margin-bottom: 8px; }
+.empty .tips { font-size: 12px; margin-top: 10px; line-height: 1.6; }
+
+@media (max-width:1180px) { .brand-sub, .session-hint { display: none; } .topbar { grid-template-columns: auto 1fr auto; } .global-tools { justify-self: center; } .pane-toolbar { gap: 4px; } .tool-group { gap: 1px; } .tool-group button { padding-inline: 5px; } .file-button { max-width: 220px; } }
+@media (max-width:850px) { .global-tools button span { display: none; } .file-button { max-width: 150px; } .zoom-label { display: none; } .pane-toolbar { padding-inline: 5px; } .page-plane { padding-inline: 8px; } .history-drawer { width: 94vw; } }
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <!-- LEFT: outer -> inner -->
-    <div class="sidebar leftbar">
-      <button id="openLeft" title="打开左侧 PDF">左 PDF</button>
-      <div class="filename" id="leftName">左侧未打开文件</div>
-
-      <div class="pagegroup">
-        <button data-nav="prev" data-side="left" title="上一页">‹</button>
-        <input id="leftPage" value="0" inputmode="numeric" aria-label="左侧页码">
-        <span id="leftTotal">/ 0</span>
-        <button data-nav="next" data-side="left" title="下一页">›</button>
-      </div>
-
-      <div class="zoomgroup">
-        <button data-zoom="out" data-side="left" title="左侧缩小">−</button>
-        <button class="zoomvalue" id="leftZoom" data-zoom="reset" data-side="left" title="左侧恢复 100%">100%</button>
-        <button data-zoom="in" data-side="left" title="左侧放大">＋</button>
-        <button data-zoom="fit" data-side="left" title="左侧适合宽度">适宽</button>
+    <div class="brand">
+      <div class="brand-mark">DP</div>
+      <div class="brand-copy">
+        <div class="brand-title">双语 PDF 工作台</div>
+        <div class="brand-sub">极致重构版 · 原子渲染 · 完美拖拽缩放</div>
       </div>
     </div>
 
-    <!-- GLOBAL -->
-    <div class="centerbar">
-      <button id="syncScroll" aria-pressed="false">同步滚动</button>
-      <button id="syncPage" aria-pressed="false">同步页码</button>
-      <button id="syncZoom" aria-pressed="false">联动缩放</button>
+    <div class="global-tools" aria-label="联动设置">
+      <button id="syncScroll" aria-pressed="true" title="按页内位置同步滚动">↕ <span>滚动</span></button>
+      <button id="syncPage" aria-pressed="true" title="翻页时同步页码">⇄ <span>页码</span></button>
+      <button id="syncZoom" aria-pressed="false" title="缩放联动">⌕ <span>缩放</span></button>
+      <button id="syncSelection" aria-pressed="true" title="将一侧文字选择映射到另一侧">▤ <span>选中</span></button>
     </div>
 
-    <!-- RIGHT: inner -> outer, mirror -->
-    <div class="sidebar rightbar">
-      <div class="zoomgroup">
-        <button data-zoom="fit" data-side="right" title="右侧适合宽度">适宽</button>
-        <button data-zoom="out" data-side="right" title="右侧缩小">−</button>
-        <button class="zoomvalue" id="rightZoom" data-zoom="reset" data-side="right" title="右侧恢复 100%">100%</button>
-        <button data-zoom="in" data-side="right" title="右侧放大">＋</button>
-      </div>
-
-      <div class="pagegroup">
-        <button data-nav="prev" data-side="right" title="上一页">‹</button>
-        <input id="rightPage" value="0" inputmode="numeric" aria-label="右侧页码">
-        <span id="rightTotal">/ 0</span>
-        <button data-nav="next" data-side="right" title="下一页">›</button>
-      </div>
-
-      <div class="filename" id="rightName">右侧未打开文件</div>
-      <button id="openRight" title="打开右侧 PDF">右 PDF</button>
+    <div class="top-actions">
+      <span class="session-hint" id="sessionHint">状态会自动保存</span>
+      <button id="historyBtn" title="打开历史记录">历史</button>
     </div>
   </header>
 
   <main class="main" id="main">
-    <section class="pane">
+    <section class="pane" id="leftPane" data-side="left">
+      <div class="pane-toolbar">
+        <button class="file-button primary" id="openLeft" title="打开左侧 PDF">
+          <span class="file-dot"></span><span class="file-label" id="leftName">打开左侧 PDF</span>
+        </button>
+        <div class="toolbar-spacer"></div>
+        <div class="tool-group" aria-label="左侧页码">
+          <button class="icon-btn" data-nav="prev" data-side="left" title="上一页">‹</button>
+          <input class="page-input" id="leftPage" value="0" inputmode="numeric" aria-label="左侧页码">
+          <span class="counter" id="leftTotal">/ 0</span>
+          <button class="icon-btn" data-nav="next" data-side="left" title="下一页">›</button>
+        </div>
+        <div class="tool-group" aria-label="左侧缩放">
+          <button class="icon-btn" data-zoom="out" data-side="left" title="缩小">−</button>
+          <span class="zoom-label" id="leftZoom">100%</span>
+          <button class="icon-btn" data-zoom="in" data-side="left" title="放大">＋</button>
+          <button data-zoom="fit" data-side="left" title="适合宽度">适宽</button>
+          <button data-zoom="reset" data-side="left" title="100%">1:1</button>
+        </div>
+      </div>
       <div class="viewer" id="leftViewer"><div class="pages" id="leftPages"></div></div>
       <div class="status" id="leftStatus"></div>
     </section>
-    <div class="divider" id="divider"></div>
-    <section class="pane">
+
+    <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="调整左右宽度"></div>
+
+    <section class="pane" id="rightPane" data-side="right">
+      <div class="pane-toolbar">
+        <button class="file-button primary" id="openRight" title="打开右侧 PDF">
+          <span class="file-dot"></span><span class="file-label" id="rightName">打开右侧 PDF</span>
+        </button>
+        <div class="toolbar-spacer"></div>
+        <div class="tool-group" aria-label="右侧页码">
+          <button class="icon-btn" data-nav="prev" data-side="right" title="上一页">‹</button>
+          <input class="page-input" id="rightPage" value="0" inputmode="numeric" aria-label="右侧页码">
+          <span class="counter" id="rightTotal">/ 0</span>
+          <button class="icon-btn" data-nav="next" data-side="right" title="下一页">›</button>
+        </div>
+        <div class="tool-group" aria-label="右侧缩放">
+          <button class="icon-btn" data-zoom="out" data-side="right" title="缩小">−</button>
+          <span class="zoom-label" id="rightZoom">100%</span>
+          <button class="icon-btn" data-zoom="in" data-side="right" title="放大">＋</button>
+          <button data-zoom="fit" data-side="right" title="适合宽度">适宽</button>
+          <button data-zoom="reset" data-side="right" title="100%">1:1</button>
+        </div>
+      </div>
       <div class="viewer" id="rightViewer"><div class="pages" id="rightPages"></div></div>
       <div class="status" id="rightStatus"></div>
     </section>
@@ -285,69 +239,200 @@ input:focus{border-color:var(--accent)}
 
 <input id="leftFile" type="file" accept="application/pdf,.pdf" hidden>
 <input id="rightFile" type="file" accept="application/pdf,.pdf" hidden>
-<div class="loading" id="loading" hidden>正在解析 PDF…</div>
+
+<div class="selection-tools" id="selectionTools" hidden>
+  <span class="selection-state" id="selectionState">已同步选中</span>
+  <button id="copySource">复制</button>
+  <button id="copyBilingual">复制双语</button>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="history-drawer" id="historyDrawer" aria-label="历史记录">
+  <div class="drawer-head">
+    <strong>历史记录</strong>
+    <span class="spacer"></span>
+    <button id="closeHistory">关闭</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+  <div class="drawer-foot">
+    数据保存至 IndexedDB；支持断点续读。
+  </div>
+</aside>
+
+<div class="loading" id="loading" hidden><div class="loading-card">正在解析 PDF…</div></div>
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs";
 
 const $ = s => document.querySelector(s);
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const nextFrame = () => new Promise(r => requestAnimationFrame(r));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const CFG = Object.freeze({
-  MIN_SCALE: 0.30,
-  MAX_SCALE: 5.00,
-  DEFAULT_SCALE: 1.00,
+  MIN_SCALE: .25,
+  MAX_SCALE: 6,
+  DEFAULT_SCALE: 1,
   ZOOM_STEP: 1.15,
-  DPR_CAP: 2.0,
-  IO_MARGIN: "1400px 0px",
-  RELEASE_DISTANCE_VIEWPORTS: 4,
-  MAX_RENDER_JOBS: Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) >> 1)),
-  BUILD_BATCH: 32
+  DPR_CAP: 1.5,
+  FAST_RENDER_SCALE_CAP: 1.75,
+  SHARP_RENDER_SCALE_CAP: 3.2,
+  FAST_CANVAS_PIXELS: 2_600_000,
+  SHARP_CANVAS_PIXELS: 6_000_000,
+  CANVAS_MEMORY_BUDGET: 134_217_728, // 128 MiB per pane
+  WHEEL_ZOOM_SETTLE_MS: 110,
+  SHARP_IDLE_MS: 260,
+  TEXT_IDLE_MS: 180,
+  RENDER_OVERSCAN_VIEWPORTS: .8,
+  MAX_RENDER_JOBS: Math.max(1, Math.min(2, Math.floor((navigator.hardwareConcurrency || 4) / 3))),
+  BUILD_BATCH: 100,
+  TEXT_CACHE_PAGES: 36,
+  HISTORY_LIMIT: 12,
+  SETTINGS_KEY: "dualpdf:settings:v5",
+  SESSION_KEY: "dualpdf:last-session:v5",
+  DB_NAME: "dualpdf-enterprise-v5",
+  DB_VERSION: 1
 });
 
+const defaultSettings = { syncScroll: true, syncPage: true, syncZoom: false, syncSelection: true, splitRatio: .5 };
+
+function loadSettings() {
+  try { return { ...defaultSettings, ...JSON.parse(localStorage.getItem(CFG.SETTINGS_KEY) || "{}") } }
+  catch { return { ...defaultSettings } }
+}
+
 const appState = {
-  activeSide: "left",
-  syncScroll: false,
-  syncPage: false,
-  syncZoom: false,
-  scrollLock: false
+  activeSide: "left", scrollLock: false, spaceDown: false, ctrlDown: false,
+  selectionToken: 0, lastSelection: null, ...loadSettings()
 };
 
+function persistSettings() {
+  const out = { syncScroll: appState.syncScroll, syncPage: appState.syncPage, syncZoom: appState.syncZoom, syncSelection: appState.syncSelection, splitRatio: appState.splitRatio };
+  localStorage.setItem(CFG.SETTINGS_KEY, JSON.stringify(out));
+}
+
+function formatBytes(n) {
+  const units = ["B", "KB", "MB", "GB"]; let v = n, i = 0;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }
+  return `${i === 0 || v >= 10 ? v.toFixed(0) : v.toFixed(1)} ${units[i]}`;
+}
+
+function formatTime(ts) {
+  if (!ts) return "";
+  try { return new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(ts)) }
+  catch { return new Date(ts).toLocaleString() }
+}
+
+let loadingCount = 0;
+function setLoading(v) {
+  loadingCount = Math.max(0, loadingCount + (v ? 1 : -1));
+  $("#loading").hidden = loadingCount === 0;
+}
+
+let toastTimer = 0;
+function toast(msg, error = false) {
+  const el = $("#toast"); el.textContent = msg; el.className = `toast show${error ? " error" : ""}`;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = "toast", 3200);
+}
+
 class PriorityRenderQueue {
-  constructor(limit){
-    this.limit = limit;
-    this.active = 0;
-    this.jobs = [];
-    this.serial = 0;
-  }
-  add(fn, priority=0){
-    return new Promise((resolve,reject)=>{
-      this.jobs.push({fn,priority,resolve,reject,serial:this.serial++});
-      this.jobs.sort((a,b)=>b.priority-a.priority || a.serial-b.serial);
+  constructor(limit) { this.limit = limit; this.active = 0; this.jobs = []; this.serial = 0 }
+  add(fn, priority = 0) {
+    return new Promise((resolve, reject) => {
+      this.jobs.push({ fn, priority, resolve, reject, serial: this.serial++ });
+      this.jobs.sort((a, b) => b.priority - a.priority || a.serial - b.serial);
       this.pump();
     });
   }
-  pump(){
-    while(this.active < this.limit && this.jobs.length){
-      const item = this.jobs.shift();
-      this.active++;
-      Promise.resolve()
-        .then(item.fn)
-        .then(item.resolve,item.reject)
-        .finally(()=>{ this.active--; this.pump(); });
+  pump() {
+    while (this.active < this.limit && this.jobs.length) {
+      const item = this.jobs.shift(); this.active++;
+      Promise.resolve().then(item.fn).then(item.resolve, item.reject).finally(() => { this.active--; this.pump() });
     }
   }
 }
 const renderQueue = new PriorityRenderQueue(CFG.MAX_RENDER_JOBS);
 
+class LruTextCache {
+  constructor(limit) { this.limit = limit; this.map = new Map() }
+  get(k) { if (!this.map.has(k)) return null; const v = this.map.get(k); this.map.delete(k); this.map.set(k, v); return v; }
+  set(k, v) { if (this.map.has(k)) this.map.delete(k); this.map.set(k, v); while (this.map.size > this.limit) this.map.delete(this.map.keys().next().value); }
+  clear() { this.map.clear() }
+}
+
+let dbPromise = null;
+function openDb() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(CFG.DB_NAME, CFG.DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains("docs")) { const s = db.createObjectStore("docs", { keyPath: "id" }); s.createIndex("lastOpened", "lastOpened"); }
+      if (!db.objectStoreNames.contains("views")) db.createObjectStore("views", { keyPath: "key" });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbPromise;
+}
+
+async function idb(store, mode, fn) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, mode); const os = tx.objectStore(store);
+    let result; try { result = fn(os) } catch (err) { reject(err); return }
+    tx.oncomplete = () => resolve(result?.result ?? result);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error("IndexedDB transaction aborted"));
+  });
+}
+
+async function dbGetDoc(id) { return id ? await idb("docs", "readonly", s => s.get(id)) : null }
+async function dbPutDoc(rec) { return idb("docs", "readwrite", s => s.put(rec)) }
+async function dbGetDocs() { const docs = await idb("docs", "readonly", s => s.getAll()); return (docs || []).sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0)); }
+async function dbDeleteDoc(id) {
+  const db = await openDb();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(["docs", "views"], "readwrite");
+    tx.objectStore("docs").delete(id); tx.objectStore("views").delete(`${id}:left`); tx.objectStore("views").delete(`${id}:right`);
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+  });
+}
+async function dbGetView(id, side) { return id ? await idb("views", "readonly", s => s.get(`${id}:${side}`)) : null }
+async function dbPutView(rec) { return idb("views", "readwrite", s => s.put(rec)) }
+
+async function makeDocId(file) {
+  const head = new Uint8Array(await file.slice(0, Math.min(file.size, 65536)).arrayBuffer());
+  const meta = new TextEncoder().encode(`${file.name}\n${file.size}\n${file.lastModified || 0}\n`);
+  const rawBytes = new Uint8Array(meta.length + head.length); rawBytes.set(meta); rawBytes.set(head, meta.length);
+  if (crypto?.subtle) {
+    const buf = await crypto.subtle.digest("SHA-256", rawBytes);
+    return [...new Uint8Array(buf)].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  let h = 2166136261; for (const c of rawBytes) { h ^= c; h = Math.imul(h, 16777619) }
+  return `f${(h >>> 0).toString(16)}`;
+}
+
+function getSession() { try { return JSON.parse(localStorage.getItem(CFG.SESSION_KEY) || "{}") } catch { return {} } }
+function setSessionSide(side, id) { const s = getSession(); s[side] = id || null; localStorage.setItem(CFG.SESSION_KEY, JSON.stringify(s)); }
+
+async function trimHistory() {
+  try {
+    const docs = await dbGetDocs(); if (docs.length <= CFG.HISTORY_LIMIT) return;
+    const session = getSession(); const keep = new Set([session.left, session.right].filter(Boolean));
+    const victims = docs.slice(CFG.HISTORY_LIMIT).filter(d => !keep.has(d.id));
+    for (const d of victims) await dbDeleteDoc(d.id);
+  } catch (err) { console.warn("trim history failed", err) }
+}
+
 class PdfPane {
-  constructor(side){
+  constructor(side) {
     this.side = side;
     this.otherSide = side === "left" ? "right" : "left";
-
+    this.paneEl = $(`#${side}Pane`);
     this.viewer = $(`#${side}Viewer`);
     this.pagesEl = $(`#${side}Pages`);
     this.nameEl = $(`#${side}Name`);
@@ -357,550 +442,1253 @@ class PdfPane {
     this.statusEl = $(`#${side}Status`);
 
     this.file = null;
+    this.docId = null;
     this.pdf = null;
     this.loadingTask = null;
     this.generation = 0;
-    this.scale = CFG.DEFAULT_SCALE;
+
+    this.scale = CFG.DEFAULT_SCALE;          
+    this.layoutScale = CFG.DEFAULT_SCALE;    
+    this.zoomMode = "custom";
     this.currentPage = 0;
+
     this.models = [];
-    this.io = null;
+    this.plane = null;
+    this.baseSurfaceW = 0;
+    this.baseSurfaceH = 0;
+    this.planeOffsetX = 0;
+
     this.scrollRaf = 0;
     this.resizeRaf = 0;
+    this.viewSaveTimer = 0;
+    this.sharpTimer = 0;
+    this.textIdleSerial = 0;
 
-    this.viewer.addEventListener("pointerdown", ()=> appState.activeSide = side);
-    this.viewer.addEventListener("scroll", ()=>this.onScroll(), {passive:true});
-    this.viewer.addEventListener("wheel", e=>this.onWheel(e), {passive:false});
-    this.pageInput.addEventListener("change", ()=>this.goToPage(+this.pageInput.value || 1, true));
-    this.pageInput.addEventListener("keydown", e=>{
-      if(e.key==="Enter"){ e.preventDefault(); this.pageInput.blur(); }
+    this.textCache = new LruTextCache(CFG.TEXT_CACHE_PAGES);
+    this.panState = null;
+
+    this.zoomPreviewActive = false;
+    this.wheelZoomTargetScale = this.scale;
+    this.wheelZoomTimer = 0;
+
+    // 零漂移数学矩阵状态
+    this.zoomAnchor = null;
+    this.zoomBaseMx = 0;
+    this.zoomBaseMy = 0;
+    this.zoomBaseDocX = 0;
+    this.zoomBaseDocY = 0;
+
+    this.canvasBytes = 0;
+
+    this.viewer.addEventListener("pointerdown", e => this.onPointerDown(e));
+    this.viewer.addEventListener("pointermove", e => this.onPointerMove(e));
+    this.viewer.addEventListener("pointerup", e => this.onPointerUp(e));
+    this.viewer.addEventListener("pointercancel", e => this.onPointerUp(e));
+    this.viewer.addEventListener("scroll", () => this.onScroll(), { passive: true });
+    this.viewer.addEventListener("wheel", e => this.onWheel(e), { passive: false });
+    this.pageInput.addEventListener("change", () => this.goToPage(+this.pageInput.value || 1, true));
+    this.pageInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); this.pageInput.blur(); }
     });
 
     this.installDrop();
     this.showEmpty();
   }
 
-  other(){ return panes[this.otherSide]; }
+  other() { return panes[this.otherSide] }
 
-  showEmpty(){
-    this.pagesEl.innerHTML = `<div class="empty">
-      <strong>${this.side==="left"?"打开左侧 PDF":"打开右侧 PDF"}</strong>
-      点击顶部按钮，或将 PDF 拖入这一侧。<br>
-      文件由浏览器本地读取，本页面不包含上传接口。
-    </div>`;
+  showEmpty() {
+    this.pagesEl.classList.add("empty-surface");
+    this.pagesEl.style.cssText = "";
+    this.pagesEl.innerHTML = `<div class="empty"><strong>${this.side === "left" ? "打开左侧 PDF" : "打开右侧 PDF"}</strong>点击顶部文件按钮，或把 PDF 直接拖到这一侧。<div class="tips">原子渲染已激活：零闪烁、增量平滑拖动、纯 GPU 硬件缩放。<br>按住 <span class="kbd">Ctrl</span> + 滚轮实现无极丝滑缩放。</div></div>`;
     this.statusEl.textContent = "";
+    this.paneEl.classList.remove("loaded");
   }
 
-  installDrop(){
-    let depth=0;
-    this.viewer.addEventListener("dragenter",e=>{
-      e.preventDefault(); depth++; this.viewer.classList.add("dragging");
+  installDrop() {
+    let depth = 0;
+    this.viewer.addEventListener("dragenter", e => { e.preventDefault(); depth++; this.viewer.classList.add("drag-over") });
+    this.viewer.addEventListener("dragover", e => e.preventDefault());
+    this.viewer.addEventListener("dragleave", () => {
+      depth = Math.max(0, depth - 1);
+      if (!depth) this.viewer.classList.remove("drag-over");
     });
-    this.viewer.addEventListener("dragover",e=>e.preventDefault());
-    this.viewer.addEventListener("dragleave",()=>{
-      depth=Math.max(0,depth-1);
-      if(depth===0) this.viewer.classList.remove("dragging");
-    });
-    this.viewer.addEventListener("drop",e=>{
-      e.preventDefault(); depth=0; this.viewer.classList.remove("dragging");
-      const f=[...e.dataTransfer.files].find(x=>x.type==="application/pdf" || /\.pdf$/i.test(x.name));
-      if(f) this.loadFile(f);
+    this.viewer.addEventListener("drop", e => {
+      e.preventDefault();
+      depth = 0;
+      this.viewer.classList.remove("drag-over");
+      const f = [...e.dataTransfer.files].find(x => x.type === "application/pdf" || /\.pdf$/i.test(x.name));
+      if (f) this.loadFile(f);
     });
   }
 
-  async loadFile(file){
-    if(!file) return;
+  onPointerDown(e) {
+    appState.activeSide = this.side;
+    const shouldPan = e.button === 1 || (e.button === 0 && (e.ctrlKey || appState.ctrlDown || appState.spaceDown));
+    if (!shouldPan) return;
+
+    if (this.zoomPreviewActive) this.commitWheelZoom();
+    e.preventDefault();
+
+    this.panState = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY
+    };
+    try { this.viewer.setPointerCapture(e.pointerId) } catch {}
+    this.viewer.classList.add("panning");
+    this.cancelSharpRender();
+  }
+
+  // 终极拖动修复：使用 Delta 增量计算，摆脱锁定坐标断链问题，丝滑跟手
+  onPointerMove(e) {
+    if (!this.panState || this.panState.id !== e.pointerId) return;
+    e.preventDefault();
+
+    const dx = e.clientX - this.panState.x;
+    const dy = e.clientY - this.panState.y;
+
+    this.viewer.scrollLeft -= dx;
+    this.viewer.scrollTop -= dy;
+
+    this.panState.x = e.clientX;
+    this.panState.y = e.clientY;
+  }
+
+  onPointerUp(e) {
+    if (!this.panState || this.panState.id !== e.pointerId) return;
+    try { this.viewer.releasePointerCapture(e.pointerId) } catch {}
+    this.panState = null;
+    this.viewer.classList.remove("panning");
+    this.scheduleSharpRender();
+  }
+
+  async loadFile(file, { docId = null, restoreState = null, persistBlob = true, silent = false } = {}) {
+    if (!file) return;
     const generation = ++this.generation;
     appState.activeSide = this.side;
+    setLoading(true);
 
-    try{
+    try {
       await this.destroyDocument(false);
-
-      this.file=file;
-      this.nameEl.textContent=file.name;
-      this.nameEl.title=file.name;
+      this.file = file;
+      this.docId = docId || await makeDocId(file);
+      this.nameEl.textContent = file.name;
+      this.nameEl.title = file.name;
+      this.paneEl.classList.add("loaded");
       this.setStatus(`读取 ${formatBytes(file.size)}…`);
-      setLoading(true);
+
+      if (persistBlob) {
+        try {
+          await dbPutDoc({
+            id: this.docId, name: file.name, size: file.size,
+            lastModified: file.lastModified || 0,
+            type: file.type || "application/pdf",
+            blob: file.slice(0, file.size, file.type || "application/pdf"),
+            lastOpened: Date.now()
+          });
+          trimHistory();
+        } catch (err) {}
+      } else {
+        try {
+          const rec = await dbGetDoc(this.docId);
+          if (rec) { rec.lastOpened = Date.now(); await dbPutDoc(rec); }
+        } catch {}
+      }
 
       const data = new Uint8Array(await file.arrayBuffer());
-      if(generation!==this.generation) return;
+      if (generation !== this.generation) return;
 
       this.loadingTask = pdfjsLib.getDocument({
         data,
-        isEvalSupported:false,
-        stopAtErrors:false,
-        useWorkerFetch:true
+        isEvalSupported: false,
+        stopAtErrors: false,
+        useWorkerFetch: true
       });
       this.pdf = await this.loadingTask.promise;
-      if(generation!==this.generation) return;
+      if (generation !== this.generation) return;
 
-      this.currentPage = this.pdf.numPages ? 1 : 0;
+      const saved = restoreState || await dbGetView(this.docId, this.side);
+      this.scale = clamp(Number(saved?.scale) || CFG.DEFAULT_SCALE, CFG.MIN_SCALE, CFG.MAX_SCALE);
+      this.layoutScale = this.scale;
+      this.wheelZoomTargetScale = this.scale;
+      this.zoomMode = saved?.zoomMode || "custom";
+      this.currentPage = this.pdf.numPages ? clamp(Number(saved?.currentPage) || 1, 1, this.pdf.numPages) : 0;
       this.pageInput.value = String(this.currentPage);
       this.totalEl.textContent = `/ ${this.pdf.numPages}`;
-      this.scale = CFG.DEFAULT_SCALE;
       this.updateZoomUI();
 
       await this.buildModels(generation);
-      if(generation!==this.generation) return;
+      if (generation !== this.generation) return;
 
-      this.installIntersectionObserver();
-      this.observeAll();
+      if (this.zoomMode === "fit-width") this.fitWidth({ propagate: false, persist: false });
+      else this.updateSurfaceGeometry(this.layoutScale);
+
+      await nextFrame();
+      if (saved) {
+        this.viewer.scrollTop = Math.max(0, Number(saved.scrollTop) || 0);
+        this.viewer.scrollLeft = Math.max(0, Number(saved.scrollLeft) || 0);
+      } else if (this.currentPage > 1) {
+        this.goToPage(this.currentPage, false);
+      }
+
       this.updateCurrentPage();
-      this.renderNearViewport();
+      this.renderNearViewport({ quality: "fast" });
+      this.scheduleSharpRender();
 
       this.setStatus(`${this.pdf.numPages} 页 · ${formatBytes(file.size)}`);
-      toast(`${this.side==="left"?"左侧":"右侧"}已打开：${file.name}`);
-    }catch(err){
+      setSessionSide(this.side, this.docId);
+      if (!silent) toast(`${this.side === "left" ? "左侧" : "右侧"}已打开：${file.name}`);
+      refreshSessionHint();
+      compareDocumentPair();
+      this.schedulePersistView();
+    } catch (err) {
       console.error(err);
-      this.pdf=null;
-      this.pageInput.value="0";
-      this.totalEl.textContent="/ 0";
+      this.pdf = null;
+      this.pageInput.value = "0";
+      this.totalEl.textContent = "/ 0";
       this.setStatus("加载失败");
       this.showEmpty();
-      toast(`无法打开 ${file.name}：${err?.message || err}`, true);
-    }finally{
+      if (!silent) toast(`无法打开：${err?.message || err}`, true);
+    } finally {
       setLoading(false);
     }
   }
 
-  async buildModels(generation){
+  async buildModels(generation) {
+    this.pagesEl.classList.remove("empty-surface");
     this.pagesEl.replaceChildren();
     this.models = new Array(this.pdf.numPages);
-    let frag=document.createDocumentFragment();
+    this.canvasBytes = 0;
 
-    for(let n=1;n<=this.pdf.numPages;n++){
-      if(generation!==this.generation) return;
+    let defaultW = 612, defaultH = 792;
+    let firstPage = null;
+    if (this.pdf.numPages) {
+      firstPage = await this.pdf.getPage(1);
+      const base = firstPage.getViewport({ scale: 1 });
+      defaultW = base.width;
+      defaultH = base.height;
+    }
 
-      const page = await this.pdf.getPage(n);
-      const base = page.getViewport({scale:1});
-      const el=document.createElement("div");
-      el.className="page";
-      el.dataset.page=String(n);
+    const plane = document.createElement("div");
+    plane.className = "page-plane";
+    this.plane = plane;
 
-      const ph=document.createElement("div");
-      ph.className="placeholder";
-      ph.textContent=`第 ${n} 页`;
-      el.appendChild(ph);
+    let frag = document.createDocumentFragment();
+    for (let n = 1; n <= this.pdf.numPages; n++) {
+      if (generation !== this.generation) return;
 
-      const model={
-        n,
-        baseW:base.width,
-        baseH:base.height,
-        page,
-        el,
-        canvas:null,
-        renderTask:null,
-        rendering:false,
-        renderedScale:0,
-        ticket:0
-      };
-      this.models[n-1]=model;
-      this.applyPageSize(model);
+      const el = document.createElement("div");
+      el.className = "page";
+      el.dataset.page = String(n);
+      el.style.width = `${defaultW}px`;
+      el.style.height = `${defaultH}px`;
+      el.style.containIntrinsicSize = `${defaultW}px ${defaultH}px`;
+
+      const canvas = document.createElement("canvas");
+      canvas.className = "pdf-bitmap";
+      canvas.width = 1;
+      canvas.height = 1;
+
+      const textLayerEl = document.createElement("div");
+      textLayerEl.className = "textLayer";
+      textLayerEl.style.setProperty("--total-scale-factor", "1");
+
+      const ph = document.createElement("div");
+      ph.className = "placeholder";
+      ph.textContent = `第 ${n} 页`;
+
+      const badge = document.createElement("div");
+      badge.className = "page-no";
+      badge.textContent = String(n);
+
+      el.append(canvas, textLayerEl, ph, badge);
       frag.appendChild(el);
 
-      if(n % CFG.BUILD_BATCH===0){
-        this.pagesEl.appendChild(frag);
-        frag=document.createDocumentFragment();
+      this.models[n - 1] = {
+        n,
+        baseW: defaultW,
+        baseH: defaultH,
+        baseTop: 0,
+        page: n === 1 ? firstPage : null,
+        pageReady: n === 1,
+        el,
+        canvas,
+        canvasBytes: 0,
+        renderedScale: 0,
+        pendingScale: 0,
+        lastUsed: 0,
+        renderTask: null,
+        rendering: false,
+        ticket: 0,
+        textLayerEl,
+        textLayer: null,
+        textReady: false,
+        textRendering: false,
+        textTicket: 0
+      };
+
+      if (n % CFG.BUILD_BATCH === 0) {
+        plane.appendChild(frag);
+        frag = document.createDocumentFragment();
         await nextFrame();
       }
     }
-    this.pagesEl.appendChild(frag);
+    plane.appendChild(frag);
+    this.pagesEl.appendChild(plane);
+    this.recomputeBaseGeometry();
   }
 
-  applyPageSize(model){
-    model.el.style.width=`${model.baseW*this.scale}px`;
-    model.el.style.height=`${model.baseH*this.scale}px`;
+  recomputeBaseGeometry() {
+    if (!this.models.length || !this.plane) return;
+
+    const PAD_X = 18, PAD_TOP = 16, PAD_BOTTOM = 80, GAP = 14;
+    let maxW = 1, y = PAD_TOP;
+
+    for (const m of this.models) {
+      m.baseTop = y;
+      maxW = Math.max(maxW, m.baseW);
+      y += m.baseH + GAP;
+    }
+    if (this.models.length) y -= GAP;
+
+    this.baseSurfaceW = maxW + PAD_X * 2;
+    this.baseSurfaceH = Math.max(1, y + PAD_BOTTOM);
+
+    this.plane.style.width = `${this.baseSurfaceW}px`;
+    this.plane.style.height = `${this.baseSurfaceH}px`;
+    this.updateSurfaceGeometry(this.layoutScale);
   }
 
-  installIntersectionObserver(){
-    this.io?.disconnect();
-    this.io = new IntersectionObserver(entries=>{
-      const vr=this.viewer.getBoundingClientRect();
-      const center=vr.top+vr.height/2;
+  updateSurfaceGeometry(scale = this.layoutScale) {
+    if (!this.plane) return;
+    const visualW = this.baseSurfaceW * scale;
+    const visualH = this.baseSurfaceH * scale;
+    const surfaceW = Math.max(this.viewer.clientWidth, visualW);
+    const surfaceH = Math.max(this.viewer.clientHeight, visualH);
 
-      for(const entry of entries){
-        const m=this.models[Number(entry.target.dataset.page)-1];
-        if(!m) continue;
-
-        if(entry.isIntersecting){
-          const r=entry.boundingClientRect;
-          const distance=Math.abs((r.top+r.bottom)/2-center);
-          const priority=Math.max(1, 100000-Math.round(distance));
-          this.ensureRendered(m,priority);
-        }else{
-          this.releaseIfFar(m);
-        }
-      }
-    },{
-      root:this.viewer,
-      rootMargin:CFG.IO_MARGIN,
-      threshold:0.01
-    });
+    this.planeOffsetX = Math.max(0, (surfaceW - visualW) / 2);
+    this.pagesEl.style.width = `${surfaceW}px`;
+    this.pagesEl.style.height = `${surfaceH}px`;
+    this.plane.style.left = `${this.planeOffsetX}px`;
+    this.plane.style.transform = `scale(${scale})`;
   }
 
-  observeAll(){
-    for(const m of this.models) this.io.observe(m.el);
+  async ensurePage(model) {
+    if (model.page) return model.page;
+
+    const page = await this.pdf.getPage(model.n);
+    model.page = page;
+    const base = page.getViewport({ scale: 1 });
+
+    if (Math.abs(base.width - model.baseW) > .1 || Math.abs(base.height - model.baseH) > .1) {
+      model.baseW = base.width;
+      model.baseH = base.height;
+      model.el.style.width = `${base.width}px`;
+      model.el.style.height = `${base.height}px`;
+      model.el.style.containIntrinsicSize = `${base.width}px ${base.height}px`;
+      this.recomputeBaseGeometry();
+    }
+
+    model.pageReady = true;
+    return page;
   }
 
-  async ensureRendered(model,priority=1){
-    if(!this.pdf || model.rendering) return;
-    if(model.canvas && Math.abs(model.renderedScale-this.scale)<0.0001) return;
+  async getTextContent(model) {
+    const cached = this.textCache.get(model.n);
+    if (cached) return cached;
+    const page = await this.ensurePage(model);
+    const tc = await page.getTextContent();
+    this.textCache.set(model.n, tc);
+    return tc;
+  }
 
-    const generation=this.generation;
-    const scale=this.scale;
-    const ticket=++model.ticket;
-    model.rendering=true;
+  desiredRenderScale(model, quality = "fast") {
+    const zoom = this.layoutScale;
+    const dpr = Math.min(window.devicePixelRatio || 1, CFG.DPR_CAP);
+    const cap = quality === "sharp" ? CFG.SHARP_RENDER_SCALE_CAP : CFG.FAST_RENDER_SCALE_CAP;
+    const pixelBudget = quality === "sharp" ? CFG.SHARP_CANVAS_PIXELS : CFG.FAST_CANVAS_PIXELS;
 
-    try{
-      await renderQueue.add(async()=>{
-        if(generation!==this.generation || ticket!==model.ticket || !model.el.isConnected) return;
+    let target = Math.min(zoom * dpr, cap);
+    const maxByPixels = Math.sqrt(pixelBudget / Math.max(1, model.baseW * model.baseH));
+    target = Math.min(target, maxByPixels);
+    return clamp(target, .3, CFG.SHARP_RENDER_SCALE_CAP);
+  }
 
-        if(model.renderTask){
-          try{model.renderTask.cancel()}catch{}
-        }
+  // 终极原子渲染修复：绝对不替换 DOM 节点，彻底杜绝闪烁 (Zero-Flash)
+  async ensureRendered(model, priority = 1, quality = "fast") {
+    if (!this.pdf || !model?.el?.isConnected) return;
 
-        const cssViewport=model.page.getViewport({scale});
-        const dpr=Math.min(window.devicePixelRatio || 1, CFG.DPR_CAP);
-        const renderViewport=model.page.getViewport({scale:scale*dpr});
+    model.lastUsed = performance.now();
+    const targetScale = this.desiredRenderScale(model, quality);
 
-        let canvas=model.canvas;
-        if(!canvas){
-          canvas=document.createElement("canvas");
-          model.canvas=canvas;
-          model.el.appendChild(canvas);
-        }
+    if (model.renderedScale >= targetScale * .96 && model.canvas?.width > 1) {
+      if (!model.textReady) this.scheduleTextLayer(model);
+      return;
+    }
 
-        canvas.width=Math.max(1,Math.floor(renderViewport.width));
-        canvas.height=Math.max(1,Math.floor(renderViewport.height));
-        canvas.style.width=`${cssViewport.width}px`;
-        canvas.style.height=`${cssViewport.height}px`;
+    if (model.rendering) {
+      if (model.pendingScale >= targetScale * .96) return;
+      model.ticket++;
+      try { model.renderTask?.cancel() } catch {}
+      model.rendering = false;
+      model.renderTask = null;
+    }
 
-        const ctx=canvas.getContext("2d",{alpha:false,desynchronized:true});
-        model.renderTask=model.page.render({
-          canvasContext:ctx,
-          viewport:renderViewport,
-          intent:"display",
-          background:"rgb(255,255,255)"
+    const generation = this.generation;
+    const ticket = ++model.ticket;
+    model.rendering = true;
+    model.pendingScale = targetScale;
+
+    try {
+      await renderQueue.add(async () => {
+        if (generation !== this.generation || ticket !== model.ticket || !model.el.isConnected) return;
+
+        const page = await this.ensurePage(model);
+        if (generation !== this.generation || ticket !== model.ticket) return;
+
+        const renderScale = this.desiredRenderScale(model, quality);
+        model.pendingScale = renderScale;
+        const viewport = page.getViewport({ scale: renderScale });
+
+        // 在完全脱离 DOM 的离屏 Canvas 上绘制
+        const staged = document.createElement("canvas");
+        staged.width = Math.max(1, Math.ceil(viewport.width));
+        staged.height = Math.max(1, Math.ceil(viewport.height));
+        const ctx = staged.getContext("2d", { alpha: false, desynchronized: true });
+
+        const renderTask = page.render({
+          canvasContext: ctx,
+          viewport,
+          intent: "display",
+          background: "rgb(255,255,255)"
         });
+        model.renderTask = renderTask;
 
-        await model.renderTask.promise;
-        if(generation!==this.generation || ticket!==model.ticket) return;
+        await renderTask.promise;
+        if (generation !== this.generation || ticket !== model.ticket || !model.el.isConnected) {
+          staged.width = staged.height = 1;
+          return;
+        }
 
-        model.renderedScale=scale;
-        model.el.querySelector(".placeholder")?.remove();
-      },priority);
-    }catch(err){
-      if(err?.name!=="RenderingCancelledException") console.warn("Render failed",this.side,model.n,err);
-    }finally{
-      model.rendering=false;
-      model.renderTask=null;
-    }
-  }
+        // 使用 rAF 确保在下一帧精准同步覆盖像素，原有 canvas 节点无需重建
+        requestAnimationFrame(() => {
+          model.canvas.width = staged.width;
+          model.canvas.height = staged.height;
+          model.canvas.getContext("2d", { alpha: false }).drawImage(staged, 0, 0);
 
-  releaseIfFar(model){
-    if(!model.canvas) return;
-    const vr=this.viewer.getBoundingClientRect();
-    const r=model.el.getBoundingClientRect();
-    const limit=vr.height*CFG.RELEASE_DISTANCE_VIEWPORTS;
-    const far=(r.bottom < vr.top-limit) || (r.top > vr.bottom+limit);
-    if(!far) return;
+          const oldBytes = model.canvasBytes || 0;
+          model.renderedScale = renderScale;
+          model.canvasBytes = staged.width * staged.height * 4;
+          model.lastUsed = performance.now();
+          this.canvasBytes += model.canvasBytes - oldBytes;
 
-    model.ticket++;
-    try{model.renderTask?.cancel()}catch{}
-    model.renderTask=null;
-    model.rendering=false;
-
-    model.canvas.width=1;
-    model.canvas.height=1;
-    model.canvas.remove();
-    model.canvas=null;
-    model.renderedScale=0;
-
-    if(!model.el.querySelector(".placeholder")){
-      const ph=document.createElement("div");
-      ph.className="placeholder";
-      ph.textContent=`第 ${model.n} 页`;
-      model.el.appendChild(ph);
-    }
-  }
-
-  renderNearViewport(){
-    if(!this.pdf) return;
-    const vr=this.viewer.getBoundingClientRect();
-    const center=vr.top+vr.height/2;
-
-    for(const m of this.models){
-      const r=m.el.getBoundingClientRect();
-      if(r.bottom >= vr.top-1200 && r.top <= vr.bottom+1200){
-        const dist=Math.abs((r.top+r.bottom)/2-center);
-        this.ensureRendered(m,Math.max(1,100000-Math.round(dist)));
+          model.el.querySelector(".placeholder")?.remove();
+          this.scheduleTextLayer(model);
+          this.pruneCanvasMemory();
+        });
+      }, priority);
+    } catch (err) {
+      if (err?.name !== "RenderingCancelledException" && !/cancel/i.test(String(err?.message || ""))) {
+        console.warn("Render failed", this.side, model.n, err);
+      }
+    } finally {
+      if (ticket === model.ticket) {
+        model.rendering = false;
+        model.renderTask = null;
+        model.pendingScale = 0;
       }
     }
   }
 
-  setScale(next,{anchorClientY=null,propagate=true}={}){
-    if(!this.pdf) return;
-    next=clamp(next,CFG.MIN_SCALE,CFG.MAX_SCALE);
-    if(Math.abs(next-this.scale)<0.0001) return;
+  scheduleTextLayer(model) {
+    if (!model || model.textReady || model.textRendering || !model.el.isConnected) return;
+    const serial = ++this.textIdleSerial;
+    const run = () => {
+      if (serial > this.textIdleSerial + 1000000) return;
+      if (!this.modelIntersectsViewport(model, 80)) return;
+      this.ensureTextLayer(model, false);
+    };
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(run, { timeout: CFG.TEXT_IDLE_MS + 220 });
+    } else {
+      setTimeout(run, CFG.TEXT_IDLE_MS);
+    }
+  }
 
-    const oldScale=this.scale;
-    const vr=this.viewer.getBoundingClientRect();
-    const anchorY=anchorClientY ?? (vr.top+vr.height/2);
-    const anchorOffset=anchorY-vr.top;
-    const logicalY=(this.viewer.scrollTop+anchorOffset)/oldScale;
+  async ensureTextLayer(model, force = false) {
+    if (!this.pdf || !model?.el?.isConnected) return;
+    if (model.textReady) return;
+    if (model.textRendering && !force) return;
 
-    this.scale=next;
+    const generation = this.generation;
+    const ticket = ++model.textTicket;
+    model.textRendering = true;
 
-    for(const m of this.models){
-      m.ticket++;
-      try{m.renderTask?.cancel()}catch{}
-      m.renderTask=null;
-      m.rendering=false;
-      m.renderedScale=0;
-      this.applyPageSize(m);
+    try {
+      const page = await this.ensurePage(model);
+      const textContent = await this.getTextContent(model);
+      if (generation !== this.generation || ticket !== model.textTicket || !model.el.isConnected) return;
+
+      const viewport = page.getViewport({ scale: 1 });
+      const staged = document.createElement("div");
+      staged.className = "textLayer";
+      staged.style.setProperty("--total-scale-factor", "1");
+
+      const layer = new pdfjsLib.TextLayer({
+        textContentSource: textContent,
+        container: staged,
+        viewport
+      });
+      await layer.render();
+
+      if (generation !== this.generation || ticket !== model.textTicket || !model.el.isConnected) return;
+
+      model.textLayerEl.replaceWith(staged);
+      try { model.textLayer?.cancel?.() } catch {}
+      model.textLayerEl = staged;
+      model.textLayer = layer;
+      model.textReady = true;
+    } catch (err) {
+      if (!/cancel/i.test(String(err?.message || ""))) console.warn("Text layer failed", this.side, model.n, err);
+    } finally {
+      if (ticket === model.textTicket) model.textRendering = false;
+    }
+  }
+
+  // 缩略图降级：在远距离回收内存时，保留缩略模糊画质，防白屏闪烁
+  pruneCanvasMemory() {
+    if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET) return;
+
+    const visible = new Set(this.modelsInViewport(0).map(m => m.n));
+    const victims = this.models
+      .filter(m => m.canvasBytes > 10000 && !visible.has(m.n) && !m.rendering)
+      .sort((a, b) => a.lastUsed - b.lastUsed);
+
+    for (const m of victims) {
+      if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET * .82) break;
+
+      if (m.canvas.width > 200) {
+        const thumbW = Math.max(1, Math.floor(m.canvas.width / 6));
+        const thumbH = Math.max(1, Math.floor(m.canvas.height / 6));
+        const thumb = document.createElement("canvas");
+        thumb.width = thumbW; thumb.height = thumbH;
+        thumb.getContext("2d", { alpha: false }).drawImage(m.canvas, 0, 0, thumbW, thumbH);
+
+        m.canvas.width = thumbW; m.canvas.height = thumbH;
+        m.canvas.getContext("2d", { alpha: false }).drawImage(thumb, 0, 0);
+
+        const newBytes = thumbW * thumbH * 4;
+        this.canvasBytes -= (m.canvasBytes - newBytes);
+        m.canvasBytes = newBytes;
+        m.renderedScale = 0.1;
+      } else {
+        this.canvasBytes -= m.canvasBytes;
+        m.canvasBytes = 0;
+        m.renderedScale = 0;
+        m.canvas.width = 1; m.canvas.height = 1;
+      }
+      try { m.page?.cleanup?.() } catch {}
+    }
+  }
+
+  releaseIfFar(model) {
+    this.pruneCanvasMemory();
+  }
+
+  modelIndexAtBaseY(y) {
+    if (!this.models.length) return 0;
+    let lo = 0, hi = this.models.length - 1, ans = 0;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const m = this.models[mid];
+      if (y < m.baseTop) hi = mid - 1;
+      else if (y > m.baseTop + m.baseH) { ans = mid; lo = mid + 1; }
+      else return mid;
+    }
+    return clamp(ans, 0, this.models.length - 1);
+  }
+
+  modelIndexAtOffset(y) {
+    return this.modelIndexAtBaseY(y / Math.max(.00001, this.layoutScale));
+  }
+
+  modelsInViewport(overscanPx = 0) {
+    if (!this.models.length) return [];
+    const scale = Math.max(.00001, this.layoutScale);
+    const top = Math.max(0, (this.viewer.scrollTop - overscanPx) / scale);
+    const bottom = (this.viewer.scrollTop + this.viewer.clientHeight + overscanPx) / scale;
+    let i = this.modelIndexAtBaseY(top);
+    const out = [];
+
+    for (; i < this.models.length; i++) {
+      const m = this.models[i];
+      if (m.baseTop > bottom) break;
+      if (m.baseTop + m.baseH >= top) out.push(m);
+    }
+    return out;
+  }
+
+  modelIntersectsViewport(model, overscanPx = 0) {
+    if (!model) return false;
+    const scale = Math.max(.00001, this.layoutScale);
+    const top = Math.max(0, (this.viewer.scrollTop - overscanPx) / scale);
+    const bottom = (this.viewer.scrollTop + this.viewer.clientHeight + overscanPx) / scale;
+    return model.baseTop <= bottom && model.baseTop + model.baseH >= top;
+  }
+
+  renderNearViewport({ quality = "fast", overscan = null } = {}) {
+    if (!this.pdf || !this.models.length || this.zoomPreviewActive) return;
+
+    const margin = overscan ?? this.viewer.clientHeight * CFG.RENDER_OVERSCAN_VIEWPORTS;
+    const models = this.modelsInViewport(margin);
+    const keep = new Set(models.map(m => m.n));
+
+    for (const m of this.models) {
+      if (m.rendering && !keep.has(m.n)) {
+        m.ticket++;
+        try { m.renderTask?.cancel() } catch {}
+        m.renderTask = null;
+        m.rendering = false;
+        m.pendingScale = 0;
+      }
     }
 
+    const centerBase = (this.viewer.scrollTop + this.viewer.clientHeight / 2) / Math.max(.00001, this.layoutScale);
+
+    for (const m of models) {
+      const distance = Math.abs((m.baseTop + m.baseH / 2) - centerBase);
+      const priority = Math.max(1, 200000 - Math.round(distance * 100));
+      this.ensureRendered(m, priority, quality);
+    }
+
+    for (const m of this.modelsInViewport(0)) this.scheduleTextLayer(m);
+  }
+
+  cancelSharpRender() {
+    clearTimeout(this.sharpTimer);
+    this.sharpTimer = 0;
+  }
+
+  scheduleSharpRender() {
+    this.cancelSharpRender();
+    this.sharpTimer = setTimeout(() => {
+      if (!this.pdf || this.zoomPreviewActive || this.panState) return;
+      const visible = this.modelsInViewport(Math.min(220, this.viewer.clientHeight * .18));
+      const centerBase = (this.viewer.scrollTop + this.viewer.clientHeight / 2) / Math.max(.00001, this.layoutScale);
+      for (const m of visible) {
+        const distance = Math.abs((m.baseTop + m.baseH / 2) - centerBase);
+        this.ensureRendered(m, Math.max(1, 300000 - Math.round(distance * 100)), "sharp");
+      }
+    }, CFG.SHARP_IDLE_MS);
+  }
+
+  captureWheelZoomGesture(clientX, clientY) {
+    const vr = this.viewer.getBoundingClientRect();
+    const localX = clamp(clientX - vr.left, 0, vr.width);
+    const localY = clamp(clientY - vr.top, 0, vr.height);
+    const scale = Math.max(.00001, this.layoutScale);
+
+    const docX = this.viewer.scrollLeft + localX;
+    const docY = this.viewer.scrollTop + localY;
+    const baseY = docY / scale;
+    const idx = this.modelIndexAtBaseY(baseY);
+    const model = this.models[idx] || null;
+
+    let rx = .5, ry = .5, hitPage = false;
+    if (model) {
+      const pageLeftBase = (this.baseSurfaceW - model.baseW) / 2;
+      const baseX = (docX - this.planeOffsetX) / scale;
+      rx = (baseX - pageLeftBase) / Math.max(1, model.baseW);
+      ry = (baseY - model.baseTop) / Math.max(1, model.baseH);
+      hitPage = rx >= 0 && rx <= 1 && ry >= 0 && ry <= 1;
+      rx = clamp(rx, 0, 1);
+      ry = clamp(ry, 0, 1);
+    }
+
+    return {
+      clientX, clientY, localX, localY,
+      model: hitPage ? model : null,
+      rx, ry,
+      baseScale: this.layoutScale,
+      scrollLeft: this.viewer.scrollLeft,
+      scrollTop: this.viewer.scrollTop
+    };
+  }
+
+  // 废除耗内存的 ZoomSnapshot 截图！改用顶级 CSS 3D 矩阵变换
+  onWheel(e) {
+    if (!(e.ctrlKey || e.metaKey) || !this.pdf) return;
+    e.preventDefault();
+
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? Math.max(320, this.viewer.clientHeight) : 1;
+    const delta = clamp(e.deltaY * unit, -240, 240);
+    const base = Number.isFinite(this.wheelZoomTargetScale) ? this.wheelZoomTargetScale : this.scale;
+    const nextScale = clamp(base * Math.exp(-delta * .0015), CFG.MIN_SCALE, CFG.MAX_SCALE);
+
+    if (!this.zoomPreviewActive) {
+      this.zoomPreviewActive = true;
+      this.viewer.classList.add("zoom-preview");
+      this.cancelSharpRender();
+
+      const vr = this.viewer.getBoundingClientRect();
+      this.zoomBaseMx = e.clientX - vr.left;
+      this.zoomBaseMy = e.clientY - vr.top;
+      this.zoomBaseDocX = this.viewer.scrollLeft + this.zoomBaseMx;
+      this.zoomBaseDocY = this.viewer.scrollTop + this.zoomBaseMy;
+      this.zoomAnchor = this.captureWheelZoomGesture(e.clientX, e.clientY);
+    }
+
+    // 纯合成器平移算法，完全避免 transform-origin 的漂移和跳跃
+    const ratio = nextScale / this.layoutScale;
+    const planeX = this.zoomBaseDocX - this.planeOffsetX;
+    const planeY = this.zoomBaseDocY;
+
+    const scaledPlaneX = planeX * ratio;
+    const scaledPlaneY = planeY * ratio;
+
+    const requiredDocX = this.viewer.scrollLeft + this.zoomBaseMx;
+    const requiredDocY = this.viewer.scrollTop + this.zoomBaseMy;
+
+    const tx = requiredDocX - (this.planeOffsetX + scaledPlaneX);
+    const ty = requiredDocY - scaledPlaneY;
+
+    this.plane.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${nextScale})`;
+    
+    this.wheelZoomTargetScale = nextScale;
+    this.scale = nextScale;
     this.updateZoomUI();
 
-    requestAnimationFrame(()=>{
-      this.viewer.scrollTop=Math.max(0,logicalY*this.scale-anchorOffset);
-      this.renderNearViewport();
-      this.updateCurrentPage();
+    clearTimeout(this.wheelZoomTimer);
+    this.wheelZoomTimer = setTimeout(() => this.commitWheelZoom(), CFG.WHEEL_ZOOM_SETTLE_MS);
+  }
+
+  commitWheelZoom() {
+    if (!this.zoomPreviewActive || !this.pdf) return;
+
+    clearTimeout(this.wheelZoomTimer);
+    this.wheelZoomTimer = 0;
+
+    const next = clamp(this.wheelZoomTargetScale, CFG.MIN_SCALE, CFG.MAX_SCALE);
+
+    this.scale = next;
+    this.layoutScale = next;
+    this.zoomMode = "custom";
+
+    this.zoomPreviewActive = false;
+    this.viewer.classList.remove("zoom-preview");
+    this.updateSurfaceGeometry(next);
+
+    // 强制触发一次同步布局，防止浏览器滞后读取到旧的 scrollWidth
+    const forceReflow = this.viewer.scrollWidth;
+
+    const g = this.zoomAnchor;
+    if (g?.model) {
+      const m = g.model;
+      const pageLeftBase = (this.baseSurfaceW - m.baseW) / 2;
+      const targetX = this.planeOffsetX + (pageLeftBase + g.rx * m.baseW) * next;
+      const targetY = (m.baseTop + g.ry * m.baseH) * next;
+      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
+      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      this.viewer.scrollLeft = clamp(targetX - g.localX, 0, maxX);
+      this.viewer.scrollTop = clamp(targetY - g.localY, 0, maxY);
+    } else if (g) {
+      const ratio = next / Math.max(.00001, g.baseScale);
+      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
+      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      this.viewer.scrollLeft = clamp((g.scrollLeft + g.localX) * ratio - g.localX, 0, maxX);
+      this.viewer.scrollTop = clamp((g.scrollTop + g.localY) * ratio - g.localY, 0, maxY);
+    }
+
+    this.zoomAnchor = null;
+    this.updateZoomUI();
+    this.updateCurrentPage();
+
+    requestAnimationFrame(() => this.renderNearViewport({ quality: "fast" }));
+    this.scheduleSharpRender();
+    this.schedulePersistView();
+
+    if (appState.syncZoom && this.other().pdf) {
+      const ov = this.other().viewer.getBoundingClientRect();
+      this.other().setScale(next, {
+        anchorClientX: ov.left + ov.width / 2,
+        anchorClientY: ov.top + ov.height / 2,
+        propagate: false
+      });
+    }
+  }
+
+  setScale(next, { anchorClientX = null, anchorClientY = null, propagate = true, persist = true, mode = "custom" } = {}) {
+    if (!this.pdf) return;
+    next = clamp(next, CFG.MIN_SCALE, CFG.MAX_SCALE);
+    if (Math.abs(next - this.scale) < .0001 && this.zoomMode === mode) return;
+
+    if (this.zoomPreviewActive) this.commitWheelZoom();
+
+    this.zoomMode = mode;
+    this.wheelZoomTargetScale = next;
+    const oldLayoutScale = this.layoutScale;
+
+    const vr = this.viewer.getBoundingClientRect();
+    const ax = anchorClientX ?? (vr.left + vr.width / 2);
+    const ay = anchorClientY ?? (vr.top + vr.height / 2);
+
+    this.zoomAnchor = this.captureWheelZoomGesture(ax, ay);
+    this.scale = next;
+    this.layoutScale = next;
+    this.updateSurfaceGeometry(next);
+
+    const forceReflow = this.viewer.scrollWidth;
+
+    const g = this.zoomAnchor;
+    if (g?.model) {
+      const m = g.model;
+      const pageLeftBase = (this.baseSurfaceW - m.baseW) / 2;
+      const targetX = this.planeOffsetX + (pageLeftBase + g.rx * m.baseW) * next;
+      const targetY = (m.baseTop + g.ry * m.baseH) * next;
+      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
+      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      this.viewer.scrollLeft = clamp(targetX - g.localX, 0, maxX);
+      this.viewer.scrollTop = clamp(targetY - g.localY, 0, maxY);
+    } else {
+      const ratio = next / Math.max(.00001, oldLayoutScale);
+      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
+      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      const docX = this.viewer.scrollLeft + (ax - vr.left);
+      const docY = this.viewer.scrollTop + (ay - vr.top);
+      this.viewer.scrollLeft = clamp(docX * ratio - (ax - vr.left), 0, maxX);
+      this.viewer.scrollTop = clamp(docY * ratio - (ay - vr.top), 0, maxY);
+    }
+
+    this.zoomAnchor = null;
+    this.updateZoomUI();
+    this.updateCurrentPage();
+    requestAnimationFrame(() => this.renderNearViewport({ quality: "fast" }));
+    this.scheduleSharpRender();
+    if (persist) this.schedulePersistView();
+
+    if (propagate && appState.syncZoom && this.other().pdf) {
+      const ov = this.other().viewer.getBoundingClientRect();
+      this.other().setScale(next, {
+        anchorClientX: ov.left + ov.width / 2,
+        anchorClientY: ov.top + ov.height / 2,
+        propagate: false,
+        persist,
+        mode
+      });
+    }
+  }
+
+  fitWidth({ propagate = true, persist = true } = {}) {
+    if (!this.pdf || !this.models.length) return;
+    const ref = this.models[this.currentPage ? this.currentPage - 1 : 0] || this.models[0];
+    const available = Math.max(180, this.viewer.clientWidth - 40);
+    this.setScale(available / ref.baseW, { propagate: false, persist, mode: "fit-width" });
+    if (propagate && appState.syncZoom && this.other().pdf) this.other().fitWidth({ propagate: false, persist });
+  }
+
+  updateZoomUI() {
+    this.zoomEl.textContent = `${Math.round(this.scale * 100)}%`;
+  }
+
+  mapPageTo(other, n) {
+    if (!this.pdf || !other.pdf) return n;
+    if (this.pdf.numPages === other.pdf.numPages) return clamp(n, 1, other.pdf.numPages);
+    if (this.pdf.numPages <= 1) return 1;
+    return clamp(Math.round(((n - 1) / (this.pdf.numPages - 1)) * (other.pdf.numPages - 1)) + 1, 1, other.pdf.numPages);
+  }
+
+  goToPage(n, propagate = true) {
+    if (!this.pdf) return;
+    if (this.zoomPreviewActive) this.commitWheelZoom();
+
+    n = clamp(Math.round(n), 1, this.pdf.numPages);
+    const m = this.models[n - 1];
+    this.viewer.scrollTo({
+      top: Math.max(0, m.baseTop * this.layoutScale - 8),
+      behavior: "auto"
     });
 
-    if(propagate && appState.syncZoom && this.other().pdf){
-      this.other().setScale(next,{propagate:false});
+    this.currentPage = n;
+    this.pageInput.value = String(n);
+    this.ensureRendered(m, 320000, "fast");
+    this.scheduleSharpRender();
+
+    if (propagate && appState.syncPage && this.other().pdf) {
+      this.other().goToPage(this.mapPageTo(this.other(), n), false);
+    }
+    this.schedulePersistView();
+  }
+
+  updateCurrentPage() {
+    if (!this.models.length) return;
+    const probe = this.viewer.scrollTop + Math.min(150, this.viewer.clientHeight * .25);
+    const idx = this.modelIndexAtOffset(probe);
+    const best = this.models[idx]?.n || 1;
+    if (best !== this.currentPage) {
+      this.currentPage = best;
+      this.pageInput.value = String(best);
     }
   }
 
-  fitWidth({propagate=true}={}){
-    if(!this.pdf || !this.models.length) return;
-    const maxW=Math.max(...this.models.map(m=>m.baseW));
-    const available=Math.max(160,this.viewer.clientWidth-28);
-    this.setScale(available/maxW,{propagate});
+  getScrollAnchor() {
+    if (!this.models.length) return { page: 1, y: 0, x: 0 };
+    const scale = Math.max(.00001, this.layoutScale);
+    const probe = this.viewer.scrollTop + Math.min(150, this.viewer.clientHeight * .25);
+    const baseProbe = probe / scale;
+    const idx = this.modelIndexAtBaseY(baseProbe);
+    const m = this.models[idx];
+    const y = clamp((baseProbe - m.baseTop) / Math.max(1, m.baseH), 0, 1);
+    const maxX = Math.max(1, this.viewer.scrollWidth - this.viewer.clientWidth);
+    return { page: m.n, y, x: this.viewer.scrollLeft / maxX };
   }
 
-  updateZoomUI(){
-    this.zoomEl.textContent=`${Math.round(this.scale*100)}%`;
+  applySyncedAnchor(anchor, source) {
+    if (!this.pdf || !this.models.length) return;
+    const page = source.mapPageTo(this, anchor.page);
+    const m = this.models[page - 1];
+    const probeOffset = Math.min(150, this.viewer.clientHeight * .25);
+    const top = (m.baseTop + anchor.y * m.baseH) * this.layoutScale - probeOffset;
+    const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
+    this.viewer.scrollTop = Math.max(0, top);
+    this.viewer.scrollLeft = anchor.x * maxX;
   }
 
-  goToPage(n,propagate=true){
-    if(!this.pdf) return;
-    n=clamp(Math.round(n),1,this.pdf.numPages);
-    const m=this.models[n-1];
-    this.viewer.scrollTo({top:Math.max(0,m.el.offsetTop-8),behavior:"auto"});
-    this.currentPage=n;
-    this.pageInput.value=String(n);
-    this.ensureRendered(m,200000);
-
-    if(propagate && appState.syncPage && this.other().pdf){
-      this.other().goToPage(n,false);
-    }
-  }
-
-  updateCurrentPage(){
-    if(!this.models.length) return;
-    const vr=this.viewer.getBoundingClientRect();
-    const probe=vr.top+Math.min(150,vr.height*.25);
-
-    let best=1;
-    let bestDist=Infinity;
-    for(const m of this.models){
-      const r=m.el.getBoundingClientRect();
-      const dist=(r.top<=probe && r.bottom>=probe)
-        ? 0
-        : Math.min(Math.abs(r.top-probe),Math.abs(r.bottom-probe));
-      if(dist<bestDist){bestDist=dist;best=m.n}
-      if(r.top>vr.bottom+400) break;
-    }
-
-    if(best!==this.currentPage){
-      this.currentPage=best;
-      this.pageInput.value=String(best);
-    }
-  }
-
-  onScroll(){
-    if(!this.pdf) return;
+  onScroll() {
+    if (!this.pdf) return;
     cancelAnimationFrame(this.scrollRaf);
-    this.scrollRaf=requestAnimationFrame(()=>{
-      this.updateCurrentPage();
-      this.renderNearViewport();
+    this.cancelSharpRender();
 
-      if(appState.syncScroll && !appState.scrollLock && this.other().pdf){
-        appState.scrollLock=true;
-        const ownMax=Math.max(1,this.viewer.scrollHeight-this.viewer.clientHeight);
-        const ratio=this.viewer.scrollTop/ownMax;
-        const ov=this.other().viewer;
-        ov.scrollTop=ratio*Math.max(0,ov.scrollHeight-ov.clientHeight);
-        requestAnimationFrame(()=>appState.scrollLock=false);
+    this.scrollRaf = requestAnimationFrame(() => {
+      this.updateCurrentPage();
+      if (!this.zoomPreviewActive) this.renderNearViewport({ quality: "fast" });
+      this.scheduleSharpRender();
+      this.schedulePersistView();
+
+      if (appState.syncScroll && !appState.scrollLock && this.other().pdf) {
+        appState.scrollLock = true;
+        this.other().applySyncedAnchor(this.getScrollAnchor(), this);
+        requestAnimationFrame(() => appState.scrollLock = false);
       }
     });
   }
 
-  onWheel(e){
-    if(!(e.ctrlKey || e.metaKey) || !this.pdf) return;
-    e.preventDefault();
-    const factor=Math.exp(-e.deltaY*0.00135);
-    this.setScale(this.scale*factor,{anchorClientY:e.clientY,propagate:true});
-  }
-
-  onResize(){
+  onResize() {
     cancelAnimationFrame(this.resizeRaf);
-    this.resizeRaf=requestAnimationFrame(()=>this.renderNearViewport());
+    this.resizeRaf = requestAnimationFrame(() => {
+      if (!this.pdf) return;
+      if (this.zoomMode === "fit-width") {
+        this.fitWidth({ propagate: false, persist: false });
+      } else {
+        this.updateSurfaceGeometry(this.layoutScale);
+        this.renderNearViewport({ quality: "fast" });
+        this.scheduleSharpRender();
+      }
+    });
   }
 
-  setStatus(text){ this.statusEl.textContent=text }
+  setStatus(text) { this.statusEl.textContent = text }
 
-  async destroyDocument(resetUI=true){
-    this.io?.disconnect();
-    this.io=null;
+  schedulePersistView() {
+    if (!this.docId || !this.pdf) return;
+    clearTimeout(this.viewSaveTimer);
+    this.viewSaveTimer = setTimeout(() => this.persistView(), 520);
+  }
 
-    for(const m of this.models){
+  async persistView() {
+    if (!this.docId || !this.pdf) return;
+    try {
+      await dbPutView({
+        key: `${this.docId}:${this.side}`,
+        docId: this.docId,
+        side: this.side,
+        scale: this.scale,
+        zoomMode: this.zoomMode,
+        currentPage: this.currentPage,
+        scrollTop: this.viewer.scrollTop,
+        scrollLeft: this.viewer.scrollLeft,
+        updated: Date.now()
+      });
+    } catch (err) {}
+  }
+
+  async destroyDocument(resetUI = true) {
+    clearTimeout(this.viewSaveTimer);
+    clearTimeout(this.wheelZoomTimer);
+    clearTimeout(this.sharpTimer);
+    cancelAnimationFrame(this.scrollRaf);
+    cancelAnimationFrame(this.resizeRaf);
+
+    this.zoomPreviewActive = false;
+    this.viewer.classList.remove("zoom-preview");
+    this.zoomAnchor = null;
+
+    try { await this.persistView() } catch {}
+
+    for (const m of this.models) {
       m.ticket++;
-      try{m.renderTask?.cancel()}catch{}
-      if(m.canvas){
-        m.canvas.width=1;m.canvas.height=1;
+      m.textTicket++;
+      try { m.renderTask?.cancel() } catch {}
+      try { m.textLayer?.cancel?.() } catch {}
+      if (m.canvas) {
+        m.canvas.width = 1;
+        m.canvas.height = 1;
       }
+      try { m.page?.cleanup?.() } catch {}
     }
-    this.models=[];
 
-    if(this.loadingTask){
-      try{await this.loadingTask.destroy()}catch{}
-      this.loadingTask=null;
+    this.models = [];
+    this.plane = null;
+    this.baseSurfaceW = 0;
+    this.baseSurfaceH = 0;
+    this.canvasBytes = 0;
+    this.textCache.clear();
+
+    if (this.loadingTask) {
+      try { await this.loadingTask.destroy() } catch {}
+      this.loadingTask = null;
     }
-    this.pdf=null;
+    this.pdf = null;
 
-    if(resetUI){
-      this.file=null;
-      this.nameEl.textContent=`${this.side==="left"?"左":"右"}侧未打开文件`;
-      this.pageInput.value="0";
-      this.totalEl.textContent="/ 0";
-      this.scale=CFG.DEFAULT_SCALE;
+    if (resetUI) {
+      this.file = null;
+      this.docId = null;
+      this.nameEl.textContent = `打开${this.side === "left" ? "左" : "右"}侧 PDF`;
+      this.nameEl.title = "";
+      this.pageInput.value = "0";
+      this.totalEl.textContent = "/ 0";
+      this.scale = CFG.DEFAULT_SCALE;
+      this.layoutScale = CFG.DEFAULT_SCALE;
+      this.wheelZoomTargetScale = CFG.DEFAULT_SCALE;
+      this.zoomMode = "custom";
       this.updateZoomUI();
       this.showEmpty();
+      setSessionSide(this.side, null);
     }
   }
 }
 
-const panes={
-  left:new PdfPane("left"),
-  right:new PdfPane("right")
-};
+const panes = { left: new PdfPane("left"), right: new PdfPane("right") };
 
-function clamp(v,min,max){ return Math.max(min,Math.min(max,v)) }
-function nextFrame(){ return new Promise(r=>requestAnimationFrame(r)) }
-function formatBytes(n){
-  const units=["B","KB","MB","GB"];
-  let v=n,i=0;
-  while(v>=1024 && i<units.length-1){v/=1024;i++}
-  return `${i===0 || v>=10 ? v.toFixed(0) : v.toFixed(1)} ${units[i]}`;
+function updateToggleUI() { for (const id of ["syncScroll", "syncPage", "syncZoom", "syncSelection"]) $(`#${id}`).setAttribute("aria-pressed", String(!!appState[id])); }
+function updatePanCursor() { for (const p of Object.values(panes)) { p.viewer.classList.toggle("ctrl-pan-ready", !!appState.ctrlDown); p.viewer.classList.toggle("hand-ready", !!appState.spaceDown); } }
+updateToggleUI(); updatePanCursor();
+
+function refreshSessionHint() {
+  const loaded = [panes.left.pdf && "左", panes.right.pdf && "右"].filter(Boolean).join(" / ");
+  $("#sessionHint").textContent = loaded ? `${loaded}侧已载入 · 自动保存` : "状态会自动保存";
 }
 
-function setLoading(v){ $("#loading").hidden=!v }
-let toastTimer=0;
-function toast(msg,error=false){
-  const el=$("#toast");
-  el.textContent=msg;
-  el.className=`toast show${error?" error":""}`;
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.className="toast",3200);
+function compareDocumentPair() {
+  const a = panes.left, b = panes.right; if (!a.pdf || !b.pdf) return;
+  const ratio = Math.min(a.pdf.numPages, b.pdf.numPages) / Math.max(a.pdf.numPages, b.pdf.numPages);
+  if (ratio < .75) toast("两份 PDF 页数差异较大：同步选中会改用相对页码 + 版面位置匹配。", false);
 }
 
-$("#openLeft").onclick=()=>$("#leftFile").click();
-$("#openRight").onclick=()=>$("#rightFile").click();
+$("#openLeft").onclick = () => $("#leftFile").click();
+$("#openRight").onclick = () => $("#rightFile").click();
+$("#leftFile").onchange = e => { const f = e.target.files?.[0]; if (f) panes.left.loadFile(f); e.target.value = "" };
+$("#rightFile").onchange = e => { const f = e.target.files?.[0]; if (f) panes.right.loadFile(f); e.target.value = "" };
 
-$("#leftFile").onchange=e=>{
-  const f=e.target.files?.[0];
-  if(f) panes.left.loadFile(f);
-  e.target.value="";
-};
-$("#rightFile").onchange=e=>{
-  const f=e.target.files?.[0];
-  if(f) panes.right.loadFile(f);
-  e.target.value="";
-};
-
-for(const id of ["syncScroll","syncPage","syncZoom"]){
-  $(`#${id}`).onclick=()=>{
-    appState[id]=!appState[id];
-    $(`#${id}`).setAttribute("aria-pressed",String(appState[id]));
-  };
+for (const id of ["syncScroll", "syncPage", "syncZoom", "syncSelection"]) {
+  $(`#${id}`).onclick = () => { appState[id] = !appState[id]; updateToggleUI(); persistSettings(); if (id === "syncSelection" && !appState.syncSelection) clearMirrorSelection(); };
 }
 
-document.addEventListener("click",e=>{
-  const nav=e.target.closest("[data-nav]");
-  if(nav){
-    const p=panes[nav.dataset.side];
-    const delta=nav.dataset.nav==="next"?1:-1;
-    p.goToPage((p.currentPage||1)+delta,true);
-    return;
-  }
-
-  const zoom=e.target.closest("[data-zoom]");
-  if(zoom){
-    const p=panes[zoom.dataset.side];
-    appState.activeSide=zoom.dataset.side;
-    const op=zoom.dataset.zoom;
-    if(op==="in") p.setScale(p.scale*CFG.ZOOM_STEP,{propagate:true});
-    else if(op==="out") p.setScale(p.scale/CFG.ZOOM_STEP,{propagate:true});
-    else if(op==="reset") p.setScale(1,{propagate:true});
-    else if(op==="fit") p.fitWidth({propagate:true});
+document.addEventListener("click", e => {
+  const nav = e.target.closest("[data-nav]");
+  if (nav) { const p = panes[nav.dataset.side], d = nav.dataset.nav === "next" ? 1 : -1; p.goToPage((p.currentPage || 1) + d, true); return }
+  const zoom = e.target.closest("[data-zoom]");
+  if (zoom) {
+    const p = panes[zoom.dataset.side]; appState.activeSide = zoom.dataset.side; const op = zoom.dataset.zoom;
+    if (op === "in") p.setScale(p.scale * CFG.ZOOM_STEP, { propagate: true });
+    else if (op === "out") p.setScale(p.scale / CFG.ZOOM_STEP, { propagate: true });
+    else if (op === "reset") p.setScale(1, { propagate: true });
+    else if (op === "fit") p.fitWidth({ propagate: true });
   }
 });
 
-document.addEventListener("keydown",e=>{
-  const tag=document.activeElement?.tagName || "";
-  if(tag==="INPUT" || tag==="TEXTAREA") return;
+document.addEventListener("keydown", e => {
+  if (e.key === "Control" && !e.repeat) { appState.ctrlDown = true; updatePanCursor() }
+  if (e.code === "Space" && !e.repeat) { appState.spaceDown = true; updatePanCursor() }
+  const tag = document.activeElement?.tagName || ""; if (tag === "INPUT" || tag === "TEXTAREA") return;
+  const p = panes[appState.activeSide];
+  if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) { e.preventDefault(); p.setScale(p.scale * CFG.ZOOM_STEP, { propagate: true }) }
+  else if ((e.ctrlKey || e.metaKey) && e.key === "-") { e.preventDefault(); p.setScale(p.scale / CFG.ZOOM_STEP, { propagate: true }) }
+  else if ((e.ctrlKey || e.metaKey) && e.key === "0") { e.preventDefault(); p.setScale(1, { propagate: true }) }
+  else if (e.key === "PageDown") { e.preventDefault(); p.goToPage((p.currentPage || 1) + 1, true) }
+  else if (e.key === "PageUp") { e.preventDefault(); p.goToPage((p.currentPage || 1) - 1, true) }
+  else if (e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey) { e.preventDefault(); p.fitWidth({ propagate: true }) }
+  else if (e.key === "Escape") { clearMirrorSelection(); closeHistory() }
+});
 
-  const p=panes[appState.activeSide];
-  if((e.ctrlKey || e.metaKey) && (e.key==="+" || e.key==="=")){
-    e.preventDefault(); p.setScale(p.scale*CFG.ZOOM_STEP,{propagate:true});
-  }else if((e.ctrlKey || e.metaKey) && e.key==="-"){
-    e.preventDefault(); p.setScale(p.scale/CFG.ZOOM_STEP,{propagate:true});
-  }else if((e.ctrlKey || e.metaKey) && e.key==="0"){
-    e.preventDefault(); p.setScale(1,{propagate:true});
-  }else if(e.key==="PageDown"){
-    e.preventDefault(); p.goToPage((p.currentPage||1)+1,true);
-  }else if(e.key==="PageUp"){
-    e.preventDefault(); p.goToPage((p.currentPage||1)-1,true);
+document.addEventListener("keyup", e => {
+  if (e.key === "Control") { appState.ctrlDown = false; updatePanCursor() }
+  if (e.code === "Space") { appState.spaceDown = false; updatePanCursor() }
+});
+window.addEventListener("blur", () => { appState.spaceDown = false; appState.ctrlDown = false; updatePanCursor() });
+
+const main = $("#main"), divider = $("#divider"); let resizing = false;
+function applySplitRatio(ratio) {
+  ratio = clamp(ratio, .22, .78); appState.splitRatio = ratio;
+  main.style.gridTemplateColumns = `minmax(0,${ratio}fr) var(--divider-w) minmax(0,${1 - ratio}fr)`;
+}
+applySplitRatio(appState.splitRatio);
+divider.addEventListener("pointerdown", e => { resizing = true; divider.setPointerCapture(e.pointerId); document.body.style.userSelect = "none" });
+divider.addEventListener("pointermove", e => { if (!resizing) return; const r = main.getBoundingClientRect(); applySplitRatio((e.clientX - r.left) / r.width); });
+divider.addEventListener("pointerup", () => { resizing = false; document.body.style.userSelect = ""; persistSettings(); panes.left.onResize(); panes.right.onResize(); });
+const ro = new ResizeObserver(() => requestAnimationFrame(() => { panes.left.onResize(); panes.right.onResize() })); ro.observe(main);
+
+let selectionTimer = 0; document.addEventListener("selectionchange", () => { clearTimeout(selectionTimer); selectionTimer = setTimeout(handleSelectionChange, 70); });
+function normalizeText(s) { return (s || "").normalize("NFKC").toLocaleLowerCase().replace(/[\s\p{P}\p{S}]+/gu, ""); }
+function textSignals(s) { return new Set(((s || "").normalize("NFKC").match(/[A-Z]{2,}|\p{N}+(?:[.,:]\p{N}+)*/gu) || []).map(x => x.toLowerCase())); }
+function intersectsSafe(range, node) { try { return range.intersectsNode(node) } catch { return false } }
+function visibleTextSpans(model) { return model.textLayerEl ? [...model.textLayerEl.querySelectorAll("span")].filter(s => s.textContent?.trim()) : [] }
+function exactSpanMatch(spans, sourceText) {
+  const needle = normalizeText(sourceText); if (needle.length < 3 || !spans.length) return null;
+  let hay = "", ranges = [];
+  for (let i = 0; i < spans.length; i++) {
+    const part = normalizeText(spans[i].textContent || ""); if (!part) continue;
+    const start = hay.length; hay += part; ranges.push({ i, start, end: hay.length });
   }
-});
+  const pos = hay.indexOf(needle); if (pos < 0) return null;
+  const end = pos + needle.length; const hit = ranges.filter(r => r.end > pos && r.start < end).map(r => spans[r.i]);
+  return hit.length ? hit : null;
+}
+function geometrySpanMatch(sourceModel, selectedSpans, targetModel, targetSpans, sourceText) {
+  if (!selectedSpans.length || !targetSpans.length) return [];
+  const srcAll = visibleTextSpans(sourceModel), srcPage = sourceModel.el.getBoundingClientRect(), targetPage = targetModel.el.getBoundingClientRect();
+  const idxs = selectedSpans.map(s => srcAll.indexOf(s)).filter(i => i >= 0).sort((a, b) => a - b);
+  const start = idxs[0] ?? 0, end = idxs[idxs.length - 1] ?? start;
+  const centerRatio = ((start + end) / 2) / Math.max(1, srcAll.length - 1);
+  const selectedRects = selectedSpans.map(s => s.getBoundingClientRect()).filter(r => r.width || r.height);
+  const yCenter = selectedRects.length ? selectedRects.reduce((a, r) => a + ((r.top + r.bottom) / 2 - srcPage.top) / Math.max(1, srcPage.height), 0) / selectedRects.length : .5;
+  const xCenter = selectedRects.length ? selectedRects.reduce((a, r) => a + ((r.left + r.right) / 2 - srcPage.left) / Math.max(1, srcPage.width), 0) / selectedRects.length : .5;
+  const count = clamp(Math.round(Math.max(1, selectedSpans.length) * targetSpans.length / Math.max(1, srcAll.length)), 1, Math.min(48, targetSpans.length));
+  const predicted = Math.round(centerRatio * Math.max(0, targetSpans.length - 1));
+  const signals = textSignals(sourceText);
+  let best = { score: Infinity, start: clamp(predicted - Math.floor(count / 2), 0, Math.max(0, targetSpans.length - count)) };
+  const lo = Math.max(0, best.start - 34), hi = Math.min(Math.max(0, targetSpans.length - count), best.start + 34);
+  for (let s = lo; s <= hi; s++) {
+    const group = targetSpans.slice(s, s + count), rects = group.map(x => x.getBoundingClientRect());
+    const gy = rects.reduce((a, r) => a + ((r.top + r.bottom) / 2 - targetPage.top) / Math.max(1, targetPage.height), 0) / rects.length;
+    const gx = rects.reduce((a, r) => a + ((r.left + r.right) / 2 - targetPage.left) / Math.max(1, targetPage.width), 0) / rects.length;
+    const gr = ((s + (s + count - 1)) / 2) / Math.max(1, targetSpans.length - 1);
+    let score = Math.abs(gr - centerRatio) * 1.05 + Math.abs(gy - yCenter) * 1.8 + Math.abs(gx - xCenter) * .18;
+    if (signals.size) {
+      const gs = textSignals(group.map(x => x.textContent).join(" "));
+      let overlap = 0; for (const t of signals) if (gs.has(t)) overlap++;
+      score -= Math.min(.55, overlap * .18);
+    }
+    if (score < best.score) best = { score, start: s };
+  }
+  return targetSpans.slice(best.start, best.start + count);
+}
+function clearMirrorSelection() {
+  appState.selectionToken++; for (const el of document.querySelectorAll(".mirror-selected")) el.classList.remove("mirror-selected");
+  appState.lastSelection = null; $("#selectionTools").hidden = true;
+}
+async function handleSelectionChange() {
+  const sel = document.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) { if (!sel || sel.isCollapsed) clearMirrorSelection(); return; }
+  const range = sel.getRangeAt(0); const startEl = (range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement)?.closest?.(".textLayer");
+  if (!startEl) return;
+  const paneEl = startEl.closest(".pane"), side = paneEl?.dataset.side; if (!side) return;
+  appState.activeSide = side; const source = panes[side], target = source.other(), sourceText = sel.toString().trim();
+  if (!sourceText) return;
+  const selectionRect = range.getBoundingClientRect(); showSelectionTools(selectionRect, "已选择");
+  if (!appState.syncSelection || !target.pdf) { appState.lastSelection = { sourceText, targetText: "", side }; return; }
 
-/* Splitter */
-const main=$("#main"), divider=$("#divider");
-let resizing=false;
-divider.addEventListener("pointerdown",e=>{
-  resizing=true;
-  divider.setPointerCapture(e.pointerId);
-  document.body.style.userSelect="none";
-});
-divider.addEventListener("pointermove",e=>{
-  if(!resizing) return;
-  const r=main.getBoundingClientRect();
-  let ratio=(e.clientX-r.left)/r.width;
-  ratio=clamp(ratio,.20,.80);
-  main.style.gridTemplateColumns=`minmax(0,${ratio}fr) 6px minmax(0,${1-ratio}fr)`;
-});
-divider.addEventListener("pointerup",()=>{
-  resizing=false;
-  document.body.style.userSelect="";
-  panes.left.onResize();
-  panes.right.onResize();
-});
-
-/* Element-size responsive refresh, not window-only resize polling. */
-const ro=new ResizeObserver(()=>{
-  requestAnimationFrame(()=>{
-    panes.left.onResize();
-    panes.right.onResize();
+  const token = ++appState.selectionToken; for (const el of document.querySelectorAll(".mirror-selected")) el.classList.remove("mirror-selected");
+  const pageEls = [...source.pagesEl.querySelectorAll(".page")].filter(page => {
+    const tl = page.querySelector(".textLayer"); if (!tl) return false; try { return range.intersectsNode(tl) } catch { return false }
+  }).slice(0, 8);
+  let mirroredText = [], modes = [];
+  for (const pageEl of pageEls) {
+    if (token !== appState.selectionToken) return;
+    const sourceModel = source.models[Number(pageEl.dataset.page) - 1];
+    await source.ensureTextLayer(sourceModel, true);
+    const srcSpans = visibleTextSpans(sourceModel), selected = srcSpans.filter(s => intersectsSafe(range, s));
+    if (!selected.length) continue;
+    const targetPage = source.mapPageTo(target, sourceModel.n), targetModel = target.models[targetPage - 1]; if (!targetModel) continue;
+    await target.ensureRendered(targetModel, 260000, "fast");
+    await target.ensureTextLayer(targetModel, true);
+    if (token !== appState.selectionToken) return;
+    const targetSpans = visibleTextSpans(targetModel); if (!targetSpans.length) continue;
+    const localText = pageEls.length === 1 ? sourceText : selected.map(x => x.textContent).join(" ");
+    let hits = exactSpanMatch(targetSpans, localText), mode = "文本命中";
+    if (!hits) { hits = geometrySpanMatch(sourceModel, selected, targetModel, targetSpans, localText); mode = "版面对齐" }
+    for (const h of hits) h.classList.add("mirror-selected");
+    if (hits.length) mirroredText.push(hits.map(x => x.textContent).join(" ").replace(/\s+/g, " ").trim());
+    modes.push(mode);
+  }
+  const targetText = mirroredText.join("\n").trim(); appState.lastSelection = { sourceText, targetText, side };
+  const mode = modes.includes("版面对齐") ? "同步：版面 + 顺序" : modes.length ? "同步：文本匹配" : "未找到对应文本层";
+  showSelectionTools(selectionRect, mode);
+}
+function showSelectionTools(rect, label) {
+  const el = $("#selectionTools"), state = $("#selectionState"); state.textContent = label; el.hidden = false;
+  requestAnimationFrame(() => {
+    const w = el.offsetWidth, h = el.offsetHeight; let left = clamp(rect.left + (rect.width - w) / 2, 8, window.innerWidth - w - 8);
+    let top = rect.top - h - 8; if (top < 8) top = Math.min(window.innerHeight - h - 8, rect.bottom + 8);
+    el.style.left = `${left}px`; el.style.top = `${top}px`;
   });
-});
-ro.observe(main);
+}
+async function copyText(text) {
+  if (!text) return;
+  try { await navigator.clipboard.writeText(text); toast("已复制") }
+  catch { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast("已复制"); }
+}
+$("#selectionTools").addEventListener("pointerdown", e => e.preventDefault());
+$("#copySource").onclick = () => copyText(appState.lastSelection?.sourceText || document.getSelection()?.toString() || "");
+$("#copyBilingual").onclick = () => { const s = appState.lastSelection; if (!s) return; copyText(s.targetText ? `${s.sourceText}\n\n——\n\n${s.targetText}` : s.sourceText); };
 
-window.addEventListener("beforeunload",()=>{
-  panes.left.destroyDocument(false);
-  panes.right.destroyDocument(false);
-});
+const drawer = $("#historyDrawer"), backdrop = $("#drawerBackdrop"), historyList = $("#historyList");
+async function openHistory() { drawer.classList.add("open"); backdrop.classList.add("show"); await renderHistory() }
+function closeHistory() { drawer.classList.remove("open"); backdrop.classList.remove("show") }
+$("#historyBtn").onclick = openHistory; $("#closeHistory").onclick = closeHistory; backdrop.onclick = closeHistory;
+async function renderHistory() {
+  historyList.innerHTML = `<div class="history-empty">正在读取历史…</div>`;
+  try {
+    const docs = await dbGetDocs();
+    if (!docs.length) { historyList.innerHTML = `<div class="history-empty">还没有历史文件。打开 PDF 后会自动出现在这里。</div>`; return }
+    const frag = document.createDocumentFragment();
+    for (const d of docs) {
+      const row = document.createElement("div"); row.className = "history-item";
+      const meta = document.createElement("div"); meta.className = "history-meta";
+      const name = document.createElement("div"); name.className = "history-name"; name.textContent = d.name; name.title = d.name;
+      const sub = document.createElement("div"); sub.className = "history-sub"; sub.textContent = `${formatBytes(d.size || 0)} · ${formatTime(d.lastOpened)}${d.blob ? "" : " · 仅记录"}`;
+      meta.append(name, sub);
+      const actions = document.createElement("div"); actions.className = "history-actions";
+      const left = document.createElement("button"); left.textContent = "左开"; left.onclick = () => restoreHistoryDoc(d, "left");
+      const right = document.createElement("button"); right.textContent = "右开"; right.onclick = () => restoreHistoryDoc(d, "right");
+      const del = document.createElement("button"); del.textContent = "删"; del.title = "删除历史"; del.onclick = async () => { await dbDeleteDoc(d.id); const s = getSession(); if (s.left === d.id) setSessionSide("left", null); if (s.right === d.id) setSessionSide("right", null); renderHistory() };
+      actions.append(left, right, del); row.append(meta, actions); frag.appendChild(row);
+    }
+    historyList.replaceChildren(frag);
+  } catch (err) { historyList.innerHTML = `<div class="history-empty">读取历史失败：${String(err?.message || err)}</div>` }
+}
+async function restoreHistoryDoc(rec, side, { silent = false } = {}) {
+  if (!rec?.blob) { toast("这个历史项没有保存文件副本，请重新选择原 PDF。", true); return }
+  const file = new File([rec.blob], rec.name, { type: rec.type || "application/pdf", lastModified: rec.lastModified || Date.now() });
+  const view = await dbGetView(rec.id, side);
+  await panes[side].loadFile(file, { docId: rec.id, restoreState: view, persistBlob: false, silent });
+  if (!silent) closeHistory();
+}
+async function restoreLastSession() {
+  try {
+    try { navigator.storage?.persist?.() } catch {}
+    const s = getSession(); const jobs = [];
+    for (const side of ["left", "right"]) {
+      if (!s[side]) continue;
+      const rec = await dbGetDoc(s[side]); if (rec?.blob) jobs.push(restoreHistoryDoc(rec, side, { silent: true }));
+    }
+    if (jobs.length) { await Promise.allSettled(jobs); toast("已恢复上次阅读现场") }
+  } catch (err) {}
+}
+window.addEventListener("beforeunload", () => { panes.left.schedulePersistView(); panes.right.schedulePersistView(); persistSettings(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { panes.left.persistView(); panes.right.persistView(); persistSettings() } });
+
+refreshSessionHint(); restoreLastSession();
 </script>
 </body>
 </html>
