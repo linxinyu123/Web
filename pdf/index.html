@@ -82,8 +82,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
   padding: 16px 18px 80px;
   transform-origin: 0 0;
   contain: layout style;
-  will-change: transform;
 }
+.viewer.zoom-preview .page-plane { will-change: transform; }
 .page {
   position: relative;
   flex: 0 0 auto;
@@ -286,7 +286,12 @@ const CFG = Object.freeze({
   WHEEL_ZOOM_SETTLE_MS: 110,
   SHARP_IDLE_MS: 260,
   TEXT_IDLE_MS: 180,
-  RENDER_OVERSCAN_VIEWPORTS: .8,
+  SCROLL_IDLE_MS: 96,
+  GEOMETRY_SETTLE_MS: 120,
+  MEMORY_PRUNE_IDLE_MS: 700,
+  RENDER_OVERSCAN_VIEWPORTS: .9,
+  RENDER_CANCEL_OVERSCAN_VIEWPORTS: 2.35,
+  INTERACTIVE_RENDER_JOBS: 1,
   MAX_RENDER_JOBS: Math.max(1, Math.min(2, Math.floor((navigator.hardwareConcurrency || 4) / 3))),
   BUILD_BATCH: 100,
   TEXT_CACHE_PAGES: 36,
@@ -340,6 +345,10 @@ function toast(msg, error = false) {
 
 class PriorityRenderQueue {
   constructor(limit) { this.limit = limit; this.active = 0; this.jobs = []; this.serial = 0 }
+  setLimit(limit) {
+    this.limit = Math.max(1, limit | 0);
+    this.pump();
+  }
   add(fn, priority = 0) {
     return new Promise((resolve, reject) => {
       this.jobs.push({ fn, priority, resolve, reject, serial: this.serial++ });
@@ -441,6 +450,12 @@ class PdfPane {
     this.zoomEl = $(`#${side}Zoom`);
     this.statusEl = $(`#${side}Status`);
 
+    // Hot-path layout metrics are cached so scroll handlers never need forced layout reads.
+    this.viewportW = this.viewer.clientWidth || 1;
+    this.viewportH = this.viewer.clientHeight || 1;
+    this.surfaceW = this.viewportW;
+    this.surfaceH = this.viewportH;
+
     this.file = null;
     this.docId = null;
     this.pdf = null;
@@ -460,9 +475,17 @@ class PdfPane {
 
     this.scrollRaf = 0;
     this.resizeRaf = 0;
+    this.panRaf = 0;
+    this.scrollIdleTimer = 0;
     this.viewSaveTimer = 0;
     this.sharpTimer = 0;
+    this.geometryTimer = 0;
+    this.memoryPruneHandle = 0;
     this.textIdleSerial = 0;
+    this.isScrolling = false;
+    this.syncEcho = null;
+    this.renderingModels = new Set();
+    this.geometryDirtyModels = new Set();
 
     this.textCache = new LruTextCache(CFG.TEXT_CACHE_PAGES);
     this.panState = null;
@@ -533,34 +556,47 @@ class PdfPane {
     this.panState = {
       id: e.pointerId,
       x: e.clientX,
-      y: e.clientY
+      y: e.clientY,
+      dx: 0,
+      dy: 0
     };
     try { this.viewer.setPointerCapture(e.pointerId) } catch {}
     this.viewer.classList.add("panning");
     this.cancelSharpRender();
+    updateRenderConcurrency();
   }
 
-  // 终极拖动修复：使用 Delta 增量计算，摆脱锁定坐标断链问题，丝滑跟手
+  // Pointer events can arrive far above display refresh rate. Accumulate deltas and write scroll only once per frame.
   onPointerMove(e) {
     if (!this.panState || this.panState.id !== e.pointerId) return;
     e.preventDefault();
 
-    const dx = e.clientX - this.panState.x;
-    const dy = e.clientY - this.panState.y;
-
-    this.viewer.scrollLeft -= dx;
-    this.viewer.scrollTop -= dy;
-
+    this.panState.dx += e.clientX - this.panState.x;
+    this.panState.dy += e.clientY - this.panState.y;
     this.panState.x = e.clientX;
     this.panState.y = e.clientY;
+
+    if (this.panRaf) return;
+    this.panRaf = requestAnimationFrame(() => {
+      this.panRaf = 0;
+      const st = this.panState;
+      if (!st) return;
+      const dx = st.dx, dy = st.dy;
+      st.dx = st.dy = 0;
+      if (dx || dy) this.viewer.scrollBy({ left: -dx, top: -dy, behavior: "auto" });
+    });
   }
 
   onPointerUp(e) {
     if (!this.panState || this.panState.id !== e.pointerId) return;
+    if (this.panRaf) { cancelAnimationFrame(this.panRaf); this.panRaf = 0; }
+    const st = this.panState;
+    if (st.dx || st.dy) this.viewer.scrollBy({ left: -st.dx, top: -st.dy, behavior: "auto" });
     try { this.viewer.releasePointerCapture(e.pointerId) } catch {}
     this.panState = null;
     this.viewer.classList.remove("panning");
-    this.scheduleSharpRender();
+    updateRenderConcurrency();
+    this.armScrollIdle(48);
   }
 
   async loadFile(file, { docId = null, restoreState = null, persistBlob = true, silent = false } = {}) {
@@ -709,6 +745,8 @@ class PdfPane {
         n,
         baseW: defaultW,
         baseH: defaultH,
+        actualW: defaultW,
+        actualH: defaultH,
         baseTop: 0,
         page: n === 1 ? firstPage : null,
         pageReady: n === 1,
@@ -721,10 +759,12 @@ class PdfPane {
         renderTask: null,
         rendering: false,
         ticket: 0,
+        placeholder: ph,
         textLayerEl,
         textLayer: null,
         textReady: false,
         textRendering: false,
+        textScheduled: false,
         textTicket: 0
       };
 
@@ -760,18 +800,78 @@ class PdfPane {
     this.updateSurfaceGeometry(this.layoutScale);
   }
 
+  refreshViewportMetrics() {
+    this.viewportW = Math.max(1, this.viewer.clientWidth);
+    this.viewportH = Math.max(1, this.viewer.clientHeight);
+  }
+
+  maxScrollX() { return Math.max(0, this.surfaceW - this.viewportW) }
+  maxScrollY() { return Math.max(0, this.surfaceH - this.viewportH) }
+
   updateSurfaceGeometry(scale = this.layoutScale) {
     if (!this.plane) return;
     const visualW = this.baseSurfaceW * scale;
     const visualH = this.baseSurfaceH * scale;
-    const surfaceW = Math.max(this.viewer.clientWidth, visualW);
-    const surfaceH = Math.max(this.viewer.clientHeight, visualH);
+    const surfaceW = Math.max(this.viewportW, visualW);
+    const surfaceH = Math.max(this.viewportH, visualH);
 
+    this.surfaceW = surfaceW;
+    this.surfaceH = surfaceH;
     this.planeOffsetX = Math.max(0, (surfaceW - visualW) / 2);
     this.pagesEl.style.width = `${surfaceW}px`;
     this.pagesEl.style.height = `${surfaceH}px`;
     this.plane.style.left = `${this.planeOffsetX}px`;
     this.plane.style.transform = `scale(${scale})`;
+  }
+
+  queueGeometryUpdate(model, width, height) {
+    model.actualW = width;
+    model.actualH = height;
+    this.geometryDirtyModels.add(model);
+    clearTimeout(this.geometryTimer);
+    this.geometryTimer = setTimeout(() => {
+      this.geometryTimer = 0;
+      if (this.isScrolling || this.panState || this.zoomPreviewActive) {
+        this.queueGeometryFlush();
+        return;
+      }
+      this.flushGeometryUpdates();
+    }, this.isScrolling ? CFG.GEOMETRY_SETTLE_MS : 0);
+  }
+
+  queueGeometryFlush() {
+    if (!this.geometryDirtyModels.size || this.geometryTimer) return;
+    this.geometryTimer = setTimeout(() => {
+      this.geometryTimer = 0;
+      if (this.isScrolling || this.panState || this.zoomPreviewActive) { this.queueGeometryFlush(); return; }
+      this.flushGeometryUpdates();
+    }, CFG.GEOMETRY_SETTLE_MS);
+  }
+
+  flushGeometryUpdates() {
+    if (!this.geometryDirtyModels.size || !this.pdf || !this.plane) return;
+    const anchor = this.getScrollAnchor();
+    for (const m of this.geometryDirtyModels) {
+      m.baseW = m.actualW;
+      m.baseH = m.actualH;
+      m.el.style.width = `${m.baseW}px`;
+      m.el.style.height = `${m.baseH}px`;
+      m.el.style.containIntrinsicSize = `${m.baseW}px ${m.baseH}px`;
+    }
+    this.geometryDirtyModels.clear();
+    this.recomputeBaseGeometry();
+    this.restoreLocalAnchor(anchor);
+  }
+
+  restoreLocalAnchor(anchor) {
+    if (!anchor || !this.models.length) return;
+    const page = clamp(anchor.page || 1, 1, this.models.length);
+    const m = this.models[page - 1];
+    const probeOffset = Math.min(150, this.viewportH * .25);
+    const top = clamp((m.baseTop + anchor.y * m.baseH) * this.layoutScale - probeOffset, 0, this.maxScrollY());
+    const left = clamp(anchor.x * this.maxScrollX(), 0, this.maxScrollX());
+    this.syncEcho = { top, left, until: performance.now() + 100 };
+    this.viewer.scrollTo({ top, left, behavior: "auto" });
   }
 
   async ensurePage(model) {
@@ -781,13 +881,10 @@ class PdfPane {
     model.page = page;
     const base = page.getViewport({ scale: 1 });
 
+    model.actualW = base.width;
+    model.actualH = base.height;
     if (Math.abs(base.width - model.baseW) > .1 || Math.abs(base.height - model.baseH) > .1) {
-      model.baseW = base.width;
-      model.baseH = base.height;
-      model.el.style.width = `${base.width}px`;
-      model.el.style.height = `${base.height}px`;
-      model.el.style.containIntrinsicSize = `${base.width}px ${base.height}px`;
-      this.recomputeBaseGeometry();
+      this.queueGeometryUpdate(model, base.width, base.height);
     }
 
     model.pageReady = true;
@@ -810,12 +907,12 @@ class PdfPane {
     const pixelBudget = quality === "sharp" ? CFG.SHARP_CANVAS_PIXELS : CFG.FAST_CANVAS_PIXELS;
 
     let target = Math.min(zoom * dpr, cap);
-    const maxByPixels = Math.sqrt(pixelBudget / Math.max(1, model.baseW * model.baseH));
+    const maxByPixels = Math.sqrt(pixelBudget / Math.max(1, (model.actualW || model.baseW) * (model.actualH || model.baseH)));
     target = Math.min(target, maxByPixels);
     return clamp(target, .3, CFG.SHARP_RENDER_SCALE_CAP);
   }
 
-  // 终极原子渲染修复：绝对不替换 DOM 节点，彻底杜绝闪烁 (Zero-Flash)
+  // Render off-DOM, then atomically swap the finished canvas. This avoids a second full-size drawImage copy on the main thread.
   async ensureRendered(model, priority = 1, quality = "fast") {
     if (!this.pdf || !model?.el?.isConnected) return;
 
@@ -823,36 +920,35 @@ class PdfPane {
     const targetScale = this.desiredRenderScale(model, quality);
 
     if (model.renderedScale >= targetScale * .96 && model.canvas?.width > 1) {
-      if (!model.textReady) this.scheduleTextLayer(model);
+      if (!this.isScrolling && !model.textReady) this.scheduleTextLayer(model);
       return;
     }
 
     if (model.rendering) {
       if (model.pendingScale >= targetScale * .96) return;
-      model.ticket++;
-      try { model.renderTask?.cancel() } catch {}
-      model.rendering = false;
-      model.renderTask = null;
+      this.cancelModelRender(model);
     }
 
     const generation = this.generation;
     const ticket = ++model.ticket;
     model.rendering = true;
     model.pendingScale = targetScale;
+    this.renderingModels.add(model);
 
     try {
       await renderQueue.add(async () => {
         if (generation !== this.generation || ticket !== model.ticket || !model.el.isConnected) return;
 
         const page = await this.ensurePage(model);
-        if (generation !== this.generation || ticket !== model.ticket) return;
+        if (generation !== this.generation || ticket !== model.ticket || !model.el.isConnected) return;
 
         const renderScale = this.desiredRenderScale(model, quality);
+        if (model.renderedScale >= renderScale * .96 && model.canvas?.width > 1) return;
         model.pendingScale = renderScale;
         const viewport = page.getViewport({ scale: renderScale });
 
-        // 在完全脱离 DOM 的离屏 Canvas 上绘制
         const staged = document.createElement("canvas");
+        staged.className = "pdf-bitmap";
         staged.width = Math.max(1, Math.ceil(viewport.width));
         staged.height = Math.max(1, Math.ceil(viewport.height));
         const ctx = staged.getContext("2d", { alpha: false, desynchronized: true });
@@ -871,22 +967,21 @@ class PdfPane {
           return;
         }
 
-        // 使用 rAF 确保在下一帧精准同步覆盖像素，原有 canvas 节点无需重建
-        requestAnimationFrame(() => {
-          model.canvas.width = staged.width;
-          model.canvas.height = staged.height;
-          model.canvas.getContext("2d", { alpha: false }).drawImage(staged, 0, 0);
+        const oldCanvas = model.canvas;
+        const oldBytes = model.canvasBytes || 0;
+        oldCanvas.replaceWith(staged);
+        model.canvas = staged;
+        oldCanvas.width = oldCanvas.height = 1;
 
-          const oldBytes = model.canvasBytes || 0;
-          model.renderedScale = renderScale;
-          model.canvasBytes = staged.width * staged.height * 4;
-          model.lastUsed = performance.now();
-          this.canvasBytes += model.canvasBytes - oldBytes;
+        model.renderedScale = renderScale;
+        model.canvasBytes = staged.width * staged.height * 4;
+        model.lastUsed = performance.now();
+        this.canvasBytes += model.canvasBytes - oldBytes;
 
-          model.el.querySelector(".placeholder")?.remove();
-          this.scheduleTextLayer(model);
-          this.pruneCanvasMemory();
-        });
+        model.placeholder?.remove();
+        model.placeholder = null;
+        if (!this.isScrolling) this.scheduleTextLayer(model);
+        this.scheduleCanvasPrune();
       }, priority);
     } catch (err) {
       if (err?.name !== "RenderingCancelledException" && !/cancel/i.test(String(err?.message || ""))) {
@@ -897,20 +992,33 @@ class PdfPane {
         model.rendering = false;
         model.renderTask = null;
         model.pendingScale = 0;
+        this.renderingModels.delete(model);
       }
     }
   }
 
+  cancelModelRender(model) {
+    if (!model?.rendering) return;
+    model.ticket++;
+    try { model.renderTask?.cancel() } catch {}
+    model.renderTask = null;
+    model.rendering = false;
+    model.pendingScale = 0;
+    this.renderingModels.delete(model);
+  }
+
   scheduleTextLayer(model) {
-    if (!model || model.textReady || model.textRendering || !model.el.isConnected) return;
-    const serial = ++this.textIdleSerial;
+    if (!model || model.textReady || model.textRendering || model.textScheduled || !model.el.isConnected) return;
+    model.textScheduled = true;
+    const generation = this.generation;
     const run = () => {
-      if (serial > this.textIdleSerial + 1000000) return;
-      if (!this.modelIntersectsViewport(model, 80)) return;
+      model.textScheduled = false;
+      if (generation !== this.generation || this.isScrolling || this.panState || this.zoomPreviewActive) return;
+      if (!this.modelIntersectsViewport(model, 96)) return;
       this.ensureTextLayer(model, false);
     };
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(run, { timeout: CFG.TEXT_IDLE_MS + 220 });
+      requestIdleCallback(run, { timeout: CFG.TEXT_IDLE_MS + 260 });
     } else {
       setTimeout(run, CFG.TEXT_IDLE_MS);
     }
@@ -923,6 +1031,7 @@ class PdfPane {
 
     const generation = this.generation;
     const ticket = ++model.textTicket;
+    model.textScheduled = false;
     model.textRendering = true;
 
     try {
@@ -956,7 +1065,21 @@ class PdfPane {
     }
   }
 
-  // 缩略图降级：在远距离回收内存时，保留缩略模糊画质，防白屏闪烁
+  scheduleCanvasPrune() {
+    if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET || this.memoryPruneHandle) return;
+    const run = () => {
+      this.memoryPruneHandle = 0;
+      if (this.isScrolling || this.panState || this.zoomPreviewActive) { this.scheduleCanvasPrune(); return; }
+      this.pruneCanvasMemory();
+    };
+    if ("requestIdleCallback" in window) {
+      this.memoryPruneHandle = requestIdleCallback(run, { timeout: CFG.MEMORY_PRUNE_IDLE_MS });
+    } else {
+      this.memoryPruneHandle = setTimeout(run, CFG.MEMORY_PRUNE_IDLE_MS);
+    }
+  }
+
+  // 缩略图降级：只在空闲期做重采样，避免滚动帧被同步 drawImage/resize 阻塞。
   pruneCanvasMemory() {
     if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET) return;
 
@@ -1017,7 +1140,7 @@ class PdfPane {
     if (!this.models.length) return [];
     const scale = Math.max(.00001, this.layoutScale);
     const top = Math.max(0, (this.viewer.scrollTop - overscanPx) / scale);
-    const bottom = (this.viewer.scrollTop + this.viewer.clientHeight + overscanPx) / scale;
+    const bottom = (this.viewer.scrollTop + this.viewportH + overscanPx) / scale;
     let i = this.modelIndexAtBaseY(top);
     const out = [];
 
@@ -1033,36 +1156,38 @@ class PdfPane {
     if (!model) return false;
     const scale = Math.max(.00001, this.layoutScale);
     const top = Math.max(0, (this.viewer.scrollTop - overscanPx) / scale);
-    const bottom = (this.viewer.scrollTop + this.viewer.clientHeight + overscanPx) / scale;
+    const bottom = (this.viewer.scrollTop + this.viewportH + overscanPx) / scale;
     return model.baseTop <= bottom && model.baseTop + model.baseH >= top;
   }
 
-  renderNearViewport({ quality = "fast", overscan = null } = {}) {
+  renderNearViewport({ quality = "fast", overscan = null, includeText = !this.isScrolling } = {}) {
     if (!this.pdf || !this.models.length || this.zoomPreviewActive) return;
 
-    const margin = overscan ?? this.viewer.clientHeight * CFG.RENDER_OVERSCAN_VIEWPORTS;
+    const margin = overscan ?? this.viewportH * CFG.RENDER_OVERSCAN_VIEWPORTS;
     const models = this.modelsInViewport(margin);
-    const keep = new Set(models.map(m => m.n));
 
-    for (const m of this.models) {
-      if (m.rendering && !keep.has(m.n)) {
-        m.ticket++;
-        try { m.renderTask?.cancel() } catch {}
-        m.renderTask = null;
-        m.rendering = false;
-        m.pendingScale = 0;
+    // Only inspect jobs that are actually pending/running. Never scan every page on a scroll frame.
+    if (this.renderingModels.size) {
+      const hardMargin = Math.max(margin, this.viewportH * CFG.RENDER_CANCEL_OVERSCAN_VIEWPORTS);
+      const hardKeep = new Set(this.modelsInViewport(hardMargin));
+      for (const m of [...this.renderingModels]) {
+        if (!hardKeep.has(m)) this.cancelModelRender(m);
       }
     }
 
-    const centerBase = (this.viewer.scrollTop + this.viewer.clientHeight / 2) / Math.max(.00001, this.layoutScale);
-
+    const centerBase = (this.viewer.scrollTop + this.viewportH / 2) / Math.max(.00001, this.layoutScale);
     for (const m of models) {
       const distance = Math.abs((m.baseTop + m.baseH / 2) - centerBase);
       const priority = Math.max(1, 200000 - Math.round(distance * 100));
       this.ensureRendered(m, priority, quality);
     }
 
-    for (const m of this.modelsInViewport(0)) this.scheduleTextLayer(m);
+    if (includeText) this.scheduleVisibleTextLayers();
+  }
+
+  scheduleVisibleTextLayers() {
+    if (this.isScrolling || this.panState || this.zoomPreviewActive) return;
+    for (const m of this.modelsInViewport(96)) this.scheduleTextLayer(m);
   }
 
   cancelSharpRender() {
@@ -1073,9 +1198,9 @@ class PdfPane {
   scheduleSharpRender() {
     this.cancelSharpRender();
     this.sharpTimer = setTimeout(() => {
-      if (!this.pdf || this.zoomPreviewActive || this.panState) return;
-      const visible = this.modelsInViewport(Math.min(220, this.viewer.clientHeight * .18));
-      const centerBase = (this.viewer.scrollTop + this.viewer.clientHeight / 2) / Math.max(.00001, this.layoutScale);
+      if (!this.pdf || this.zoomPreviewActive || this.panState || this.isScrolling) return;
+      const visible = this.modelsInViewport(Math.min(220, this.viewportH * .18));
+      const centerBase = (this.viewer.scrollTop + this.viewportH / 2) / Math.max(.00001, this.layoutScale);
       for (const m of visible) {
         const distance = Math.abs((m.baseTop + m.baseH / 2) - centerBase);
         this.ensureRendered(m, Math.max(1, 300000 - Math.round(distance * 100)), "sharp");
@@ -1121,7 +1246,7 @@ class PdfPane {
     if (!(e.ctrlKey || e.metaKey) || !this.pdf) return;
     e.preventDefault();
 
-    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? Math.max(320, this.viewer.clientHeight) : 1;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? Math.max(320, this.viewportH) : 1;
     const delta = clamp(e.deltaY * unit, -240, 240);
     const base = Number.isFinite(this.wheelZoomTargetScale) ? this.wheelZoomTargetScale : this.scale;
     const nextScale = clamp(base * Math.exp(-delta * .0015), CFG.MIN_SCALE, CFG.MAX_SCALE);
@@ -1130,6 +1255,7 @@ class PdfPane {
       this.zoomPreviewActive = true;
       this.viewer.classList.add("zoom-preview");
       this.cancelSharpRender();
+      updateRenderConcurrency();
 
       const vr = this.viewer.getBoundingClientRect();
       this.zoomBaseMx = e.clientX - vr.left;
@@ -1177,10 +1303,8 @@ class PdfPane {
 
     this.zoomPreviewActive = false;
     this.viewer.classList.remove("zoom-preview");
+    updateRenderConcurrency();
     this.updateSurfaceGeometry(next);
-
-    // 强制触发一次同步布局，防止浏览器滞后读取到旧的 scrollWidth
-    const forceReflow = this.viewer.scrollWidth;
 
     const g = this.zoomAnchor;
     if (g?.model) {
@@ -1188,14 +1312,14 @@ class PdfPane {
       const pageLeftBase = (this.baseSurfaceW - m.baseW) / 2;
       const targetX = this.planeOffsetX + (pageLeftBase + g.rx * m.baseW) * next;
       const targetY = (m.baseTop + g.ry * m.baseH) * next;
-      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
-      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      const maxX = this.maxScrollX();
+      const maxY = this.maxScrollY();
       this.viewer.scrollLeft = clamp(targetX - g.localX, 0, maxX);
       this.viewer.scrollTop = clamp(targetY - g.localY, 0, maxY);
     } else if (g) {
       const ratio = next / Math.max(.00001, g.baseScale);
-      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
-      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      const maxX = this.maxScrollX();
+      const maxY = this.maxScrollY();
       this.viewer.scrollLeft = clamp((g.scrollLeft + g.localX) * ratio - g.localX, 0, maxX);
       this.viewer.scrollTop = clamp((g.scrollTop + g.localY) * ratio - g.localY, 0, maxY);
     }
@@ -1238,22 +1362,20 @@ class PdfPane {
     this.layoutScale = next;
     this.updateSurfaceGeometry(next);
 
-    const forceReflow = this.viewer.scrollWidth;
-
     const g = this.zoomAnchor;
     if (g?.model) {
       const m = g.model;
       const pageLeftBase = (this.baseSurfaceW - m.baseW) / 2;
       const targetX = this.planeOffsetX + (pageLeftBase + g.rx * m.baseW) * next;
       const targetY = (m.baseTop + g.ry * m.baseH) * next;
-      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
-      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      const maxX = this.maxScrollX();
+      const maxY = this.maxScrollY();
       this.viewer.scrollLeft = clamp(targetX - g.localX, 0, maxX);
       this.viewer.scrollTop = clamp(targetY - g.localY, 0, maxY);
     } else {
       const ratio = next / Math.max(.00001, oldLayoutScale);
-      const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
-      const maxY = Math.max(0, this.viewer.scrollHeight - this.viewer.clientHeight);
+      const maxX = this.maxScrollX();
+      const maxY = this.maxScrollY();
       const docX = this.viewer.scrollLeft + (ax - vr.left);
       const docY = this.viewer.scrollTop + (ay - vr.top);
       this.viewer.scrollLeft = clamp(docX * ratio - (ax - vr.left), 0, maxX);
@@ -1282,7 +1404,7 @@ class PdfPane {
   fitWidth({ propagate = true, persist = true } = {}) {
     if (!this.pdf || !this.models.length) return;
     const ref = this.models[this.currentPage ? this.currentPage - 1 : 0] || this.models[0];
-    const available = Math.max(180, this.viewer.clientWidth - 40);
+    const available = Math.max(180, this.viewportW - 40);
     this.setScale(available / ref.baseW, { propagate: false, persist, mode: "fit-width" });
     if (propagate && appState.syncZoom && this.other().pdf) this.other().fitWidth({ propagate: false, persist });
   }
@@ -1322,7 +1444,7 @@ class PdfPane {
 
   updateCurrentPage() {
     if (!this.models.length) return;
-    const probe = this.viewer.scrollTop + Math.min(150, this.viewer.clientHeight * .25);
+    const probe = this.viewer.scrollTop + Math.min(150, this.viewportH * .25);
     const idx = this.modelIndexAtOffset(probe);
     const best = this.models[idx]?.n || 1;
     if (best !== this.currentPage) {
@@ -1334,41 +1456,81 @@ class PdfPane {
   getScrollAnchor() {
     if (!this.models.length) return { page: 1, y: 0, x: 0 };
     const scale = Math.max(.00001, this.layoutScale);
-    const probe = this.viewer.scrollTop + Math.min(150, this.viewer.clientHeight * .25);
+    const probe = this.viewer.scrollTop + Math.min(150, this.viewportH * .25);
     const baseProbe = probe / scale;
     const idx = this.modelIndexAtBaseY(baseProbe);
     const m = this.models[idx];
     const y = clamp((baseProbe - m.baseTop) / Math.max(1, m.baseH), 0, 1);
-    const maxX = Math.max(1, this.viewer.scrollWidth - this.viewer.clientWidth);
+    const maxX = Math.max(1, this.maxScrollX());
     return { page: m.n, y, x: this.viewer.scrollLeft / maxX };
+  }
+
+  consumeSyncEcho() {
+    const echo = this.syncEcho;
+    if (!echo) return false;
+    if (performance.now() > echo.until) { this.syncEcho = null; return false; }
+    const matched = Math.abs(this.viewer.scrollTop - echo.top) < .75 && Math.abs(this.viewer.scrollLeft - echo.left) < .75;
+    if (matched) this.syncEcho = null;
+    return matched;
   }
 
   applySyncedAnchor(anchor, source) {
     if (!this.pdf || !this.models.length) return;
     const page = source.mapPageTo(this, anchor.page);
     const m = this.models[page - 1];
-    const probeOffset = Math.min(150, this.viewer.clientHeight * .25);
-    const top = (m.baseTop + anchor.y * m.baseH) * this.layoutScale - probeOffset;
-    const maxX = Math.max(0, this.viewer.scrollWidth - this.viewer.clientWidth);
-    this.viewer.scrollTop = Math.max(0, top);
-    this.viewer.scrollLeft = anchor.x * maxX;
+    const probeOffset = Math.min(150, this.viewportH * .25);
+    const top = clamp((m.baseTop + anchor.y * m.baseH) * this.layoutScale - probeOffset, 0, this.maxScrollY());
+    const left = clamp(anchor.x * this.maxScrollX(), 0, this.maxScrollX());
+
+    if (Math.abs(this.viewer.scrollTop - top) < .25 && Math.abs(this.viewer.scrollLeft - left) < .25) return;
+    this.syncEcho = { top, left, until: performance.now() + 100 };
+    this.viewer.scrollTo({ top, left, behavior: "auto" });
+  }
+
+  beginScrollActivity(idleMs = CFG.SCROLL_IDLE_MS) {
+    if (!this.isScrolling) {
+      this.isScrolling = true;
+      this.cancelSharpRender();
+      updateRenderConcurrency();
+    }
+    this.armScrollIdle(idleMs);
+  }
+
+  armScrollIdle(idleMs = CFG.SCROLL_IDLE_MS) {
+    clearTimeout(this.scrollIdleTimer);
+    this.scrollIdleTimer = setTimeout(() => this.finishScrollActivity(), idleMs);
+  }
+
+  finishScrollActivity() {
+    clearTimeout(this.scrollIdleTimer);
+    this.scrollIdleTimer = 0;
+    const wasScrolling = this.isScrolling;
+    this.isScrolling = false;
+    if (wasScrolling) updateRenderConcurrency();
+    if (!this.pdf) return;
+
+    if (this.geometryDirtyModels.size) this.flushGeometryUpdates();
+    this.updateCurrentPage();
+    if (!this.zoomPreviewActive) this.renderNearViewport({ quality: "fast", includeText: true });
+    this.scheduleVisibleTextLayers();
+    this.scheduleSharpRender();
+    this.schedulePersistView();
+    this.scheduleCanvasPrune();
   }
 
   onScroll() {
-    if (!this.pdf) return;
-    cancelAnimationFrame(this.scrollRaf);
-    this.cancelSharpRender();
-
+    if (!this.pdf || this.scrollRaf) return;
     this.scrollRaf = requestAnimationFrame(() => {
-      this.updateCurrentPage();
-      if (!this.zoomPreviewActive) this.renderNearViewport({ quality: "fast" });
-      this.scheduleSharpRender();
-      this.schedulePersistView();
+      this.scrollRaf = 0;
+      if (!this.pdf) return;
 
-      if (appState.syncScroll && !appState.scrollLock && this.other().pdf) {
-        appState.scrollLock = true;
+      this.beginScrollActivity();
+      this.updateCurrentPage();
+      if (!this.zoomPreviewActive) this.renderNearViewport({ quality: "fast", includeText: false });
+
+      const isEcho = this.consumeSyncEcho();
+      if (appState.syncScroll && !isEcho && this.other().pdf) {
         this.other().applySyncedAnchor(this.getScrollAnchor(), this);
-        requestAnimationFrame(() => appState.scrollLock = false);
       }
     });
   }
@@ -1376,12 +1538,14 @@ class PdfPane {
   onResize() {
     cancelAnimationFrame(this.resizeRaf);
     this.resizeRaf = requestAnimationFrame(() => {
+      this.resizeRaf = 0;
+      this.refreshViewportMetrics();
       if (!this.pdf) return;
       if (this.zoomMode === "fit-width") {
         this.fitWidth({ propagate: false, persist: false });
       } else {
         this.updateSurfaceGeometry(this.layoutScale);
-        this.renderNearViewport({ quality: "fast" });
+        this.renderNearViewport({ quality: "fast", includeText: !this.isScrolling });
         this.scheduleSharpRender();
       }
     });
@@ -1416,12 +1580,25 @@ class PdfPane {
     clearTimeout(this.viewSaveTimer);
     clearTimeout(this.wheelZoomTimer);
     clearTimeout(this.sharpTimer);
+    clearTimeout(this.scrollIdleTimer);
+    clearTimeout(this.geometryTimer);
     cancelAnimationFrame(this.scrollRaf);
     cancelAnimationFrame(this.resizeRaf);
+    cancelAnimationFrame(this.panRaf);
+    if (this.memoryPruneHandle) {
+      if ("cancelIdleCallback" in window) cancelIdleCallback(this.memoryPruneHandle);
+      else clearTimeout(this.memoryPruneHandle);
+    }
+    this.memoryPruneHandle = 0;
 
     this.zoomPreviewActive = false;
+    this.isScrolling = false;
     this.viewer.classList.remove("zoom-preview");
+    updateRenderConcurrency();
     this.zoomAnchor = null;
+    this.syncEcho = null;
+    this.renderingModels.clear();
+    this.geometryDirtyModels.clear();
 
     try { await this.persistView() } catch {}
 
@@ -1469,6 +1646,11 @@ class PdfPane {
 }
 
 const panes = { left: new PdfPane("left"), right: new PdfPane("right") };
+
+function updateRenderConcurrency() {
+  const interactive = Object.values(panes).some(p => p.isScrolling || p.panState || p.zoomPreviewActive);
+  renderQueue.setLimit(interactive ? CFG.INTERACTIVE_RENDER_JOBS : CFG.MAX_RENDER_JOBS);
+}
 
 function updateToggleUI() { for (const id of ["syncScroll", "syncPage", "syncZoom", "syncSelection"]) $(`#${id}`).setAttribute("aria-pressed", String(!!appState[id])); }
 function updatePanCursor() { for (const p of Object.values(panes)) { p.viewer.classList.toggle("ctrl-pan-ready", !!appState.ctrlDown); p.viewer.classList.toggle("hand-ready", !!appState.spaceDown); } }
@@ -1527,16 +1709,30 @@ document.addEventListener("keyup", e => {
 });
 window.addEventListener("blur", () => { appState.spaceDown = false; appState.ctrlDown = false; updatePanCursor() });
 
-const main = $("#main"), divider = $("#divider"); let resizing = false;
+const main = $("#main"), divider = $("#divider"); let resizing = false, splitRaf = 0, pendingSplitRatio = appState.splitRatio;
 function applySplitRatio(ratio) {
   ratio = clamp(ratio, .22, .78); appState.splitRatio = ratio;
   main.style.gridTemplateColumns = `minmax(0,${ratio}fr) var(--divider-w) minmax(0,${1 - ratio}fr)`;
 }
 applySplitRatio(appState.splitRatio);
 divider.addEventListener("pointerdown", e => { resizing = true; divider.setPointerCapture(e.pointerId); document.body.style.userSelect = "none" });
-divider.addEventListener("pointermove", e => { if (!resizing) return; const r = main.getBoundingClientRect(); applySplitRatio((e.clientX - r.left) / r.width); });
-divider.addEventListener("pointerup", () => { resizing = false; document.body.style.userSelect = ""; persistSettings(); panes.left.onResize(); panes.right.onResize(); });
-const ro = new ResizeObserver(() => requestAnimationFrame(() => { panes.left.onResize(); panes.right.onResize() })); ro.observe(main);
+divider.addEventListener("pointermove", e => {
+  if (!resizing) return;
+  const r = main.getBoundingClientRect();
+  pendingSplitRatio = (e.clientX - r.left) / r.width;
+  if (!splitRaf) splitRaf = requestAnimationFrame(() => { splitRaf = 0; applySplitRatio(pendingSplitRatio); });
+});
+divider.addEventListener("pointerup", () => {
+  resizing = false;
+  if (splitRaf) { cancelAnimationFrame(splitRaf); splitRaf = 0; applySplitRatio(pendingSplitRatio); }
+  document.body.style.userSelect = ""; persistSettings(); panes.left.onResize(); panes.right.onResize();
+});
+let globalResizeRaf = 0;
+const ro = new ResizeObserver(() => {
+  if (globalResizeRaf) return;
+  globalResizeRaf = requestAnimationFrame(() => { globalResizeRaf = 0; panes.left.onResize(); panes.right.onResize(); });
+});
+ro.observe(main);
 
 let selectionTimer = 0; document.addEventListener("selectionchange", () => { clearTimeout(selectionTimer); selectionTimer = setTimeout(handleSelectionChange, 70); });
 function normalizeText(s) { return (s || "").normalize("NFKC").toLocaleLowerCase().replace(/[\s\p{P}\p{S}]+/gu, ""); }
