@@ -3,69 +3,371 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<title>Dual PDF Enterprise Reader</title>
+<meta name="color-scheme" content="light dark">
+<title>对读 · PDF 工作台</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/web/pdf_viewer.css">
 <style>
+/*
+ * Liquid Glass presentation layer.
+ * Original DOM, scripts, data hooks, reading geometry and state rules retained.
+ * Blurring belongs to top-level functional surfaces only, never PDF content.
+ */
 :root {
-  --bg: #090d12; --panel: #0f151c; --panel-2: #141c25; --panel-3: #192431;
-  --line: #253342; --line-2: #35475b; --text: #f1f5f9; --muted: #91a0b2;
-  --accent: #5b9cff; --accent-2: #86b8ff; --danger: #ff7a7a; --success: #70d6a3;
-  --topbar-h: 52px; --pane-toolbar-h: 44px; --divider-w: 6px; --radius: 9px;
-  --shadow: 0 18px 46px rgba(0,0,0,.35);
+  color-scheme: light dark;
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-title: 22px;
+  --font-headline: 14px;
+  --font-body: 13px;
+  --font-callout: 12px;
+  --font-label: 11px;
+  --font-caption: 10px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-emphasis: 600;
+  --text-primary: #23262d;
+  --text-secondary: #595e69;
+  --text-tertiary: #696e78;
+  --accent: #0069d9;
+  --accent-on: #fff;
+  --danger: #be3036;
+  --window-bg: #eceef2;
+  --canvas: #dedfe3;
+  --surface-solid: #f8f9fb;
+  --surface-input: rgb(255 255 255 / .55);
+  --stroke-subtle: rgb(48 54 69 / .10);
+  --stroke-strong: rgb(48 54 69 / .24);
+  --focus-ring: rgb(0 105 217 / .68);
+  --focus-halo: rgb(0 105 217 / .12);
+  --glass-regular: rgb(246 248 252 / .76);
+  --glass-clear: rgb(249 250 253 / .62);
+  --glass-toolbar: rgb(248 250 255 / .64);
+  --glass-sidebar: rgb(244 246 252 / .85);
+  --glass-popover: rgb(250 251 254 / .90);
+  --glass-control: rgb(255 255 255 / .35);
+  --glass-selected: rgb(255 255 255 / .86);
+  --glass-hover: rgb(255 255 255 / .55);
+  --glass-pressed: rgb(83 105 144 / .13);
+  --glass-border: rgb(255 255 255 / .77);
+  --glass-highlight: rgb(255 255 255 / .94);
+  --glass-lowlight: rgb(77 88 111 / .13);
+  --glass-specular: linear-gradient(165deg, rgb(255 255 255 / .40), transparent 38%, transparent 74%, rgb(255 255 255 / .12));
+  --glass-blur: 12px;
+  --glass-blur-popover: 22px;
+  --glass-blur-sidebar: 18px;
+  --glass-saturation: 1.35;
+  --glass-shadow: 0 3px 12px rgb(31 40 59 / .08), 0 1px 3px rgb(31 40 59 / .06);
+  --glass-shadow-elevated: 0 16px 42px rgb(26 34 54 / .15), 0 3px 8px rgb(26 34 54 / .07);
+  --glass-inner: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 var(--glass-lowlight);
+  --control-shadow: 0 1px 3px rgb(30 40 60 / .12), inset 0 1px 0 var(--glass-highlight);
+  --selection-wash: rgb(0 105 217 / .09);
+  --backdrop-dim: rgb(18 25 41 / .12);
+  --scroll-thumb: rgb(100 106 119 / .22);
+  --scroll-thumb-active: rgb(90 96 111 / .48);
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-capsule: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --transition-fast: 140ms;
+  --transition-normal: 200ms;
+  --transition-panel: 260ms;
+  --ease-material: cubic-bezier(.2,.75,.25,1);
+  --z-toolbar: 40;
+  --z-focus: 45;
+  --z-loading: 90;
+  --z-popover: 100;
+  --z-backdrop: 110;
+  --z-sidebar: 120;
+  --z-toast: 150;
+  /* Compatibility aliases used by existing inline SVG and PDF rules. */
+  --bg: var(--window-bg);
+  --panel: var(--surface-solid);
+  --glass: var(--glass-regular);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --line: var(--stroke-subtle);
+  --hover: var(--glass-hover);
+  --shadow: var(--glass-shadow-elevated);
+  /* These dimensions are shared with the original view and remain unchanged. */
+  --topbar-h: 44px;
+  --pane-toolbar-h: 28px;
+  --divider-w: 5px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #f0f1f5;
+    --text-secondary: #c1c5cf;
+    --text-tertiary: #a4aab7;
+    --accent: #6ab2ff;
+    --accent-on: #fff;
+    --danger: #ff8c90;
+    --window-bg: #23252b;
+    --canvas: #191b20;
+    --surface-solid: #30333c;
+    --surface-input: rgb(8 12 20 / .27);
+    --stroke-subtle: rgb(219 227 255 / .12);
+    --stroke-strong: rgb(219 227 255 / .30);
+    --focus-ring: rgb(117 186 255 / .9);
+    --focus-halo: rgb(89 170 255 / .17);
+    --glass-regular: rgb(41 45 56 / .80);
+    --glass-clear: rgb(37 41 51 / .84);
+    --glass-toolbar: rgb(53 57 68 / .72);
+    --glass-sidebar: rgb(36 40 50 / .88);
+    --glass-popover: rgb(44 48 59 / .94);
+    --glass-control: rgb(217 226 255 / .06);
+    --glass-selected: rgb(168 185 219 / .22);
+    --glass-hover: rgb(213 227 255 / .11);
+    --glass-pressed: rgb(6 11 23 / .30);
+    --glass-border: rgb(234 241 255 / .17);
+    --glass-highlight: rgb(245 249 255 / .24);
+    --glass-lowlight: rgb(0 0 0 / .24);
+    --glass-specular: linear-gradient(165deg, rgb(226 236 255 / .12), transparent 38%, transparent 74%, rgb(225 235 255 / .025));
+    --glass-saturation: 1.2;
+    --glass-shadow: 0 3px 12px rgb(0 0 0 / .19), 0 1px 3px rgb(0 0 0 / .12);
+    --glass-shadow-elevated: 0 16px 42px rgb(0 0 0 / .35), 0 3px 8px rgb(0 0 0 / .2);
+    --control-shadow: 0 1px 3px rgb(0 0 0 / .20), inset 0 1px 0 var(--glass-highlight);
+    --selection-wash: rgb(106 178 255 / .14);
+    --backdrop-dim: rgb(0 0 0 / .25);
+    --scroll-thumb: rgb(210 220 245 / .20);
+    --scroll-thumb-active: rgb(210 220 245 / .43);
+  }
 }
 
-* { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
-
+/* Base controls. Geometry-changing transitions are deliberately excluded. */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font: 14px/1.35 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-button, input { font: inherit; }
-button { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 8px; min-height: 32px; padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: border-color .12s, background .12s, color .12s, transform .05s; }
-button:hover { border-color: var(--line-2); background: #1a2531; }
-button:active { transform: translateY(1px); }
-button[aria-pressed="true"], button.active { background: #17345e; border-color: #3d7ed4; color: #eef6ff; }
-button:disabled { opacity: .42; cursor: not-allowed; transform: none; }
-input { border: 1px solid var(--line); background: #091018; color: var(--text); border-radius: 7px; outline: none; }
-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255,.15); }
-.icon-btn { width: 34px; padding: 0; display: inline-grid; place-items: center; font-size: 17px; }
-.primary { background: #1d5ca8; border-color: #377dce; }
-.primary:hover { background: #2369bd; }
+html, body { height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--text); font:var(--weight-regular) var(--font-body)/1.4 var(--font-system); -webkit-font-smoothing:antialiased; }
+button, input, select { font:inherit; color:inherit; }
+button { border:0; background:transparent; border-radius:var(--radius-sm); min-height:28px; padding:var(--space-1) var(--space-2); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px; white-space:nowrap; transition:scale var(--transition-fast) var(--ease-material), transform var(--transition-fast) var(--ease-material), opacity var(--transition-fast) var(--ease-material), background-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease; }
+button:hover:not(:disabled) { background-color:var(--glass-hover); }
+button:active:not(:disabled) { background-color:var(--glass-pressed); scale:.98; }
+button:disabled { opacity:.38; cursor:default; scale:1; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, .divider:focus-visible, .viewer:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+.viewer:focus-visible { outline-offset:-2px; }
+button svg { width:18px; height:18px; flex:none; stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+input, select { border:1px solid var(--stroke-subtle); border-radius:var(--radius-sm); background:var(--surface-input); padding:5px var(--space-2); min-width:0; }
+input:focus { outline:2px solid var(--focus-ring); outline-offset:1px; }
+input::placeholder { color:var(--text-tertiary); opacity:1; }
+input[type=checkbox] { accent-color:var(--accent); }
+[hidden] { display:none!important; }
+* { scrollbar-width:thin; scrollbar-color:var(--scroll-thumb) transparent; }
+:is(.viewer,.history-list,.search-results):hover { scrollbar-color:var(--scroll-thumb-active) transparent; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-thumb { background:var(--scroll-thumb); border-radius:var(--radius-capsule); }
+::-webkit-scrollbar-thumb:hover { background:var(--scroll-thumb-active); }
 
-.app { height: 100%; display: grid; grid-template-rows: var(--topbar-h) 1fr; }
-.topbar { display: grid; grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr); align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: rgba(13,19,26,.97); backdrop-filter: blur(14px); z-index: 40; }
-.brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.brand-mark { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(145deg, #1d64bc, #253d61); font-weight: 800; letter-spacing: -.03em; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
-.brand-copy { min-width: 0; }
-.brand-title { font-weight: 760; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.brand-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.global-tools { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: #0b1118; }
-.global-tools button { min-height: 30px; border-color: transparent; background: transparent; }
-.global-tools button:hover { background: var(--panel-3); border-color: transparent; }
-.global-tools button[aria-pressed="true"] { background: #17345e; color: #eaf3ff; border-color: #2d69b0; }
-.top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
-.session-hint { font-size: 11px; color: var(--muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Material engine: one blur per functional surface; children only use tint. */
+:is(.brand,.layout-switch,.top-actions,.reading-controls,.global-tools,.search-panel,.history-drawer,.selection-tools,.loading-card,.toast,.focus-exit) {
+  --material-bg: var(--glass-regular);
+  --material-blur: var(--glass-blur);
+  background-color:var(--material-bg);
+  background-image:var(--glass-specular);
+  background-clip:padding-box;
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-inner),var(--glass-shadow);
+  -webkit-backdrop-filter:blur(var(--material-blur)) saturate(var(--glass-saturation));
+  backdrop-filter:blur(var(--material-blur)) saturate(var(--glass-saturation));
+}
+:is(.brand,.layout-switch,.top-actions) { --material-bg:var(--glass-toolbar); }
+:is(.reading-controls,.selection-tools,.focus-exit) { --material-bg:var(--glass-clear); }
+:is(.global-tools,.search-panel,.loading-card,.toast) { --material-bg:var(--glass-popover); --material-blur:var(--glass-blur-popover); box-shadow:var(--glass-inner),var(--glass-shadow-elevated); }
+.history-drawer { --material-bg:var(--glass-sidebar); --material-blur:var(--glass-blur-sidebar); box-shadow:var(--glass-inner),var(--glass-shadow-elevated); }
 
-.main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) var(--divider-w) minmax(0, 1fr); background: #070a0e; }
-.divider { position: relative; background: #1d2834; cursor: col-resize; z-index: 6; }
-.divider::before { content: ""; position: absolute; inset: 0 -7px; }
-.divider::after { content: ""; position: absolute; left: 2px; top: 42%; bottom: 42%; width: 2px; border-radius: 2px; background: #5a6c80; opacity: .7; }
-.pane { min-width: 0; min-height: 0; display: grid; grid-template-rows: var(--pane-toolbar-h) 1fr; position: relative; background: var(--panel); }
-.pane-toolbar { min-width: 0; display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: #101720; z-index: 8; }
-.file-button { max-width: min(38vw, 330px); display: flex; align-items: center; gap: 7px; min-width: 0; }
-.file-button .file-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
-.file-button .file-dot { width: 7px; height: 7px; border-radius: 50%; background: #5d6a79; flex: 0 0 auto; }
-.pane.loaded .file-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(112,214,163,.1); }
-.toolbar-spacer { flex: 1; min-width: 4px; }
-.tool-group { display: flex; align-items: center; gap: 3px; padding: 2px; border: 1px solid #202d3a; border-radius: 8px; background: #0c1219; }
-.tool-group button { min-height: 28px; height: 28px; padding: 3px 7px; background: transparent; border-color: transparent; }
-.tool-group button:hover { background: #1a2531; }
-.page-input { width: 46px; height: 28px; text-align: center; padding: 3px 5px; }
-.counter, .zoom-label { font-variant-numeric: tabular-nums; color: #cdd7e1; font-size: 12px; white-space: nowrap; }
-.zoom-label { min-width: 46px; text-align: center; }
+/* Window geometry stays identical to the incoming application. */
+.app { height:100%; display:grid; grid-template-rows:var(--topbar-h) minmax(0,1fr); }
+.topbar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 var(--space-3); gap:14px; background:var(--window-bg); border:0; z-index:var(--z-toolbar); min-width:0; }
+.brand, .top-actions { display:flex; align-items:center; gap:var(--space-2); min-width:0; border-radius:var(--radius-capsule); }
+.brand { justify-self:start; padding:1px var(--space-3) 1px var(--space-1); }
+.brand-title { font-weight:var(--weight-emphasis); font-size:var(--font-body); letter-spacing:-.2px; }
+.toolbar-separator { height:16px; width:1px; background:var(--stroke-subtle); margin:0 3px; }
+.top-actions { justify-self:end; justify-content:flex-end; gap:3px; padding:1px var(--space-1); }
+.top-actions button, .brand button { border-radius:var(--radius-capsule); color:var(--text-secondary); }
+.top-actions button:hover, .brand button:hover { color:var(--text-primary); }
+.top-actions button[aria-expanded=true], .top-actions button[aria-pressed=true] { background:var(--glass-selected); box-shadow:var(--control-shadow); color:var(--text-primary); }
+.session-hint { display:none; }
+.layout-switch { display:flex; gap:1px; padding:2px; border-radius:var(--radius-capsule); }
+.layout-switch button { min-height:25px; padding:2px 11px; border-radius:var(--radius-capsule); font-size:var(--font-label); color:var(--text-secondary); }
+.layout-switch button[aria-pressed=true] { background-color:var(--glass-selected); background-image:var(--glass-specular); box-shadow:var(--control-shadow); color:var(--text-primary); }
+.layout-switch svg { width:15px; height:15px; }
+.main { min-height:0; min-width:0; display:grid; grid-template-columns:minmax(0,1fr) var(--divider-w) minmax(0,1fr); padding:0; gap:0; background:var(--canvas); }
+.pane { position:relative; min-width:0; min-height:0; display:grid; grid-template-rows:var(--pane-toolbar-h) minmax(0,1fr); overflow:hidden; border:0; border-radius:0; }
+.pane-toolbar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-2); padding:0 10px; background:var(--window-bg); border:0; min-width:0; z-index:8; }
+.file-button { padding:0 var(--space-1); min-height:24px; max-width:calc(100% - 38px); min-width:0; font-size:var(--font-label); color:var(--text-secondary); border-radius:var(--radius-capsule); }
+.file-button .file-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-button svg { width:12px; height:12px; }
+.file-dot { display:none; }
+.pane-focus { font-size:0; width:26px; min-height:24px; padding:3px; color:var(--text-secondary); border-radius:var(--radius-capsule); }
+.pane-focus::after { content:"↗"; font-size:15px; }
+.divider { position:relative; background:var(--window-bg); cursor:col-resize; touch-action:none; z-index:9; border-inline:1px solid var(--stroke-subtle); }
+.divider::before { content:""; position:absolute; inset:0 -3px; }
+.divider::after { content:""; position:absolute; left:1px; top:calc(50% - 18px); width:1px; height:36px; background:var(--text-tertiary); border-radius:var(--radius-capsule); }
+.divider:hover { background:var(--selection-wash); }
 
-.viewer { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; background: #0b1016; position: relative; touch-action: none; }
+/* Reading controls float over content without consuming document space. */
+.reading-controls { position:absolute; z-index:15; left:50%; bottom:var(--space-4); transform:translateX(-50%) translateY(5px); display:flex; align-items:center; gap:10px; padding:5px var(--space-2); border-radius:var(--radius-capsule); opacity:0; pointer-events:none; transition:opacity var(--transition-normal) var(--ease-material),transform var(--transition-normal) var(--ease-material); max-width:calc(100% - 12px); }
+.pane.controls-visible .reading-controls, .reading-controls:hover, .reading-controls:focus-within { opacity:1; pointer-events:auto; transform:translateX(-50%); }
+.pane:not(.loaded) .reading-controls { display:none; }
+.tool-group { display:flex; align-items:center; gap:1px; white-space:nowrap; }
+.tool-group + .tool-group { border-left:1px solid var(--stroke-subtle); padding-left:var(--space-2); }
+.tool-group button { height:26px; min-height:26px; padding:2px 6px; font-size:var(--font-label); border-radius:var(--radius-capsule); }
+.icon-btn { width:25px; padding:0; font-size:18px!important; }
+.page-input { width:34px; height:22px; text-align:center; padding:1px 3px; font-size:var(--font-label); border-radius:var(--radius-xs); background:var(--glass-control); box-shadow:inset 0 1px 2px var(--stroke-subtle); }
+.counter, .zoom-label { color:var(--text-secondary); font-size:var(--font-label); font-variant-numeric:tabular-nums; }
+.counter { padding-right:3px; }
+.zoom-label { min-width:37px; text-align:center; }
+.reading-controls :is(.counter,.zoom-label) { color:var(--text-primary); }
+.status { position:absolute; bottom:5px; left:9px; max-width:50%; font-size:var(--font-caption); color:var(--text-secondary); background:var(--surface-solid); border-radius:var(--radius-xs); padding:0 3px; pointer-events:none; opacity:0; }
+.pane.controls-visible .status { opacity:1; }
+.empty { max-width:360px; margin:auto; padding:var(--space-6); text-align:center; color:var(--text-secondary); }
+.empty-symbol { font-size:36px; color:var(--text-tertiary); margin-bottom:18px; }
+.empty strong { display:block; font-size:var(--font-title); font-weight:var(--weight-medium); letter-spacing:-.5px; color:var(--text-primary); margin-bottom:var(--space-2); }
+.empty button { display:block; margin:22px auto 0; background:#0073e6; color:var(--accent-on); padding:5px 17px; border-radius:var(--radius-capsule); box-shadow:inset 0 1px 0 rgb(255 255 255 / .28),0 2px 4px rgb(0 62 147 / .16); }
+.empty button:hover { background:#006bd6; }
+.tips { font-size:var(--font-label); line-height:1.8; margin-top:var(--space-6); }
+.kbd { font-size:var(--font-caption); color:var(--text-primary); }
+
+/* Existing popovers retain their placement, focus handling and dismissal. */
+.global-tools { position:absolute; right:84px; top:49px; display:grid; gap:2px; min-width:220px; padding:10px; border-radius:var(--radius-lg); z-index:var(--z-popover); }
+.popover-title { padding:3px var(--space-2) var(--space-2); font-size:var(--font-label); color:var(--text-tertiary); }
+.global-tools button { position:relative; justify-content:flex-start; gap:var(--space-2); font-size:var(--font-callout); min-height:32px; border-radius:var(--radius-sm); }
+.global-tools button::after { content:""; margin-left:auto; width:27px; height:16px; border-radius:var(--radius-capsule); background:var(--stroke-strong); box-shadow:inset 0 0 0 1px var(--stroke-subtle); }
+.global-tools button::before { content:""; position:absolute; right:21px; top:calc(50% - 6px); width:12px; height:12px; border-radius:var(--radius-capsule); background:#fff; box-shadow:0 1px 2px rgb(0 0 0 / .2); transition:transform var(--transition-fast) var(--ease-material); pointer-events:none; }
+.global-tools button[aria-pressed=true]::after { background:#0073e6; }
+.global-tools button[aria-pressed=true]::before { transform:translateX(11px); }
+.global-tools button[aria-pressed=true] { color:var(--text-primary); }
+.global-tools button span { display:inline!important; }
+.search-panel { position:fixed; right:var(--space-3); top:50px; width:min(365px,calc(100vw - 24px)); max-height:calc(100dvh - 64px); overflow:auto; z-index:var(--z-popover); padding:var(--space-4); border-radius:var(--radius-xl); }
+.search-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.search-head strong { font-weight:var(--weight-emphasis); }
+#closeSearch { border-radius:var(--radius-capsule); color:var(--text-secondary); }
+.search-field input { width:100%; height:32px; border-radius:var(--radius-capsule); padding-inline:var(--space-3); background:var(--surface-input); box-shadow:inset 0 1px 2px var(--stroke-subtle); }
+.search-field input:focus, .history-controls input:focus { background:var(--glass-selected); box-shadow:0 0 0 4px var(--focus-halo); }
+.search-options { display:flex; align-items:center; gap:5px; font-size:var(--font-label); margin-top:var(--space-2); }
+.search-options select { font-size:var(--font-label); max-width:112px; border-radius:var(--radius-sm); background-color:var(--glass-control); }
+.search-options label { display:flex; align-items:center; gap:3px; }
+.search-options button { padding:3px 6px; min-height:24px; border-radius:var(--radius-capsule); background-color:var(--glass-control); }
+.search-status { font-size:var(--font-label); color:var(--text-secondary); line-height:1.6; margin:var(--space-3) 0 var(--space-2); }
+.search-results { max-height:45vh; overflow:auto; display:grid; gap:3px; }
+.search-result { text-align:left; display:block; white-space:normal; padding:var(--space-2); font-size:var(--font-label); line-height:1.7; border-radius:var(--radius-sm); }
+.search-result span { overflow-wrap:anywhere; }
+.search-result strong { display:block; color:var(--accent); font-weight:var(--weight-medium); }
+.search-result.active { background:var(--selection-wash); box-shadow:inset 0 0 0 1px var(--stroke-subtle); }
+.textLayer span.search-hit { background:#ffdb667d; }
+.textLayer span.search-current { background:#ffaa4299; outline:1px solid #db8921; }
+
+/* The historical records remain the same modal drawer, styled as a sidebar. */
+.drawer-backdrop { position:fixed; inset:0; background:var(--backdrop-dim); z-index:var(--z-backdrop); opacity:0; pointer-events:none; transition:opacity var(--transition-normal) ease; }
+.drawer-backdrop.show { opacity:1; pointer-events:auto; }
+.history-drawer { position:fixed; top:var(--space-2); left:var(--space-2); bottom:var(--space-2); width:min(340px,calc(100vw - 16px)); z-index:var(--z-sidebar); display:grid; grid-template-rows:48px auto minmax(0,1fr) auto; transform:translateX(calc(-100% - 18px)); transition:transform var(--transition-panel) var(--ease-material); border-radius:var(--radius-xl); }
+.history-drawer.open { transform:none; }
+.drawer-head { display:flex; align-items:center; padding:10px 15px; gap:var(--space-2); }
+.drawer-head strong { font-size:var(--font-headline); font-weight:var(--weight-emphasis); }
+.drawer-head .spacer { flex:1; }
+.drawer-head button { font-size:var(--font-label); color:var(--text-secondary); border-radius:var(--radius-capsule); }
+.history-controls { padding:0 13px var(--space-3); }
+.history-controls input { width:100%; height:29px; background:var(--surface-input); font-size:var(--font-callout); border-radius:var(--radius-capsule); padding-inline:var(--space-3); }
+.history-list { overflow:auto; padding:0 var(--space-2) var(--space-3); }
+.history-item { padding:var(--space-3) 9px; border:0; border-radius:var(--radius-lg); margin-bottom:var(--space-1); background:transparent; }
+.history-item:hover { background:var(--glass-control); }
+.history-item:focus-within { background:var(--selection-wash); }
+.history-meta { min-width:0; }
+.history-name { font-size:var(--font-callout); font-weight:var(--weight-medium); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.history-sub { font-size:var(--font-caption); color:var(--text-secondary); margin:5px 0 var(--space-2); line-height:1.6; }
+.history-actions { display:flex; gap:var(--space-1); }
+.history-actions button { min-height:23px; padding:3px 6px; font-size:var(--font-caption); background:var(--glass-control); border-radius:var(--radius-capsule); }
+.history-actions button:first-child { color:var(--accent); }
+.history-actions button:last-child { margin-left:auto; color:var(--danger); }
+.history-empty { padding:32px 15px; color:var(--text-secondary); font-size:var(--font-callout); text-align:center; }
+.drawer-foot { padding:var(--space-3) 15px; font-size:var(--font-caption); color:var(--text-tertiary); border-top:1px solid var(--stroke-subtle); }
+.selection-tools { position:fixed; z-index:var(--z-popover); display:flex; gap:var(--space-1); align-items:center; padding:var(--space-1); border-radius:var(--radius-md); }
+.selection-state { font-size:var(--font-caption); padding:0 5px; color:var(--text-primary); }
+.selection-tools button { font-size:var(--font-label); border-radius:var(--radius-sm); }
+.loading { position:fixed; inset:72px 0 0; display:grid; place-items:center; background:var(--backdrop-dim); z-index:var(--z-loading); pointer-events:none; }
+.loading-card { padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); }
+.toast { display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%); max-width:90vw; padding:9px var(--space-4); border-radius:var(--radius-capsule); font-size:var(--font-callout); z-index:var(--z-toast); }
+.toast.show { display:block; }
+.toast.error { color:var(--danger); }
+
+/* Do not override hidden attributes or script-owned transform coordinates. */
+body[data-layout=left] .main, body[data-layout=right] .main { grid-template-columns:minmax(0,1fr)!important; }
+body:not([data-layout=dual]) .divider { display:none; }
+.focus-exit { display:none; position:fixed; right:var(--space-3); top:10px; z-index:var(--z-focus); font-size:var(--font-label); border-radius:var(--radius-capsule); opacity:.25; }
+.focus-exit:hover, .focus-exit:focus-visible { opacity:1; }
+body.zen { --topbar-h:0px; --pane-toolbar-h:0px; }
+body.zen .topbar, body.zen .pane-toolbar { visibility:hidden; overflow:hidden; }
+body.zen .focus-exit { display:flex; }
+body.zen .search-panel { top:48px; }
+@keyframes glass-appear { from { opacity:0; translate:0 -3px; scale:.985; } to { opacity:1; translate:0 0; scale:1; } }
+:is(.global-tools,.search-panel,.selection-tools):not([hidden]) { animation:glass-appear var(--transition-normal) var(--ease-material); transform-origin:top right; }
+
+/* Compact layouts keep the original visibility and reading-mode behavior. */
+@media (max-width:720px) {
+  .topbar { grid-template-columns:auto auto minmax(0,1fr); gap:6px; padding:0 6px; }
+  .brand-title, .toolbar-separator { display:none; }
+  .brand { gap:2px; padding:1px 2px; }
+  .top-actions { gap:1px; padding:1px 2px; }
+  .top-actions button { padding:var(--space-1) 6px; }
+  .top-actions .button-label { display:none; }
+  .layout-switch button { padding:2px 7px; }
+  .layout-switch svg { display:none; }
+  .reading-controls { gap:var(--space-1); padding:var(--space-1); }
+  .tool-group + .tool-group { padding-left:3px; }
+  .tool-group button { padding:2px var(--space-1); }
+  .tool-group [data-zoom=reset] { display:none; }
+  .zoom-label { display:none; }
+  .file-button { font-size:var(--font-caption); }
+  .reading-controls .icon-btn { width:22px; }
+  .counter { font-size:var(--font-caption); }
+}
+@media (max-width:450px) {
+  body[data-layout=dual] .reading-controls { flex-wrap:wrap; justify-content:center; gap:2px; width:max-content; max-width:calc(100% - 10px); border-radius:var(--radius-lg); }
+  body[data-layout=dual] .tool-group + .tool-group { border-left:0; padding-left:0; }
+  .empty { padding:var(--space-3); }
+  .empty strong { font-size:17px; }
+  .tips { font-size:var(--font-caption); }
+  .layout-switch button { padding:2px 5px; }
+  .topbar { gap:2px; }
+  .brand button { padding:var(--space-1); }
+  .search-panel { border-radius:var(--radius-lg); }
+}
+
+/* No rendering effects are required for correctness or legibility. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  :is(.brand,.layout-switch,.top-actions,.reading-controls,.global-tools,.search-panel,.history-drawer,.selection-tools,.loading-card,.toast,.focus-exit) { background:var(--surface-solid); }
+}
+@media (prefers-reduced-transparency:reduce), (update:slow) {
+  :is(.brand,.layout-switch,.top-actions,.reading-controls,.global-tools,.search-panel,.history-drawer,.selection-tools,.loading-card,.toast,.focus-exit) { background:var(--surface-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+@media (pointer:coarse) {
+  :root { --glass-blur:8px; --glass-blur-sidebar:12px; --glass-blur-popover:12px; }
+}
+@media (prefers-contrast:more) {
+  :root { --text-primary:#11151b; --text-secondary:#343a45; --text-tertiary:#434b59; --stroke-subtle:rgb(20 30 45 / .38); --glass-border:rgb(20 30 45 / .45); --glass-selected:#fff; --focus-ring:#0058bd; }
+  :is(.brand,.layout-switch,.top-actions,.reading-controls,.global-tools,.search-panel,.history-drawer,.selection-tools,.loading-card,.toast,.focus-exit) { background:var(--surface-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  button[aria-pressed=true],button.active { outline:1px solid var(--text-secondary); outline-offset:-2px; }
+  button:focus-visible,input:focus-visible,select:focus-visible { outline-width:3px; }
+}
+@media (prefers-contrast:more) and (prefers-color-scheme:dark) {
+  :root { --text-primary:#fff; --text-secondary:#eef1f8; --text-tertiary:#d6dce9; --stroke-subtle:rgb(240 246 255 / .45); --glass-border:rgb(240 246 255 / .55); --glass-selected:#505967; --focus-ring:#9dcdff; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation:none!important; transition:none!important; }
+  button:active:not(:disabled) { scale:1; }
+}
+@media (forced-colors:active) {
+  :is(.brand,.layout-switch,.top-actions,.reading-controls,.global-tools,.search-panel,.history-drawer,.selection-tools,.loading-card,.toast,.focus-exit) { background:Canvas; color:CanvasText; border-color:ButtonText; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
+  button[aria-pressed=true],.search-result.active { outline:2px solid Highlight; outline-offset:-2px; }
+}
+
+/* Original PDF rendering geometry and selection layer: unchanged. */
+.viewer { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; background: var(--canvas); position: relative; touch-action: none; }
 .viewer.drag-over { outline: 2px solid var(--accent); outline-offset: -2px; }
 .viewer.hand-ready, .viewer.ctrl-pan-ready { cursor: grab; }
 .viewer.panning { cursor: grabbing; user-select: none; }
@@ -78,8 +380,8 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px 80px;
+  gap: 10px;
+  padding: 6px 6px 24px;
   transform-origin: 0 0;
   contain: layout style;
 }
@@ -88,7 +390,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
   position: relative;
   flex: 0 0 auto;
   background: #fff;
-  box-shadow: 0 8px 30px rgba(0,0,0,.38);
+  box-shadow: 0 1px 5px rgba(0,0,0,.16);
   overflow: hidden;
   contain: strict;
   content-visibility: auto;
@@ -123,66 +425,12 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
 .placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: #7b8794; background: linear-gradient(180deg, #f5f7f9, #eef1f4); user-select: none; font-size: 12px; z-index: 0; }
 .page-no { position: absolute; right: 7px; bottom: 6px; z-index: 3; background: rgba(0,0,0,.42); color: #fff; border-radius: 5px; padding: 2px 5px; font-size: 10px; opacity: 0; pointer-events: none; }
 .page:hover .page-no { opacity: .7; }
-.status { position: absolute; left: 10px; bottom: 10px; z-index: 12; max-width: 72%; padding: 5px 8px; border: 1px solid rgba(255,255,255,.08); background: rgba(10,14,19,.78); color: #aeb8c3; border-radius: 7px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity .15s; }
-.pane:hover .status { opacity: 1; }
-.selection-tools { position: fixed; z-index: 100; display: flex; align-items: center; gap: 5px; padding: 5px; border: 1px solid #35506d; background: rgba(16,24,33,.96); border-radius: 10px; box-shadow: var(--shadow); backdrop-filter: blur(12px); }
-.selection-tools[hidden] { display: none; }
-.selection-tools .selection-state { font-size: 11px; color: #b7c7d8; padding: 0 5px; max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.selection-tools button { min-height: 28px; padding: 4px 7px; }
-.history-drawer { position: fixed; top: 0; right: 0; height: 100%; width: min(420px, 92vw); z-index: 120; display: grid; grid-template-rows: 56px 1fr auto; background: #0d141c; border-left: 1px solid var(--line); box-shadow: -22px 0 50px rgba(0,0,0,.38); transform: translateX(102%); transition: transform .2s ease; }
-.history-drawer.open { transform: none; }
-.drawer-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
-.drawer-head strong { font-size: 15px; }
-.drawer-head .spacer { flex: 1; }
-.history-list { overflow: auto; padding: 9px; }
-.history-empty { padding: 30px 18px; text-align: center; color: var(--muted); }
-.history-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px; border: 1px solid #22303d; border-radius: 10px; background: #111923; margin-bottom: 8px; }
-.history-meta { min-width: 0; }
-.history-name { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.history-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.history-actions { display: flex; align-items: center; gap: 4px; }
-.history-actions button { min-height: 28px; padding: 3px 7px; font-size: 12px; }
-.drawer-foot { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); line-height: 1.55; }
-.drawer-backdrop { position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,.32); opacity: 0; pointer-events: none; transition: opacity .2s; }
-.drawer-backdrop.show { opacity: 1; pointer-events: auto; }
-.loading { position: fixed; inset: var(--topbar-h) 0 0; display: grid; place-items: center; background: rgba(7,10,14,.58); z-index: 90; pointer-events: none; backdrop-filter: blur(2px); }
-.loading[hidden] { display: none; }
-.loading-card { padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: #111923; box-shadow: var(--shadow); color: #dbe6f0; }
-.toast { position: fixed; right: 14px; bottom: 14px; max-width: min(470px, calc(100vw - 28px)); border: 1px solid var(--line); background: #161f29; color: var(--text); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); z-index: 140; display: none; }
-.toast.show { display: block; }
-.toast.error { border-color: #7b4141; color: #ffe2e2; }
-.kbd { display: inline-block; border: 1px solid #435163; border-bottom-color: #62748a; border-radius: 4px; padding: 0 4px; background: #111922; color: #c8d3df; font-size: 10px; }
-.empty { margin: auto; max-width: 430px; padding: 34px 28px; color: var(--muted); border: 1px dashed #35465a; border-radius: 14px; background: #101720; text-align: center; box-shadow: 0 12px 34px rgba(0,0,0,.18); }
-.empty strong { display: block; color: var(--text); font-size: 17px; margin-bottom: 8px; }
-.empty .tips { font-size: 12px; margin-top: 10px; line-height: 1.6; }
 
-@media (max-width:1180px) { .brand-sub, .session-hint { display: none; } .topbar { grid-template-columns: auto 1fr auto; } .global-tools { justify-self: center; } .pane-toolbar { gap: 4px; } .tool-group { gap: 1px; } .tool-group button { padding-inline: 5px; } .file-button { max-width: 220px; } }
-@media (max-width:850px) { .global-tools button span { display: none; } .file-button { max-width: 150px; } .zoom-label { display: none; } .pane-toolbar { padding-inline: 5px; } .page-plane { padding-inline: 8px; } .history-drawer { width: 94vw; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">DP</div>
-      <div class="brand-copy">
-        <div class="brand-title">双语 PDF 工作台</div>
-        <div class="brand-sub">极致重构版 · 原子渲染 · 完美拖拽缩放</div>
-      </div>
-    </div>
-
-    <div class="global-tools" aria-label="联动设置">
-      <button id="syncScroll" aria-pressed="true" title="按页内位置同步滚动">↕ <span>滚动</span></button>
-      <button id="syncPage" aria-pressed="true" title="翻页时同步页码">⇄ <span>页码</span></button>
-      <button id="syncZoom" aria-pressed="false" title="缩放联动">⌕ <span>缩放</span></button>
-      <button id="syncSelection" aria-pressed="true" title="将一侧文字选择映射到另一侧">▤ <span>选中</span></button>
-    </div>
-
-    <div class="top-actions">
-      <span class="session-hint" id="sessionHint">状态会自动保存</span>
-      <button id="historyBtn" title="打开历史记录">历史</button>
-    </div>
-  </header>
+  <header class="topbar"><div class="brand"><button id="historyBtn" title="显示历史记录" aria-label="显示历史记录"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M13 8h5M13 12h5M13 16h3"/></svg></button><span class="toolbar-separator"></span><span class="brand-title">对读</span></div><div class="layout-switch" aria-label="阅读布局"><button data-layout="left" title="左侧" aria-label="左侧"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16"/><path d="M5 7h3v10H5z" fill="currentColor" stroke="none"/></svg><span>左侧</span></button><button data-layout="dual" title="双栏" aria-label="双栏"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg><span>双栏</span></button><button data-layout="right" title="右侧" aria-label="右侧"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16"/><path d="M16 7h3v10h-3z" fill="currentColor" stroke="none"/></svg><span>右侧</span></button></div><div class="top-actions"><span id="sessionHint" class="session-hint"></span><button id="fitAll" title="两侧适合宽度，完整显示页面宽度" aria-label="两侧适宽"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v14M20 5v14M7 12h10M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg><span class="button-label">适宽</span></button><button id="zenBtn" title="专注阅读，隐藏所有工具栏（Shift + F）" aria-label="专注阅读" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg></button><button id="fullBtn" title="浏览器全屏" aria-label="浏览器全屏"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5M4 4l6 6M20 20l-6-6"/></svg></button><span class="toolbar-separator"></span><button id="syncMenuBtn" title="联动设置" aria-label="联动设置" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5" fill="var(--panel)"/><circle cx="15" cy="17" r="2.5" fill="var(--panel)"/></svg></button><button id="searchBtn" title="搜索（⌘ / Ctrl F）" aria-label="搜索 PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button></div></header>
 
   <main class="main" id="main">
     <section class="pane" id="leftPane" data-side="left">
@@ -190,7 +438,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
         <button class="file-button primary" id="openLeft" title="打开左侧 PDF">
           <span class="file-dot"></span><span class="file-label" id="leftName">打开左侧 PDF</span>
         </button>
-        <div class="toolbar-spacer"></div>
+        <button class="pane-focus" data-focus="left" title="展开此文档，保留另一侧阅读位置">展开 ↗</button>
         <div class="tool-group" aria-label="左侧页码">
           <button class="icon-btn" data-nav="prev" data-side="left" title="上一页">‹</button>
           <input class="page-input" id="leftPage" value="0" inputmode="numeric" aria-label="左侧页码">
@@ -216,7 +464,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
         <button class="file-button primary" id="openRight" title="打开右侧 PDF">
           <span class="file-dot"></span><span class="file-label" id="rightName">打开右侧 PDF</span>
         </button>
-        <div class="toolbar-spacer"></div>
+        <button class="pane-focus" data-focus="right" title="展开此文档，保留另一侧阅读位置">展开 ↗</button>
         <div class="tool-group" aria-label="右侧页码">
           <button class="icon-btn" data-nav="prev" data-side="right" title="上一页">‹</button>
           <input class="page-input" id="rightPage" value="0" inputmode="numeric" aria-label="右侧页码">
@@ -237,6 +485,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
   </main>
 </div>
 
+<div class="global-tools" id="syncMenu" hidden role="group" aria-label="联动设置"><div class="popover-title">双栏联动</div><button id="syncScroll" aria-pressed="true"><span>同步滚动位置</span></button><button id="syncPage" aria-pressed="true"><span>同步翻页</span></button><button id="syncZoom" aria-pressed="false"><span>同步缩放</span></button><button id="syncSelection" aria-pressed="true"><span>映射文字选择</span></button></div><button class="focus-exit" id="exitZen" title="退出专注阅读（Esc）">退出专注 · Esc</button>
 <input id="leftFile" type="file" accept="application/pdf,.pdf" hidden>
 <input id="rightFile" type="file" accept="application/pdf,.pdf" hidden>
 
@@ -247,23 +496,27 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,156,255
 </div>
 
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
-<aside class="history-drawer" id="historyDrawer" aria-label="历史记录">
+<aside class="history-drawer" id="historyDrawer" aria-label="历史记录" role="dialog" aria-modal="true" inert>
   <div class="drawer-head">
     <strong>历史记录</strong>
     <span class="spacer"></span>
     <button id="closeHistory">关闭</button>
   </div>
-  <div class="history-list" id="historyList"></div>
+  <div class="history-controls"><input id="historyFilter" type="search" placeholder="按文件名查找…" aria-label="筛选历史文件"></div><div class="history-list" id="historyList"></div>
   <div class="drawer-foot">
-    数据保存至 IndexedDB；支持断点续读。
+    在此浏览器自动保存文件与阅读位置 · 最近 12 份
   </div>
 </aside>
 
+<section class="search-panel" id="searchPanel" hidden aria-label="搜索 PDF"><div class="search-head"><strong>搜索文档</strong><button id="closeSearch" aria-label="关闭搜索">✕</button></div><div class="search-field"><input id="searchInput" type="search" placeholder="输入关键词…" aria-label="搜索关键词"></div><div class="search-options"><select id="searchScope" aria-label="搜索范围"><option value="both">两份文档</option><option value="left">仅左侧</option><option value="right">仅右侧</option></select><label><input id="searchCase" type="checkbox"> 区分大小写</label><span style="flex:1"></span><button id="searchPrev" title="上一处（Shift + Enter）">↑</button><button id="searchNext" title="下一处（Enter）">↓</button></div><div id="searchStatus" class="search-status" role="status" aria-live="polite">输入关键词，搜索 PDF 中的文字。</div><div id="searchResults" class="search-results"></div></section>
 <div class="loading" id="loading" hidden><div class="loading-card">正在解析 PDF…</div></div>
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs";
+const pdfjsLib = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs").catch(error => {
+  const box=document.createElement("div");box.style.cssText="position:fixed;inset:20px 20px auto;padding:20px;background:#fff;color:#222;border:1px solid #ccc;border-radius:12px;z-index:999";
+  box.textContent="PDF 引擎加载失败。请检查网络连接后刷新页面（此 HTML 需要联网加载 PDF.js）。";document.body.append(box);throw error;
+});
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs";
 
@@ -302,7 +555,7 @@ const CFG = Object.freeze({
   DB_VERSION: 1
 });
 
-const defaultSettings = { syncScroll: true, syncPage: true, syncZoom: false, syncSelection: true, splitRatio: .5 };
+const defaultSettings = { syncScroll: true, syncPage: true, syncZoom: false, syncSelection: true, splitRatio: .5, layout: window.matchMedia("(max-width: 600px)").matches ? "left" : "dual" };
 
 function loadSettings() {
   try { return { ...defaultSettings, ...JSON.parse(localStorage.getItem(CFG.SETTINGS_KEY) || "{}") } }
@@ -315,7 +568,7 @@ const appState = {
 };
 
 function persistSettings() {
-  const out = { syncScroll: appState.syncScroll, syncPage: appState.syncPage, syncZoom: appState.syncZoom, syncSelection: appState.syncSelection, splitRatio: appState.splitRatio };
+  const out = { syncScroll: appState.syncScroll, syncPage: appState.syncPage, syncZoom: appState.syncZoom, syncSelection: appState.syncSelection, splitRatio: appState.splitRatio, layout: appState.layout };
   localStorage.setItem(CFG.SETTINGS_KEY, JSON.stringify(out));
 }
 
@@ -523,7 +776,7 @@ class PdfPane {
   showEmpty() {
     this.pagesEl.classList.add("empty-surface");
     this.pagesEl.style.cssText = "";
-    this.pagesEl.innerHTML = `<div class="empty"><strong>${this.side === "left" ? "打开左侧 PDF" : "打开右侧 PDF"}</strong>点击顶部文件按钮，或把 PDF 直接拖到这一侧。<div class="tips">原子渲染已激活：零闪烁、增量平滑拖动、纯 GPU 硬件缩放。<br>按住 <span class="kbd">Ctrl</span> + 滚轮实现无极丝滑缩放。</div></div>`;
+    this.pagesEl.innerHTML = `<div class="empty"><div class="empty-symbol">▤</div><strong>${this.side === "left" ? "打开左侧 PDF" : "打开右侧 PDF"}</strong>拖入 PDF，开始你的阅读。<button onclick="document.getElementById('${this.side}File').click()">选择 PDF</button><div class="tips">Ctrl + 滚轮缩放 · 空格 + 拖动平移<br>拖动中间分隔线，或用顶部按钮切换单栏。</div></div>`;
     this.statusEl.textContent = "";
     this.paneEl.classList.remove("loaded");
   }
@@ -648,7 +901,7 @@ class PdfPane {
       this.scale = clamp(Number(saved?.scale) || CFG.DEFAULT_SCALE, CFG.MIN_SCALE, CFG.MAX_SCALE);
       this.layoutScale = this.scale;
       this.wheelZoomTargetScale = this.scale;
-      this.zoomMode = saved?.zoomMode || "custom";
+      this.zoomMode = saved?.zoomMode || "fit-width";
       this.currentPage = this.pdf.numPages ? clamp(Number(saved?.currentPage) || 1, 1, this.pdf.numPages) : 0;
       this.pageInput.value = String(this.currentPage);
       this.totalEl.textContent = `/ ${this.pdf.numPages}`;
@@ -657,11 +910,13 @@ class PdfPane {
       await this.buildModels(generation);
       if (generation !== this.generation) return;
 
+      const refitLegacy = saved && !saved.viewportRevision;
+      if(refitLegacy) this.zoomMode="fit-width";
       if (this.zoomMode === "fit-width") this.fitWidth({ propagate: false, persist: false });
       else this.updateSurfaceGeometry(this.layoutScale);
 
       await nextFrame();
-      if (saved) {
+      if (saved && !refitLegacy) {
         this.viewer.scrollTop = Math.max(0, Number(saved.scrollTop) || 0);
         this.viewer.scrollLeft = Math.max(0, Number(saved.scrollLeft) || 0);
       } else if (this.currentPage > 1) {
@@ -782,7 +1037,7 @@ class PdfPane {
   recomputeBaseGeometry() {
     if (!this.models.length || !this.plane) return;
 
-    const PAD_X = 18, PAD_TOP = 16, PAD_BOTTOM = 80, GAP = 14;
+    const PAD_X = 6, PAD_TOP = 6, PAD_BOTTOM = 24, GAP = 10;
     let maxW = 1, y = PAD_TOP;
 
     for (const m of this.models) {
@@ -1058,6 +1313,7 @@ class PdfPane {
       model.textLayerEl = staged;
       model.textLayer = layer;
       model.textReady = true;
+      paintSearchHits(this, model);
     } catch (err) {
       if (!/cancel/i.test(String(err?.message || ""))) console.warn("Text layer failed", this.side, model.n, err);
     } finally {
@@ -1161,7 +1417,7 @@ class PdfPane {
   }
 
   renderNearViewport({ quality = "fast", overscan = null, includeText = !this.isScrolling } = {}) {
-    if (!this.pdf || !this.models.length || this.zoomPreviewActive) return;
+    if (this.paneEl.hidden || !this.pdf || !this.models.length || this.zoomPreviewActive) return;
 
     const margin = overscan ?? this.viewportH * CFG.RENDER_OVERSCAN_VIEWPORTS;
     const models = this.modelsInViewport(margin);
@@ -1332,7 +1588,7 @@ class PdfPane {
     this.scheduleSharpRender();
     this.schedulePersistView();
 
-    if (appState.syncZoom && this.other().pdf) {
+    if (appState.layout === "dual" && appState.syncZoom && this.other().pdf) {
       const ov = this.other().viewer.getBoundingClientRect();
       this.other().setScale(next, {
         anchorClientX: ov.left + ov.width / 2,
@@ -1389,7 +1645,7 @@ class PdfPane {
     this.scheduleSharpRender();
     if (persist) this.schedulePersistView();
 
-    if (propagate && appState.syncZoom && this.other().pdf) {
+    if (propagate && appState.layout === "dual" && appState.syncZoom && this.other().pdf) {
       const ov = this.other().viewer.getBoundingClientRect();
       this.other().setScale(next, {
         anchorClientX: ov.left + ov.width / 2,
@@ -1404,9 +1660,10 @@ class PdfPane {
   fitWidth({ propagate = true, persist = true } = {}) {
     if (!this.pdf || !this.models.length) return;
     const ref = this.models[this.currentPage ? this.currentPage - 1 : 0] || this.models[0];
-    const available = Math.max(180, this.viewportW - 40);
-    this.setScale(available / ref.baseW, { propagate: false, persist, mode: "fit-width" });
-    if (propagate && appState.syncZoom && this.other().pdf) this.other().fitWidth({ propagate: false, persist });
+    this.refreshViewportMetrics();
+    const available = Math.max(80, this.viewportW - 2);
+    this.setScale(available / (ref.baseW + 12), { propagate: false, persist, mode: "fit-width" });
+    if (propagate && appState.layout === "dual" && appState.syncZoom && this.other().pdf) this.other().fitWidth({ propagate: false, persist });
   }
 
   updateZoomUI() {
@@ -1436,7 +1693,7 @@ class PdfPane {
     this.ensureRendered(m, 320000, "fast");
     this.scheduleSharpRender();
 
-    if (propagate && appState.syncPage && this.other().pdf) {
+    if (propagate && appState.layout === "dual" && appState.syncPage && this.other().pdf) {
       this.other().goToPage(this.mapPageTo(this.other(), n), false);
     }
     this.schedulePersistView();
@@ -1529,13 +1786,14 @@ class PdfPane {
       if (!this.zoomPreviewActive) this.renderNearViewport({ quality: "fast", includeText: false });
 
       const isEcho = this.consumeSyncEcho();
-      if (appState.syncScroll && !isEcho && this.other().pdf) {
+      if (appState.layout === "dual" && appState.syncScroll && !isEcho && this.other().pdf) {
         this.other().applySyncedAnchor(this.getScrollAnchor(), this);
       }
     });
   }
 
   onResize() {
+    if(this.paneEl.hidden) return;
     cancelAnimationFrame(this.resizeRaf);
     this.resizeRaf = requestAnimationFrame(() => {
       this.resizeRaf = 0;
@@ -1571,6 +1829,7 @@ class PdfPane {
         currentPage: this.currentPage,
         scrollTop: this.viewer.scrollTop,
         scrollLeft: this.viewer.scrollLeft,
+        viewportRevision: 2,
         updated: Date.now()
       });
     } catch (err) {}
@@ -1645,6 +1904,7 @@ class PdfPane {
   }
 }
 
+for(const side of ["left","right"]){const pane=$(`#${side}Pane`),controls=document.createElement("div");controls.className="reading-controls";controls.setAttribute("aria-label",`${side==="left"?"左侧":"右侧"}阅读工具`);pane.querySelectorAll(".tool-group").forEach(group=>controls.append(group));pane.append(controls);}
 const panes = { left: new PdfPane("left"), right: new PdfPane("right") };
 
 function updateRenderConcurrency() {
@@ -1690,16 +1950,17 @@ document.addEventListener("click", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeHistory(); clearMirrorSelection(); }
   if (e.key === "Control" && !e.repeat) { appState.ctrlDown = true; updatePanCursor() }
   if (e.code === "Space" && !e.repeat) { appState.spaceDown = true; updatePanCursor() }
-  const tag = document.activeElement?.tagName || ""; if (tag === "INPUT" || tag === "TEXTAREA") return;
+  const tag = document.activeElement?.tagName || ""; if (["INPUT","TEXTAREA","SELECT","BUTTON"].includes(tag)) return;
   const p = panes[appState.activeSide];
   if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")) { e.preventDefault(); p.setScale(p.scale * CFG.ZOOM_STEP, { propagate: true }) }
   else if ((e.ctrlKey || e.metaKey) && e.key === "-") { e.preventDefault(); p.setScale(p.scale / CFG.ZOOM_STEP, { propagate: true }) }
   else if ((e.ctrlKey || e.metaKey) && e.key === "0") { e.preventDefault(); p.setScale(1, { propagate: true }) }
   else if (e.key === "PageDown") { e.preventDefault(); p.goToPage((p.currentPage || 1) + 1, true) }
   else if (e.key === "PageUp") { e.preventDefault(); p.goToPage((p.currentPage || 1) - 1, true) }
-  else if (e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey) { e.preventDefault(); p.fitWidth({ propagate: true }) }
+  else if (e.key.toLowerCase() === "f" && !e.shiftKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); p.fitWidth({ propagate: true }) }
   else if (e.key === "Escape") { clearMirrorSelection(); closeHistory() }
 });
 
@@ -1711,28 +1972,34 @@ window.addEventListener("blur", () => { appState.spaceDown = false; appState.ctr
 
 const main = $("#main"), divider = $("#divider"); let resizing = false, splitRaf = 0, pendingSplitRatio = appState.splitRatio;
 function applySplitRatio(ratio) {
-  ratio = clamp(ratio, .22, .78); appState.splitRatio = ratio;
-  main.style.gridTemplateColumns = `minmax(0,${ratio}fr) var(--divider-w) minmax(0,${1 - ratio}fr)`;
+  ratio = clamp(Number(ratio)||.5, .10, .90); appState.splitRatio = ratio;
+  main.style.gridTemplateColumns = `minmax(0,${ratio}fr) var(--divider-w) minmax(0,${1-ratio}fr)`;
+  divider.setAttribute("aria-valuenow", Math.round(ratio*100));
 }
-applySplitRatio(appState.splitRatio);
-divider.addEventListener("pointerdown", e => { resizing = true; divider.setPointerCapture(e.pointerId); document.body.style.userSelect = "none" });
-divider.addEventListener("pointermove", e => {
-  if (!resizing) return;
-  const r = main.getBoundingClientRect();
-  pendingSplitRatio = (e.clientX - r.left) / r.width;
-  if (!splitRaf) splitRaf = requestAnimationFrame(() => { splitRaf = 0; applySplitRatio(pendingSplitRatio); });
-});
-divider.addEventListener("pointerup", () => {
-  resizing = false;
-  if (splitRaf) { cancelAnimationFrame(splitRaf); splitRaf = 0; applySplitRatio(pendingSplitRatio); }
-  document.body.style.userSelect = ""; persistSettings(); panes.left.onResize(); panes.right.onResize();
-});
-let globalResizeRaf = 0;
-const ro = new ResizeObserver(() => {
-  if (globalResizeRaf) return;
-  globalResizeRaf = requestAnimationFrame(() => { globalResizeRaf = 0; panes.left.onResize(); panes.right.onResize(); });
-});
-ro.observe(main);
+function setLayout(mode, save=true) {
+  appState.layout = ["left","right","dual"].includes(mode) ? mode : "dual";
+  document.body.dataset.layout=appState.layout;
+  for (const side of ["left","right"]) {
+    panes[side].paneEl.hidden=appState.layout!=="dual" && appState.layout!==side;
+    if (panes[side].paneEl.hidden) { panes[side].cancelSharpRender(); for(const m of panes[side].renderingModels) panes[side].cancelModelRender(m); }
+  }
+  if(appState.layout!=="dual") appState.activeSide=appState.layout;
+  document.querySelectorAll("button[data-layout]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.layout===appState.layout)));
+  document.querySelectorAll("[data-focus]").forEach(b=>b.textContent=appState.layout==="dual"?"展开 ↗":"恢复双栏 ↔");
+  requestAnimationFrame(()=>Object.values(panes).filter(p=>!p.paneEl.hidden).forEach(p=>p.onResize()));
+  if(save) persistSettings();
+}
+applySplitRatio(appState.splitRatio);setLayout(appState.layout,false);
+document.querySelectorAll("button[data-layout]").forEach(b=>b.onclick=()=>setLayout(b.dataset.layout));
+document.querySelectorAll("[data-focus]").forEach(b=>b.onclick=()=>setLayout(appState.layout==="dual"?b.dataset.focus:"dual"));
+divider.tabIndex=0;divider.setAttribute("aria-valuemin","10");divider.setAttribute("aria-valuemax","90");divider.title="拖到边缘收起一侧 · 双击居中 · 方向键调整";
+divider.addEventListener("dblclick",()=>{applySplitRatio(.5);setLayout("dual")});
+divider.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();applySplitRatio(appState.splitRatio+(e.key==="ArrowLeft"?-.05:.05));persistSettings()}if(e.key==="Home"){applySplitRatio(.5);persistSettings()}});
+divider.addEventListener("pointerdown",e=>{resizing=true;pendingSplitRatio=appState.splitRatio;divider.setPointerCapture(e.pointerId);document.body.style.userSelect="none"});
+divider.addEventListener("pointermove",e=>{if(!resizing)return;const r=main.getBoundingClientRect();pendingSplitRatio=(e.clientX-r.left)/r.width;if(!splitRaf)splitRaf=requestAnimationFrame(()=>{splitRaf=0;applySplitRatio(pendingSplitRatio)});divider.title=pendingSplitRatio<.10?"松手收起左侧":pendingSplitRatio>.90?"松手收起右侧":"拖到边缘收起一侧"});
+function finishSplit(e){if(!resizing)return;resizing=false;if(splitRaf){cancelAnimationFrame(splitRaf);splitRaf=0}document.body.style.userSelect="";if(e.type!=="pointercancel" && (pendingSplitRatio<.10||pendingSplitRatio>.90)){const mode=pendingSplitRatio<.10?"right":"left";applySplitRatio(.5);setLayout(mode);toast("已切换单栏，点击顶部「双栏」恢复")}else{applySplitRatio(pendingSplitRatio);persistSettings()}Object.values(panes).forEach(p=>p.onResize())}
+divider.addEventListener("pointerup",finishSplit);divider.addEventListener("pointercancel",finishSplit);
+const ro = new ResizeObserver(entries=>{for(const entry of entries){const p=Object.values(panes).find(p=>p.viewer===entry.target);if(p&&!p.paneEl.hidden)p.onResize()}});Object.values(panes).forEach(p=>ro.observe(p.viewer));
 
 let selectionTimer = 0; document.addEventListener("selectionchange", () => { clearTimeout(selectionTimer); selectionTimer = setTimeout(handleSelectionChange, 70); });
 function normalizeText(s) { return (s || "").normalize("NFKC").toLocaleLowerCase().replace(/[\s\p{P}\p{S}]+/gu, ""); }
@@ -1792,7 +2059,7 @@ async function handleSelectionChange() {
   appState.activeSide = side; const source = panes[side], target = source.other(), sourceText = sel.toString().trim();
   if (!sourceText) return;
   const selectionRect = range.getBoundingClientRect(); showSelectionTools(selectionRect, "已选择");
-  if (!appState.syncSelection || !target.pdf) { appState.lastSelection = { sourceText, targetText: "", side }; return; }
+  if (appState.layout !== "dual" || !appState.syncSelection || !target.pdf) { appState.lastSelection = { sourceText, targetText: "", side }; return; }
 
   const token = ++appState.selectionToken; for (const el of document.querySelectorAll(".mirror-selected")) el.classList.remove("mirror-selected");
   const pageEls = [...source.pagesEl.querySelectorAll(".page")].filter(page => {
@@ -1839,8 +2106,9 @@ $("#copySource").onclick = () => copyText(appState.lastSelection?.sourceText || 
 $("#copyBilingual").onclick = () => { const s = appState.lastSelection; if (!s) return; copyText(s.targetText ? `${s.sourceText}\n\n——\n\n${s.targetText}` : s.sourceText); };
 
 const drawer = $("#historyDrawer"), backdrop = $("#drawerBackdrop"), historyList = $("#historyList");
-async function openHistory() { drawer.classList.add("open"); backdrop.classList.add("show"); await renderHistory() }
-function closeHistory() { drawer.classList.remove("open"); backdrop.classList.remove("show") }
+async function openHistory() { drawer.inert=false; drawer.classList.add("open"); backdrop.classList.add("show"); $(".app").inert=true; $("#historyFilter").focus(); await renderHistory() }
+function closeHistory() { const wasOpen=drawer.classList.contains("open"); drawer.classList.remove("open"); drawer.inert=true; $(".app").inert=false; backdrop.classList.remove("show"); if(wasOpen) $("#historyBtn").focus() }
+$("#historyFilter").oninput = () => { clearTimeout(window.historyFilterTimer); window.historyFilterTimer=setTimeout(renderHistory,150); };
 $("#historyBtn").onclick = openHistory; $("#closeHistory").onclick = closeHistory; backdrop.onclick = closeHistory;
 async function renderHistory() {
   historyList.innerHTML = `<div class="history-empty">正在读取历史…</div>`;
@@ -1848,19 +2116,23 @@ async function renderHistory() {
     const docs = await dbGetDocs();
     if (!docs.length) { historyList.innerHTML = `<div class="history-empty">还没有历史文件。打开 PDF 后会自动出现在这里。</div>`; return }
     const frag = document.createDocumentFragment();
-    for (const d of docs) {
+    const views = await idb("views", "readonly", store => store.getAll());
+    for (const d of docs.filter(d=>d.name.toLocaleLowerCase().includes($("#historyFilter").value.trim().toLocaleLowerCase()))) {
       const row = document.createElement("div"); row.className = "history-item";
       const meta = document.createElement("div"); meta.className = "history-meta";
       const name = document.createElement("div"); name.className = "history-name"; name.textContent = d.name; name.title = d.name;
       const sub = document.createElement("div"); sub.className = "history-sub"; sub.textContent = `${formatBytes(d.size || 0)} · ${formatTime(d.lastOpened)}${d.blob ? "" : " · 仅记录"}`;
+      const lastView=(views||[]).filter(v=>v.docId===d.id).sort((a,b)=>(b.updated||0)-(a.updated||0))[0];
+      if(lastView) sub.textContent+=` · 上次读到第 ${lastView.currentPage} 页`;
       meta.append(name, sub);
       const actions = document.createElement("div"); actions.className = "history-actions";
-      const left = document.createElement("button"); left.textContent = "左开"; left.onclick = () => restoreHistoryDoc(d, "left");
-      const right = document.createElement("button"); right.textContent = "右开"; right.onclick = () => restoreHistoryDoc(d, "right");
-      const del = document.createElement("button"); del.textContent = "删"; del.title = "删除历史"; del.onclick = async () => { await dbDeleteDoc(d.id); const s = getSession(); if (s.left === d.id) setSessionSide("left", null); if (s.right === d.id) setSessionSide("right", null); renderHistory() };
+      const left = document.createElement("button"); left.textContent = "在左侧打开"; left.onclick = () => restoreHistoryDoc(d, "left");
+      const right = document.createElement("button"); right.textContent = "在右侧打开"; right.onclick = () => restoreHistoryDoc(d, "right");
+      const del = document.createElement("button"); del.textContent = "删除"; del.title = "删除历史"; del.onclick = async () => { if(!confirm(`从历史中删除「${d.name}」及阅读记录？当前已打开的文档不受影响。`)) return; await dbDeleteDoc(d.id); const s = getSession(); if (s.left === d.id) setSessionSide("left", null); if (s.right === d.id) setSessionSide("right", null); renderHistory() };
       actions.append(left, right, del); row.append(meta, actions); frag.appendChild(row);
     }
     historyList.replaceChildren(frag);
+    if(!historyList.children.length) historyList.textContent="没有匹配的文件。";
   } catch (err) { historyList.innerHTML = `<div class="history-empty">读取历史失败：${String(err?.message || err)}</div>` }
 }
 async function restoreHistoryDoc(rec, side, { silent = false } = {}) {
@@ -1868,7 +2140,7 @@ async function restoreHistoryDoc(rec, side, { silent = false } = {}) {
   const file = new File([rec.blob], rec.name, { type: rec.type || "application/pdf", lastModified: rec.lastModified || Date.now() });
   const view = await dbGetView(rec.id, side);
   await panes[side].loadFile(file, { docId: rec.id, restoreState: view, persistBlob: false, silent });
-  if (!silent) closeHistory();
+  if (!silent) { if(panes[side].paneEl.hidden) setLayout(side); closeHistory(); }
 }
 async function restoreLastSession() {
   try {
@@ -1881,8 +2153,82 @@ async function restoreLastSession() {
     if (jobs.length) { await Promise.allSettled(jobs); toast("已恢复上次阅读现场") }
   } catch (err) {}
 }
-window.addEventListener("beforeunload", () => { panes.left.schedulePersistView(); panes.right.schedulePersistView(); persistSettings(); });
+window.addEventListener("beforeunload", () => { panes.left.persistView(); panes.right.persistView(); persistSettings(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { panes.left.persistView(); panes.right.persistView(); persistSettings() } });
+
+const searchState={token:0,hits:[],index:-1,query:"",caseSensitive:false,cache:new Map(),bytes:0,timer:0,chain:Promise.resolve(),jumpToken:0};
+const compactSearch=s=>s.replace(/\s+/gu,"");
+function searchText(s){s=compactSearch(s);return searchState.caseSensitive?s:s.toLowerCase()}
+function paintSearchHits(p,m){
+  if(!m.textLayerEl)return;const spans=[...m.textLayerEl.querySelectorAll("span")];
+  spans.forEach(s=>s.classList.remove("search-hit","search-current"));
+  if(!searchState.query||$("#searchPanel").hidden)return;
+  const hits=searchState.hits.filter(h=>h.side===p.side&&h.page===m.n);if(!hits.length)return;
+  const current=searchState.hits[searchState.index];let offset=0;
+  for(const span of spans){const len=searchText(span.textContent||"").length;for(const h of hits){if(offset<h.end&&offset+len>h.start){span.classList.add(h===current?"search-current":"search-hit")}}offset+=len}
+}
+function repaintSearch(){for(const p of Object.values(panes))for(const m of p.models)if(m.textReady)paintSearchHits(p,m)}
+function closeSearch(){searchState.token++;searchState.jumpToken++;clearTimeout(searchState.timer);$("#searchPanel").hidden=true;repaintSearch();$("#searchBtn").focus()}
+function openSearch(){ $("#searchPanel").hidden=false;$("#searchInput").focus();$("#searchInput").select();if($("#searchInput").value.trim())queueSearch(); }
+$("#searchBtn").onclick=openSearch;$("#closeSearch").onclick=closeSearch;
+function queueSearch(){const token=++searchState.token;searchState.jumpToken++;clearTimeout(searchState.timer);searchState.hits=[];searchState.index=-1;searchState.query="";repaintSearch();$("#searchResults").replaceChildren();$("#searchStatus").textContent="等待搜索…";searchState.timer=setTimeout(()=>{searchState.chain=searchState.chain.catch(()=>{}).then(()=>runSearch(token))},220)}
+$("#searchInput").oninput=queueSearch;$("#searchScope").onchange=queueSearch;$("#searchCase").onchange=queueSearch;
+async function runSearch(token){
+ if(token!==searchState.token)return;
+ searchState.caseSensitive=$("#searchCase").checked;searchState.query=searchText($("#searchInput").value.trim());
+ if(!searchState.query){$("#searchStatus").textContent="输入关键词，搜索 PDF 中的文字。";return}
+ const scope=$("#searchScope").value;const targets=Object.values(panes).filter(p=>p.pdf&&(scope==="both"||scope===p.side)).map(p=>({p,pdf:p.pdf,generation:p.generation}));
+ if(!targets.length){$("#searchStatus").textContent="请先在所选范围打开 PDF。";return}
+ let done=0,failed=0,total=targets.reduce((n,t)=>n+t.pdf.numPages,0);let capped=false;
+ for(const {p,pdf,generation} of targets){
+  for(let n=1;n<=pdf.numPages;n++){
+   if(token!==searchState.token||generation!==p.generation)return;
+   try{
+    const key=p.docId+":"+n;let raw=searchState.cache.get(key);
+    if(raw===undefined){const page=await pdf.getPage(n);if(token!==searchState.token||generation!==p.generation)return;const tc=await page.getTextContent();raw=tc.items.map(i=>i.str||"").join("");if(token!==searchState.token||generation!==p.generation)return;
+     if(raw.length<4_000_000){while(searchState.bytes+raw.length*2>8_000_000&&searchState.cache.size){const first=searchState.cache.keys().next().value;searchState.bytes-=searchState.cache.get(first).length*2;searchState.cache.delete(first)}searchState.cache.set(key,raw);searchState.bytes+=raw.length*2}
+    }
+    const text=searchText(raw),q=searchState.query;let start=0;
+    while((start=text.indexOf(q,start))!==-1){searchState.hits.push({side:p.side,page:n,start,end:start+q.length,snippet:text.slice(Math.max(0,start-24),start+q.length+60),generation});start+=Math.max(1,q.length);if(searchState.hits.length>=2000){capped=true;break}}
+   }catch(err){failed++}
+   done++;if(done%4===0||done===total){$("#searchStatus").textContent=`正在搜索 ${done} / ${total} 页 · ${searchState.hits.length} 处匹配`;renderSearchResults();await sleep(0)}
+   if(capped)break;
+  }
+  if(capped)break;
+ }
+ if(token!==searchState.token)return;
+ $("#searchStatus").textContent=searchState.hits.length?`${searchState.hits.length}${capped?"+":""} 处匹配${capped?" · 仅显示前 2000 处，请缩小范围":""}${failed?` · ${failed} 页读取失败`:""}`:failed?`未找到匹配 · ${failed} 页读取失败` :"未找到匹配。扫描图片 PDF 需先经过 OCR 识别。";
+ renderSearchResults();repaintSearch();
+}
+function renderSearchResults(){
+ const list=$("#searchResults"),frag=document.createDocumentFragment();
+ // Keep DOM bounded; navigation still visits every match.
+ const base=Math.max(0,searchState.index-30),end=Math.min(searchState.hits.length,base+100);
+ for(let i=base;i<end;i++){const h=searchState.hits[i],b=document.createElement("button");b.className="search-result"+(i===searchState.index?" active":"");b.setAttribute("aria-label",`${h.side==="left"?"左侧":"右侧"} 第 ${h.page} 页，匹配 ${i+1}`);const label=document.createElement("strong");label.textContent=`${h.side==="left"?"左侧":"右侧"} · 第 ${h.page} 页 · #${i+1}`;const snippet=document.createElement("span");snippet.textContent=h.snippet;b.append(label,snippet);b.onclick=()=>jumpSearch(i);frag.append(b)}list.replaceChildren(frag);
+ $("#searchPrev").disabled=$("#searchNext").disabled=!searchState.hits.length;
+}
+async function jumpSearch(index){
+ if(!searchState.hits.length)return;const jump=++searchState.jumpToken;
+ searchState.index=(index+searchState.hits.length)%searchState.hits.length;const h=searchState.hits[searchState.index],p=panes[h.side];if(h.generation!==p.generation){queueSearch();return}
+ if(p.paneEl.hidden)setLayout(h.side);appState.activeSide=h.side;p.goToPage(h.page,false);
+ const m=p.models[h.page-1];try{await p.ensureRendered(m,300000,"fast");await p.ensureTextLayer(m,true);if(jump!==searchState.jumpToken||h.generation!==p.generation)return;repaintSearch();renderSearchResults();const hit=m.textLayerEl.querySelector(".search-current");if(hit){const r=hit.getBoundingClientRect(),v=p.viewer.getBoundingClientRect();p.viewer.scrollTop+=r.top-v.top-p.viewer.clientHeight*.35;p.viewer.scrollLeft+=r.left-v.left-p.viewer.clientWidth*.4}$("#searchStatus").textContent=`第 ${searchState.index+1} / ${searchState.hits.length} 处 · ${h.side==="left"?"左侧":"右侧"}第 ${h.page} 页`;}catch{toast("该结果暂时无法定位，请重试。",true)}
+}
+$("#searchPrev").onclick=()=>jumpSearch(searchState.index-1);$("#searchNext").onclick=()=>jumpSearch(searchState.index+1);
+$("#searchInput").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();jumpSearch(searchState.index+(e.shiftKey?-1:1))}};
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="f"){e.preventDefault();openSearch()}if(e.key==="Escape"&&!$("#searchPanel").hidden){e.preventDefault();closeSearch()}},true);
+for(const p of Object.values(panes)){p.paneEl.addEventListener("pointerdown",()=>{appState.activeSide=p.side});const original=p.loadFile.bind(p);p.loadFile=async(...args)=>{searchState.token++;searchState.jumpToken++;searchState.hits=[];searchState.query="";repaintSearch();await original(...args);if(!$("#searchPanel").hidden)queueSearch()}}
+renderSearchResults();
+
+
+function showReadingControls(p){p.paneEl.classList.add("controls-visible");clearTimeout(p.controlsTimer);p.controlsTimer=setTimeout(()=>p.paneEl.classList.remove("controls-visible"),1700)}
+for(const p of Object.values(panes)){p.paneEl.addEventListener("pointermove",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerdown",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerleave",()=>{clearTimeout(p.controlsTimer);p.paneEl.classList.remove("controls-visible")});p.viewer.tabIndex=0;p.viewer.setAttribute("aria-label",p.side==="left"?"左侧文档阅读区":"右侧文档阅读区");}
+function setZen(value){document.body.classList.toggle("zen",value);$("#zenBtn").setAttribute("aria-pressed",String(value));$("#syncMenu").hidden=true;$("#syncMenuBtn").setAttribute("aria-expanded","false");Object.values(panes).forEach(p=>p.onResize());if(value)$("#exitZen").focus();else $("#zenBtn").focus()}
+$("#zenBtn").onclick=()=>setZen(!document.body.classList.contains("zen"));$("#exitZen").onclick=()=>setZen(false);
+$("#fitAll").onclick=()=>{for(const p of Object.values(panes)){if(p.pdf&&!p.paneEl.hidden){p.fitWidth({propagate:false});p.viewer.scrollLeft=0;showReadingControls(p)}}};
+$("#fullBtn").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast("此浏览器无法进入全屏，请使用浏览器的全屏命令。",true)}};
+$("#syncMenuBtn").onclick=()=>{const menu=$("#syncMenu");menu.hidden=!menu.hidden;$("#syncMenuBtn").setAttribute("aria-expanded",String(!menu.hidden))};
+document.addEventListener("pointerdown",e=>{if(!e.target.closest("#syncMenu,#syncMenuBtn")){$("#syncMenu").hidden=true;$("#syncMenuBtn").setAttribute("aria-expanded","false")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("#syncMenu").hidden=true;$("#syncMenuBtn").setAttribute("aria-expanded","false");if(document.body.classList.contains("zen"))setZen(false)}if(e.code==="KeyF"&&e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)){e.preventDefault();setZen(!document.body.classList.contains("zen"))}});
 
 refreshSessionHint(); restoreLastSession();
 </script>
