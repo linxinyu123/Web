@@ -259,8 +259,21 @@ input[type=checkbox] { accent-color:var(--accent); }
 .search-result span { overflow-wrap:anywhere; }
 .search-result strong { display:block; color:var(--accent); font-weight:var(--weight-medium); }
 .search-result.active { background:var(--selection-wash); box-shadow:inset 0 0 0 1px var(--stroke-subtle); }
-.textLayer span.search-hit { background:#ffdb667d; }
-.textLayer span.search-current { background:#ffaa4299; outline:1px solid #db8921; }
+::highlight(pdf-search-hit) { background-color:rgba(255,207,64,.42); color:transparent; }
+::highlight(pdf-search-current) { background-color:rgba(255,147,30,.65); color:transparent; }
+.search-overlay { position:absolute; inset:0; pointer-events:none; user-select:none; }
+.search-rect { position:absolute; background:rgba(255,207,64,.42); pointer-events:none; }
+.search-rect.current { background:rgba(255,147,30,.65); outline:1px solid #ac6000; }
+.search-result mark { background:rgba(255,207,64,.3); color:inherit; border-radius:3px; font-weight:600; }
+.search-options { flex-wrap:wrap; }
+.search-options label { white-space:nowrap; }
+.search-pager { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; color:var(--text-secondary); font-size:var(--font-label); }
+.search-pager button { background:var(--glass-control); border-radius:var(--radius-capsule); }
+@media (forced-colors:active) {
+  ::highlight(pdf-search-hit) { background-color:Highlight; color:transparent; }
+  ::highlight(pdf-search-current) { background-color:Mark; color:transparent; }
+  .search-result mark { background:Highlight; color:HighlightText; }
+}
 
 /* The historical records remain the same modal drawer, styled as a sidebar. */
 .drawer-backdrop { position:fixed; inset:0; background:var(--backdrop-dim); z-index:var(--z-backdrop); opacity:0; pointer-events:none; transition:opacity var(--transition-normal) ease; }
@@ -508,7 +521,7 @@ body.zen .search-panel { top:48px; }
   </div>
 </aside>
 
-<section class="search-panel" id="searchPanel" hidden aria-label="搜索 PDF"><div class="search-head"><strong>搜索文档</strong><button id="closeSearch" aria-label="关闭搜索">✕</button></div><div class="search-field"><input id="searchInput" type="search" placeholder="输入关键词…" aria-label="搜索关键词"></div><div class="search-options"><select id="searchScope" aria-label="搜索范围"><option value="both">两份文档</option><option value="left">仅左侧</option><option value="right">仅右侧</option></select><label><input id="searchCase" type="checkbox"> 区分大小写</label><span style="flex:1"></span><button id="searchPrev" title="上一处（Shift + Enter）">↑</button><button id="searchNext" title="下一处（Enter）">↓</button></div><div id="searchStatus" class="search-status" role="status" aria-live="polite">输入关键词，搜索 PDF 中的文字。</div><div id="searchResults" class="search-results"></div></section>
+<section class="search-panel" id="searchPanel" hidden aria-label="搜索 PDF"><div class="search-head"><strong>搜索文档</strong><button id="closeSearch" aria-label="关闭搜索">✕</button></div><div class="search-field"><input id="searchInput" type="search" placeholder="输入关键词…" aria-label="搜索关键词"></div><div class="search-options"><select id="searchScope" aria-label="搜索范围"><option value="both">两份文档</option><option value="left">仅左侧</option><option value="right">仅右侧</option></select><label><input id="searchCase" type="checkbox"> 区分大小写</label><label title="完整匹配词语，不匹配较长单词中的片段"><input id="searchWhole" type="checkbox"> 完整词</label><span style="flex:1"></span><button id="searchPrev" title="上一处（Shift + Enter）">↑</button><button id="searchNext" title="下一处（Enter）">↓</button></div><div id="searchStatus" class="search-status" role="status" aria-live="polite">支持完整词匹配、短语与中文。</div><div id="searchResults" class="search-results"></div></section>
 <div class="loading" id="loading" hidden><div class="loading-card">正在解析 PDF…</div></div>
 <div class="toast" id="toast"></div>
 
@@ -2156,68 +2169,376 @@ async function restoreLastSession() {
 window.addEventListener("beforeunload", () => { panes.left.persistView(); panes.right.persistView(); persistSettings(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { panes.left.persistView(); panes.right.persistView(); persistSettings() } });
 
-const searchState={token:0,hits:[],index:-1,query:"",caseSensitive:false,cache:new Map(),bytes:0,timer:0,chain:Promise.resolve(),jumpToken:0};
-const compactSearch=s=>s.replace(/\s+/gu,"");
-function searchText(s){s=compactSearch(s);return searchState.caseSensitive?s:s.toLowerCase()}
-function paintSearchHits(p,m){
-  if(!m.textLayerEl)return;const spans=[...m.textLayerEl.querySelectorAll("span")];
-  spans.forEach(s=>s.classList.remove("search-hit","search-current"));
-  if(!searchState.query||$("#searchPanel").hidden)return;
-  const hits=searchState.hits.filter(h=>h.side===p.side&&h.page===m.n);if(!hits.length)return;
-  const current=searchState.hits[searchState.index];let offset=0;
-  for(const span of spans){const len=searchText(span.textContent||"").length;for(const h of hits){if(offset<h.end&&offset+len>h.start){span.classList.add(h===current?"search-current":"search-hit")}}offset+=len}
+// Search owns only indexing, results and decoration; PDF text nodes stay untouched.
+const SEARCH_LIMITS = Object.freeze({ cacheBytes: 24 * 1024 * 1024, hits: 2000, rows: 60, debounce: 160 });
+const searchState = {
+  token: 0, jumpToken: 0, timer: 0, hits: [], byPage: new Map(), index: -1,
+  query: "", cache: new Map(), bytes: 0, documents: new WeakMap(), nextDocument: 0,
+  pending: new Map(), decorations: new Map(), listPage: 0, running: false, summary: ""
+};
+const nativeSearchHighlights = typeof CSS !== "undefined" && CSS.highlights && typeof Highlight !== "undefined";
+const searchHighlights = nativeSearchHighlights ? { all: new Highlight(), current: new Highlight() } : null;
+if (searchHighlights) {
+  searchHighlights.current.priority = 1;
+  CSS.highlights.set("pdf-search-hit", searchHighlights.all);
+  CSS.highlights.set("pdf-search-current", searchHighlights.current);
 }
-function repaintSearch(){for(const p of Object.values(panes))for(const m of p.models)if(m.textReady)paintSearchHits(p,m)}
-function closeSearch(){searchState.token++;searchState.jumpToken++;clearTimeout(searchState.timer);$("#searchPanel").hidden=true;repaintSearch();$("#searchBtn").focus()}
-function openSearch(){ $("#searchPanel").hidden=false;$("#searchInput").focus();$("#searchInput").select();if($("#searchInput").value.trim())queueSearch(); }
-$("#searchBtn").onclick=openSearch;$("#closeSearch").onclick=closeSearch;
-function queueSearch(){const token=++searchState.token;searchState.jumpToken++;clearTimeout(searchState.timer);searchState.hits=[];searchState.index=-1;searchState.query="";repaintSearch();$("#searchResults").replaceChildren();$("#searchStatus").textContent="等待搜索…";searchState.timer=setTimeout(()=>{searchState.chain=searchState.chain.catch(()=>{}).then(()=>runSearch(token))},220)}
-$("#searchInput").oninput=queueSearch;$("#searchScope").onchange=queueSearch;$("#searchCase").onchange=queueSearch;
-async function runSearch(token){
- if(token!==searchState.token)return;
- searchState.caseSensitive=$("#searchCase").checked;searchState.query=searchText($("#searchInput").value.trim());
- if(!searchState.query){$("#searchStatus").textContent="输入关键词，搜索 PDF 中的文字。";return}
- const scope=$("#searchScope").value;const targets=Object.values(panes).filter(p=>p.pdf&&(scope==="both"||scope===p.side)).map(p=>({p,pdf:p.pdf,generation:p.generation}));
- if(!targets.length){$("#searchStatus").textContent="请先在所选范围打开 PDF。";return}
- let done=0,failed=0,total=targets.reduce((n,t)=>n+t.pdf.numPages,0);let capped=false;
- for(const {p,pdf,generation} of targets){
-  for(let n=1;n<=pdf.numPages;n++){
-   if(token!==searchState.token||generation!==p.generation)return;
-   try{
-    const key=p.docId+":"+n;let raw=searchState.cache.get(key);
-    if(raw===undefined){const page=await pdf.getPage(n);if(token!==searchState.token||generation!==p.generation)return;const tc=await page.getTextContent();raw=tc.items.map(i=>i.str||"").join("");if(token!==searchState.token||generation!==p.generation)return;
-     if(raw.length<4_000_000){while(searchState.bytes+raw.length*2>8_000_000&&searchState.cache.size){const first=searchState.cache.keys().next().value;searchState.bytes-=searchState.cache.get(first).length*2;searchState.cache.delete(first)}searchState.cache.set(key,raw);searchState.bytes+=raw.length*2}
-    }
-    const text=searchText(raw),q=searchState.query;let start=0;
-    while((start=text.indexOf(q,start))!==-1){searchState.hits.push({side:p.side,page:n,start,end:start+q.length,snippet:text.slice(Math.max(0,start-24),start+q.length+60),generation});start+=Math.max(1,q.length);if(searchState.hits.length>=2000){capped=true;break}}
-   }catch(err){failed++}
-   done++;if(done%4===0||done===total){$("#searchStatus").textContent=`正在搜索 ${done} / ${total} 页 · ${searchState.hits.length} 处匹配`;renderSearchResults();await sleep(0)}
-   if(capped)break;
+const searchPageKey = (p, n) => `${p.side}:${p.generation}:${n}`;
+function searchDocumentId(pdf) {
+  if (!searchState.documents.has(pdf)) searchState.documents.set(pdf, ++searchState.nextDocument);
+  return searchState.documents.get(pdf);
+}
+function searchHash(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
+  return hash >>> 0;
+}
+// Preserve explicit whitespace. Infer separators only when PDF item geometry
+// indicates a real word gap or line break; adjacent glyph runs remain joined.
+function searchSeparator(previous, item) {
+  if (!previous) return "";
+  if (previous.hasEOL) return "\n";
+  if (/\s$/u.test(previous.str) || /^\s/u.test(item.str)) return "";
+  const a = previous.transform, b = item.transform;
+  if (!a || !b || previous.dir === "ttb" || item.dir === "ttb") return "";
+  const size = Math.hypot(a[0], a[1]) || Math.hypot(a[2], a[3]) || 1;
+  const ux = a[0] / size, uy = a[1] / size;
+  const dx = b[4] - a[4], dy = b[5] - a[5];
+  if (Math.abs(-dx * uy + dy * ux) > size * .55) return "\n";
+  const advance = dx * ux + dy * uy;
+  const gap = previous.dir === "rtl" ? -advance - Math.abs(item.width || 0) : advance - Math.abs(previous.width || 0);
+  return gap > size * .12 ? " " : "";
+}
+function buildSearchPage(content) {
+  const parts = [], rawParts = [], segments = [];
+  let length = 0, rawLength = 0, previous = null;
+  for (const item of content.items) {
+    if (typeof item.str !== "string") continue;
+    if (!item.str) { if (item.hasEOL && previous) previous = { ...previous, hasEOL: true }; continue; }
+    const separator = searchSeparator(previous, item);
+    parts.push(separator, item.str); length += separator.length;
+    segments.push({ start: length, end: length + item.str.length, rawStart: rawLength });
+    rawParts.push(item.str); length += item.str.length; rawLength += item.str.length;
+    previous = item;
   }
-  if(capped)break;
- }
- if(token!==searchState.token)return;
- $("#searchStatus").textContent=searchState.hits.length?`${searchState.hits.length}${capped?"+":""} 处匹配${capped?" · 仅显示前 2000 处，请缩小范围":""}${failed?` · ${failed} 页读取失败`:""}`:failed?`未找到匹配 · ${failed} 页读取失败` :"未找到匹配。扫描图片 PDF 需先经过 OCR 识别。";
- renderSearchResults();repaintSearch();
+  const raw = rawParts.join("");
+  return { text: parts.join(""), segments, rawLength, hash: searchHash(raw), normalized: new Map(), bytes: length * 2 + segments.length * 32 };
 }
-function renderSearchResults(){
- const list=$("#searchResults"),frag=document.createDocumentFragment();
- // Keep DOM bounded; navigation still visits every match.
- const base=Math.max(0,searchState.index-30),end=Math.min(searchState.hits.length,base+100);
- for(let i=base;i<end;i++){const h=searchState.hits[i],b=document.createElement("button");b.className="search-result"+(i===searchState.index?" active":"");b.setAttribute("aria-label",`${h.side==="left"?"左侧":"右侧"} 第 ${h.page} 页，匹配 ${i+1}`);const label=document.createElement("strong");label.textContent=`${h.side==="left"?"左侧":"右侧"} · 第 ${h.page} 页 · #${i+1}`;const snippet=document.createElement("span");snippet.textContent=h.snippet;b.append(label,snippet);b.onclick=()=>jumpSearch(i);frag.append(b)}list.replaceChildren(frag);
- $("#searchPrev").disabled=$("#searchNext").disabled=!searchState.hits.length;
+// Every normalized UTF-16 unit maps back to the original display text. This
+// handles ligatures, composed accents and case expansions without offset drift.
+function* searchNormalizationSteps(text, caseSensitive) {
+  let processed = 0;
+  const chunks = [], starts = [], ends = [];
+  for (const match of text.matchAll(/[^\p{M}]\p{M}*|\p{M}+/gu)) {
+    if (++processed % 1024 === 0) yield;
+    const from = match.index, to = from + match[0].length;
+    let part = match[0].normalize("NFKC").replace(/[\u00ad\u200b\ufeff]/gu, "");
+    if (!caseSensitive) part = part.toLowerCase();
+    for (const character of part) {
+      if (/\s/u.test(character)) {
+        if (chunks[chunks.length - 1] === " ") { ends[ends.length - 1] = to; continue; }
+        chunks.push(" "); starts.push(from); ends.push(to);
+      } else {
+        chunks.push(character);
+        for (let j = 0; j < character.length; j++) { starts.push(from); ends.push(to); }
+      }
+    }
+  }
+  return { text: chunks.join(""), starts: Uint32Array.from(starts), ends: Uint32Array.from(ends) };
 }
-async function jumpSearch(index){
- if(!searchState.hits.length)return;const jump=++searchState.jumpToken;
- searchState.index=(index+searchState.hits.length)%searchState.hits.length;const h=searchState.hits[searchState.index],p=panes[h.side];if(h.generation!==p.generation){queueSearch();return}
- if(p.paneEl.hidden)setLayout(h.side);appState.activeSide=h.side;p.goToPage(h.page,false);
- const m=p.models[h.page-1];try{await p.ensureRendered(m,300000,"fast");await p.ensureTextLayer(m,true);if(jump!==searchState.jumpToken||h.generation!==p.generation)return;repaintSearch();renderSearchResults();const hit=m.textLayerEl.querySelector(".search-current");if(hit){const r=hit.getBoundingClientRect(),v=p.viewer.getBoundingClientRect();p.viewer.scrollTop+=r.top-v.top-p.viewer.clientHeight*.35;p.viewer.scrollLeft+=r.left-v.left-p.viewer.clientWidth*.4}$("#searchStatus").textContent=`第 ${searchState.index+1} / ${searchState.hits.length} 处 · ${h.side==="left"?"左侧":"右侧"}第 ${h.page} 页`;}catch{toast("该结果暂时无法定位，请重试。",true)}
+function normalizeSearch(text, caseSensitive) {
+  const steps = searchNormalizationSteps(text, caseSensitive);
+  let result; do { result = steps.next(); } while (!result.done);
+  return result.value;
 }
-$("#searchPrev").onclick=()=>jumpSearch(searchState.index-1);$("#searchNext").onclick=()=>jumpSearch(searchState.index+1);
-$("#searchInput").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();jumpSearch(searchState.index+(e.shiftKey?-1:1))}};
-document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="f"){e.preventDefault();openSearch()}if(e.key==="Escape"&&!$("#searchPanel").hidden){e.preventDefault();closeSearch()}},true);
-for(const p of Object.values(panes)){p.paneEl.addEventListener("pointerdown",()=>{appState.activeSide=p.side});const original=p.loadFile.bind(p);p.loadFile=async(...args)=>{searchState.token++;searchState.jumpToken++;searchState.hits=[];searchState.query="";repaintSearch();await original(...args);if(!$("#searchPanel").hidden)queueSearch()}}
+async function normalizeSearchPage(text, sensitive, valid) {
+  const steps = searchNormalizationSteps(text, sensitive);
+  let result, deadline = performance.now() + 8;
+  do {
+    if (!valid()) return null;
+    result = steps.next();
+    if (!result.done && performance.now() >= deadline) { await sleep(0); deadline = performance.now() + 8; }
+  } while (!result.done);
+  return result.value;
+}
+function isSearchWord(character) {
+  return !!character && /[\p{L}\p{M}\p{N}\p{Pc}]/u.test(character) && !/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}]/u.test(character);
+}
+function searchCodePointBefore(text, offset) {
+  if (!offset) return "";
+  const last = text.charCodeAt(offset - 1);
+  return text.slice(offset - (last >= 0xdc00 && last <= 0xdfff && offset > 1 ? 2 : 1), offset);
+}
+function isWholeSearchMatch(text, start, end, query) {
+  const first = String.fromCodePoint(query.codePointAt(0)), last = searchCodePointBefore(query, query.length);
+  return !(isSearchWord(first) && isSearchWord(searchCodePointBefore(text, start))) &&
+    !(isSearchWord(last) && isSearchWord(end < text.length ? String.fromCodePoint(text.codePointAt(end)) : ""));
+}
+function sourceSearchOffset(page, offset, end = false) {
+  let low = 0, high = page.segments.length;
+  while (low < high) { const mid = (low + high) >>> 1; if (page.segments[mid].end <= offset && ! (end && page.segments[mid].end === offset)) low = mid + 1; else high = mid; }
+  const segment = page.segments[Math.min(low, page.segments.length - 1)];
+  return segment ? segment.rawStart + Math.max(0, Math.min(segment.end - segment.start, offset - segment.start)) : 0;
+}
+function evictSearchCache() {
+  while (searchState.bytes > SEARCH_LIMITS.cacheBytes && searchState.cache.size) {
+    const key = searchState.cache.keys().next().value;
+    searchState.bytes -= searchState.cache.get(key).bytes; searchState.cache.delete(key);
+  }
+}
+async function getSearchPage(pdf, n, p) {
+  const key = `${searchDocumentId(pdf)}:${n}`;
+  if (searchState.cache.has(key)) {
+    const page = searchState.cache.get(key); searchState.cache.delete(key); searchState.cache.set(key, page); return page;
+  }
+  if (searchState.pending.has(key)) return searchState.pending.get(key);
+  const task = (async () => {
+    const cached = p.pdf === pdf ? p.textCache.get(n) : null;
+    const content = cached || await (await pdf.getPage(n)).getTextContent();
+    const page = buildSearchPage(content);
+    // Do not retain indexes belonging to a replaced document.
+    if (p.pdf === pdf && page.bytes <= SEARCH_LIMITS.cacheBytes) {
+      searchState.cache.set(key, page); searchState.bytes += page.bytes; evictSearchCache();
+    }
+    return page;
+  })();
+  searchState.pending.set(key, task);
+  try { return await task; } finally { searchState.pending.delete(key); }
+}
+async function getNormalizedSearchPage(page, sensitive, valid) {
+  if (!page.normalized.has(sensitive)) {
+    const normalized = await normalizeSearchPage(page.text, sensitive, valid);
+    if (!normalized || !valid()) return null;
+    page.normalized.set(sensitive, normalized);
+    const added = normalized.text.length * 2 + normalized.starts.byteLength + normalized.ends.byteLength;
+    page.bytes += added;
+    if ([...searchState.cache.values()].includes(page)) { searchState.bytes += added; evictSearchCache(); }
+  }
+  return page.normalized.get(sensitive);
+}
+function clearSearchDecoration(key) {
+  const record = searchState.decorations.get(key); if (!record) return;
+  if (searchHighlights) for (const { range } of record.ranges) { searchHighlights.all.delete(range); searchHighlights.current.delete(range); }
+  record.overlay?.remove(); searchState.decorations.delete(key);
+}
+function clearSearchDecorations() { for (const key of searchState.decorations.keys()) clearSearchDecoration(key); }
+function searchRange(nodes, start, end) {
+  if (end <= start || !nodes.length) return null;
+  const locate = (offset, ending) => {
+    let low = 0, high = nodes.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (nodes[mid].end < offset || (!ending && nodes[mid].end === offset)) low = mid + 1;
+      else high = mid;
+    }
+    return nodes[low];
+  };
+  const first = locate(start, false), last = locate(end, true);
+  if (!first || !last) return null;
+  const range = document.createRange();
+  range.setStart(first.node, start - first.start); range.setEnd(last.node, end - last.start);
+  return range;
+}
+function paintSearchHits(p, m) {
+  const key = searchPageKey(p, m.n); clearSearchDecoration(key);
+  if (!m.textLayerEl || !searchState.query || $("#searchPanel").hidden) return;
+  const hits = searchState.byPage.get(key); if (!hits?.length) return;
+  // Use leaf text nodes, not whole spans: one PDF span can contain a full line.
+  const nodes = [], parts = []; let offset = 0;
+  const walker = document.createTreeWalker(m.textLayerEl, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const value = node.nodeValue || "";
+    if (value.length) { nodes.push({ node, start: offset, end: offset + value.length }); parts.push(value); offset += value.length; }
+  }
+  // A mismatched extraction must never paint unrelated text.
+  if (offset !== hits[0].rawLength || searchHash(parts.join("")) !== hits[0].hash) return;
+  const record = { layer: m.textLayerEl, ranges: [], overlay: null };
+  const current = searchState.hits[searchState.index];
+  let box, scaleX, scaleY;
+  if (!searchHighlights) {
+    record.overlay = document.createElement("div"); record.overlay.className = "search-overlay"; record.overlay.setAttribute("aria-hidden", "true");
+    box = m.textLayerEl.getBoundingClientRect(); scaleX = box.width / m.textLayerEl.offsetWidth; scaleY = box.height / m.textLayerEl.offsetHeight;
+  }
+  for (const hit of hits) {
+    const range = searchRange(nodes, hit.rawStart, hit.rawEnd); if (!range) continue;
+    record.ranges.push({ hit, range });
+    if (searchHighlights) { searchHighlights.all.add(range); if (hit === current) searchHighlights.current.add(range); }
+    else if (scaleX > 0 && scaleY > 0) for (const rect of range.getClientRects()) {
+      const mark = document.createElement("i"); mark.className = "search-rect" + (hit === current ? " current" : "");
+      Object.assign(mark.style, { left: `${(rect.left - box.left) / scaleX}px`, top: `${(rect.top - box.top) / scaleY}px`, width: `${rect.width / scaleX}px`, height: `${rect.height / scaleY}px` });
+      record.overlay.append(mark);
+    }
+  }
+  if (record.overlay) m.textLayerEl.append(record.overlay);
+  searchState.decorations.set(key, record);
+}
+function repaintSearch() {
+  for (const [key, record] of searchState.decorations) if (!record.layer.isConnected) clearSearchDecoration(key);
+  for (const p of Object.values(panes)) for (const m of p.models) if (m.textReady) paintSearchHits(p, m);
+}
+function resetSearch() {
+  ++searchState.token; ++searchState.jumpToken; clearTimeout(searchState.timer);
+  searchState.hits = []; searchState.byPage.clear(); searchState.index = -1; searchState.query = "";
+  searchState.listPage = 0; searchState.running = false; searchState.summary = ""; clearSearchDecorations(); renderSearchResults();
+}
+function closeSearch() { resetSearch(); $("#searchPanel").hidden = true; $("#searchBtn").focus(); }
+function openSearch() { $("#searchPanel").hidden = false; $("#searchInput").focus(); $("#searchInput").select(); queueSearch(); }
+function queueSearch() {
+  resetSearch(); const token = searchState.token;
+  $("#searchStatus").textContent = $("#searchInput").value.trim() ? "等待搜索…" : "支持完整词匹配、短语与中文。";
+  if (!$("#searchInput").value.trim()) return;
+  searchState.timer = setTimeout(() => { runSearch(token).catch(error => {
+    if (token !== searchState.token) return;
+    searchState.running = false; $("#searchStatus").textContent = "搜索未完成，请重试。"; renderSearchResults(); console.warn("PDF search failed", error);
+  }); }, SEARCH_LIMITS.debounce);
+}
+async function runSearch(token) {
+  if (token !== searchState.token) return;
+  const sensitive = $("#searchCase").checked, whole = $("#searchWhole").checked;
+  const query = normalizeSearch($("#searchInput").value.trim(), sensitive).text.trim();
+  if (!query) { $("#searchStatus").textContent = "请输入有效关键词。"; return; }
+  searchState.query = query;
+  const scope = $("#searchScope").value;
+  const targets = Object.values(panes).filter(p => p.pdf && (scope === "both" || scope === p.side)).map(p => ({ p, pdf: p.pdf, generation: p.generation }));
+  if (!targets.length) { $("#searchStatus").textContent = "请先在所选范围打开 PDF。"; return; }
+  let done = 0, failed = 0, capped = false, lastPublish = 0, sliceStart = performance.now();
+  const total = targets.reduce((sum, target) => sum + target.pdf.numPages, 0);
+  searchState.running = true;
+  const valid = target => token === searchState.token && target.p.pdf === target.pdf && target.p.generation === target.generation;
+  const publish = () => {
+    $("#searchStatus").textContent = `正在搜索 ${done} / ${total} 页 · ${searchState.hits.length} 处匹配`;
+    renderSearchResults(); lastPublish = performance.now();
+  };
+  publish();
+  for (const target of targets) {
+    const { p, pdf, generation } = target;
+    for (let n = 1; n <= pdf.numPages; n++) {
+      if (!valid(target)) return;
+      try {
+        const page = await getSearchPage(pdf, n, p);
+        if (!valid(target)) return;
+        const normalized = await getNormalizedSearchPage(page, sensitive, () => valid(target));
+        if (!normalized || !valid(target)) return;
+        const text = normalized.text;
+        const pageHits = []; let cursor = 0, start;
+        while ((start = text.indexOf(query, cursor)) !== -1) {
+          const end = start + query.length; cursor = end;
+          if (!whole || isWholeSearchMatch(text, start, end, query)) {
+            // Never match just half of a normalization expansion (e.g. ﬁ -> fi).
+            if ((start === 0 || normalized.starts[start - 1] !== normalized.starts[start]) &&
+                (end === text.length || normalized.ends[end - 1] !== normalized.ends[end])) {
+              const displayStart = normalized.starts[start], displayEnd = normalized.ends[end - 1];
+              const snippetStart = Math.max(0, displayStart - 45), snippetEnd = Math.min(page.text.length, displayEnd + 75);
+              const hit = {
+                side: p.side, page: n, generation, pdf, rawLength: page.rawLength, hash: page.hash,
+                rawStart: sourceSearchOffset(page, displayStart), rawEnd: sourceSearchOffset(page, displayEnd, true),
+                before: (snippetStart ? "…" : "") + page.text.slice(snippetStart, displayStart).replace(/\s+/gu, " "),
+                match: page.text.slice(displayStart, displayEnd).replace(/\s+/gu, " "),
+                after: page.text.slice(displayEnd, snippetEnd).replace(/\s+/gu, " ") + (snippetEnd < page.text.length ? "…" : "")
+              };
+              pageHits.push(hit); searchState.hits.push(hit);
+              if (searchState.hits.length >= SEARCH_LIMITS.hits) { capped = true; break; }
+            }
+          }
+          if (performance.now() - sliceStart > 8) { await sleep(0); sliceStart = performance.now(); if (!valid(target)) return; }
+        }
+        if (pageHits.length) { searchState.byPage.set(searchPageKey(p, n), pageHits); const m = p.models[n - 1]; if (m?.textReady) paintSearchHits(p, m); }
+      } catch (error) { if (!valid(target)) return; failed++; console.warn("PDF search page failed", p.side, n, error); }
+      done++;
+      if (performance.now() - lastPublish > 100) publish();
+      if (performance.now() - sliceStart > 8) { await sleep(0); sliceStart = performance.now(); }
+      if (capped) break;
+    }
+    if (capped) break;
+  }
+  if (token !== searchState.token) return;
+  searchState.running = false;
+  searchState.summary = searchState.hits.length ? `${searchState.hits.length}${capped ? "+" : ""} 处匹配${whole ? " · 完整词" : " · 部分匹配"}${capped ? " · 达到 2000 处上限，请缩小范围" : ""}` : "未找到匹配。可取消“完整词”扩大范围；扫描件需 OCR。";
+  if (failed) searchState.summary += ` · ${failed} 页读取失败`;
+  $("#searchStatus").textContent = searchState.summary; renderSearchResults();
+}
+function renderSearchResults() {
+  const list = $("#searchResults"), fragment = document.createDocumentFragment();
+  const pages = Math.max(1, Math.ceil(searchState.hits.length / SEARCH_LIMITS.rows));
+  searchState.listPage = Math.min(searchState.listPage, pages - 1);
+  const base = searchState.listPage * SEARCH_LIMITS.rows, end = Math.min(searchState.hits.length, base + SEARCH_LIMITS.rows);
+  for (let i = base; i < end; i++) {
+    const hit = searchState.hits[i], button = document.createElement("button");
+    button.type = "button"; button.className = "search-result" + (i === searchState.index ? " active" : ""); button.dataset.resultIndex = i;
+    button.setAttribute("aria-current", i === searchState.index ? "true" : "false");
+    const label = document.createElement("strong"); label.textContent = `${hit.side === "left" ? "左侧" : "右侧"} · 第 ${hit.page} 页 · #${i + 1}`;
+    const snippet = document.createElement("span"), mark = document.createElement("mark"); mark.textContent = hit.match;
+    snippet.append(hit.before, mark, hit.after); button.append(label, snippet); fragment.append(button);
+  }
+  // Explicit pagination keeps every result reachable while bounding DOM work.
+  if (pages > 1) {
+    const pager = document.createElement("div"); pager.className = "search-pager";
+    for (const [delta, title] of [[-1, "上一组"], [1, "下一组"]]) {
+      const button = document.createElement("button"); button.type = "button"; button.textContent = title; button.dataset.resultPage = searchState.listPage + delta;
+      button.disabled = searchState.listPage + delta < 0 || searchState.listPage + delta >= pages; pager.append(button);
+      if (delta === -1) { const caption = document.createElement("span"); caption.textContent = `${base + 1}–${end} / ${searchState.hits.length}`; pager.append(caption); }
+    }
+    fragment.append(pager);
+  }
+  const focus = list.contains(document.activeElement) ? document.activeElement?.dataset : null;
+  const focusedIndex = focus?.resultIndex, focusedPage = focus?.resultPage;
+  list.replaceChildren(fragment);
+  if (focusedIndex !== undefined) list.querySelector(`[data-result-index="${focusedIndex}"]`)?.focus({ preventScroll: true });
+  else if (focusedPage !== undefined) list.querySelector(`[data-result-page="${focusedPage}"]`)?.focus({ preventScroll: true });
+  $("#searchPrev").disabled = $("#searchNext").disabled = !searchState.hits.length;
+}
+async function jumpSearch(index) {
+  if (!searchState.hits.length) return;
+  const jump = ++searchState.jumpToken;
+  const old = searchState.hits[searchState.index];
+  searchState.index = (index + searchState.hits.length) % searchState.hits.length;
+  const hit = searchState.hits[searchState.index], p = panes[hit.side];
+  if (hit.pdf !== p.pdf || hit.generation !== p.generation) { queueSearch(); return; }
+  searchState.listPage = Math.floor(searchState.index / SEARCH_LIMITS.rows);
+  if (p.paneEl.hidden) setLayout(hit.side);
+  appState.activeSide = hit.side; p.goToPage(hit.page, false);
+  const model = p.models[hit.page - 1];
+  try {
+    await p.ensureRendered(model, 300000, "fast"); await p.ensureTextLayer(model, true);
+    if (jump !== searchState.jumpToken || hit.pdf !== p.pdf || hit.generation !== p.generation) return;
+    if (old) { const pane = panes[old.side], m = pane.models[old.page - 1]; if (m?.textReady && pane.generation === old.generation) paintSearchHits(pane, m); }
+    paintSearchHits(p, model); renderSearchResults();
+    const range = searchState.decorations.get(searchPageKey(p, hit.page))?.ranges.find(entry => entry.hit === hit)?.range;
+    if (range) {
+      const rect = range.getBoundingClientRect(), viewport = p.viewer.getBoundingClientRect();
+      p.viewer.scrollTop += rect.top - viewport.top - p.viewer.clientHeight * .35;
+      if (rect.left < viewport.left || rect.right > viewport.right) p.viewer.scrollLeft += rect.left - viewport.left - 24;
+    }
+    $("#searchStatus").textContent = `第 ${searchState.index + 1} / ${searchState.hits.length} 处 · ${hit.side === "left" ? "左侧" : "右侧"}第 ${hit.page} 页${range ? "" : " · 已定位到页面，文字层暂不可用"}${searchState.running ? " · 搜索仍在继续" : ""}`;
+    $("#searchResults").querySelector(".active")?.scrollIntoView({ block: "nearest" });
+  } catch { if (jump === searchState.jumpToken) toast("该结果暂时无法定位，请重试。", true); }
+}
+$("#searchBtn").onclick = openSearch; $("#closeSearch").onclick = closeSearch;
+for (const selector of ["#searchInput", "#searchScope", "#searchCase", "#searchWhole"]) $(selector)[selector === "#searchInput" ? "oninput" : "onchange"] = queueSearch;
+$("#searchResults").onclick = event => {
+  const button = event.target.closest("button"); if (!button || button.disabled) return;
+  if (button.dataset.resultIndex !== undefined) jumpSearch(Number(button.dataset.resultIndex));
+  else if (button.dataset.resultPage !== undefined) { searchState.listPage = Number(button.dataset.resultPage); renderSearchResults(); $("#searchResults").scrollTop = 0; $("#searchResults").querySelector("button")?.focus({ preventScroll: true }); }
+};
+$("#searchPrev").onclick = () => jumpSearch(searchState.index < 0 ? searchState.hits.length - 1 : searchState.index - 1);
+$("#searchNext").onclick = () => jumpSearch(searchState.index + 1);
+$("#searchInput").onkeydown = event => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); if (event.shiftKey) $("#searchPrev").click(); else $("#searchNext").click(); } };
+document.addEventListener("keydown", event => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") { event.preventDefault(); openSearch(); }
+  if (event.key === "Escape" && !$("#searchPanel").hidden) { event.preventDefault(); closeSearch(); }
+}, true);
+for (const p of Object.values(panes)) {
+  p.paneEl.addEventListener("pointerdown", () => { appState.activeSide = p.side; });
+  const originalLoad = p.loadFile.bind(p), originalDestroy = p.destroyDocument.bind(p);
+  p.loadFile = async (...args) => { resetSearch(); try { return await originalLoad(...args); } finally { if (!$("#searchPanel").hidden) queueSearch(); } };
+  p.destroyDocument = async (...args) => {
+    const pdf = p.pdf; resetSearch();
+    if (pdf) { const prefix = `${searchDocumentId(pdf)}:`; for (const [key, page] of searchState.cache) if (key.startsWith(prefix)) { searchState.bytes -= page.bytes; searchState.cache.delete(key); } }
+    try { return await originalDestroy(...args); } finally { if (!$("#searchPanel").hidden) queueSearch(); }
+  };
+}
 renderSearchResults();
+
 
 
 function showReadingControls(p){p.paneEl.classList.add("controls-visible");clearTimeout(p.controlsTimer);p.controlsTimer=setTimeout(()=>p.paneEl.classList.remove("controls-visible"),1700)}
