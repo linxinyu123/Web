@@ -1,0 +1,6 @@
+/* Only static app files are cached. API requests and user data never enter Cache Storage. */
+const CACHE='cashew-static-v1.0.0';
+const FILES=['./','./index.html','./styles.css','./config.js','./src/core.js','./src/app.js','./assets/icon.png','./assets/DMSans-Regular.ttf','./assets/DMSans-Bold.ttf','./manifest.webmanifest'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES))));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('cashew-static-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin)return;const base=new URL('./',self.location.href),relative=url.pathname.slice(base.pathname.length);if(url.pathname.startsWith(base.pathname)&&FILES.includes('./'+relative)){event.respondWith(caches.match(event.request,{ignoreSearch:true}).then(cached=>cached||fetch(event.request)));}else if(event.request.mode==='navigate'&&url.pathname.startsWith(base.pathname)){event.respondWith(fetch(event.request).catch(()=>caches.match('./index.html')));}});
