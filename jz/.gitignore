@@ -1,7 +1,0 @@
-node_modules/
-dist/
-Cashew.html
-.dev.vars
-worker/.dev.vars
-worker/.wrangler/
-.DS_Store
