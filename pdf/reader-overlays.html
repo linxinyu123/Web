@@ -1,0 +1,28 @@
+<div class="global-tools" id="syncMenu" hidden role="group" aria-label="联动设置"><div class="popover-title">双栏联动</div><button id="syncScroll" aria-pressed="true"><span>同步滚动位置</span></button><button id="syncPage" aria-pressed="true"><span>同步翻页</span></button><button id="syncZoom" aria-pressed="false"><span>同步缩放</span></button><button id="syncSelection" aria-pressed="true"><span>映射文字选择</span></button></div><button class="focus-exit" id="exitZen" title="退出专注阅读（Esc）">退出专注 · Esc</button>
+<input id="leftFile" type="file" accept="application/pdf,.pdf" hidden>
+<input id="rightFile" type="file" accept="application/pdf,.pdf" hidden>
+
+<div class="selection-tools" id="selectionTools" hidden>
+  <span class="selection-state" id="selectionState">已同步选中</span>
+  <button id="copySource">复制</button>
+  <button id="copyBilingual">复制双语</button>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="history-drawer" id="historyDrawer" aria-label="历史记录" role="dialog" aria-modal="true" inert>
+  <div class="drawer-head">
+    <strong>历史记录</strong>
+    <span class="spacer"></span>
+    <button id="closeHistory">关闭</button>
+  </div>
+  <div class="history-controls"><input id="historyFilter" type="search" placeholder="按文件名查找…" aria-label="筛选历史文件"></div><div class="history-list" id="historyList"></div>
+  <div class="drawer-foot">
+    在此浏览器自动保存文件与阅读位置 · 最近 60 份
+  </div>
+</aside>
+
+
+<div class="loading" id="loading" hidden><div class="loading-card">正在解析 PDF…</div></div>
+<div class="toast" id="toast"></div>
+
+

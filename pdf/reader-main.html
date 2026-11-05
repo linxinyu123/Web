@@ -1,0 +1,51 @@
+  <main class="main" id="main">
+    <section class="pane" id="leftPane" data-side="left">
+      <div class="pane-toolbar">
+        <button class="file-button primary" id="openLeft" title="打开左侧 PDF">
+          <svg class="document-file-icon" aria-hidden="true"><use href="#i-file"/></svg><span class="file-label" id="leftName">打开左侧 PDF</span>
+        </button>
+        <button class="pane-focus" data-focus="left" title="展开此文档，保留另一侧阅读位置">展开 ↗</button>
+        <div class="tool-group" aria-label="左侧页码导航">
+          <button class="icon-btn" data-nav="prev" data-side="left" title="上一页">‹</button>
+          <input class="page-input" id="leftPage" value="0" inputmode="numeric" aria-label="左侧页码">
+          <span class="counter" id="leftTotal">/ 0</span>
+          <button class="icon-btn" data-nav="next" data-side="left" title="下一页">›</button>
+        </div>
+        <div class="tool-group" aria-label="左侧缩放">
+          <button class="icon-btn" data-zoom="out" data-side="left" title="缩小">−</button>
+          <span class="zoom-label" id="leftZoom">100%</span>
+          <button class="icon-btn" data-zoom="in" data-side="left" title="放大">＋</button>
+          <button data-zoom="fit" data-side="left" title="适合宽度">适宽</button>
+          <button data-zoom="reset" data-side="left" title="100%">1:1</button>
+        </div>
+      </div>
+      <div class="viewer" id="leftViewer"><div class="pages" id="leftPages"></div></div>
+      <div class="status" id="leftStatus"></div>
+    </section>
+
+    <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="调整左右宽度"></div>
+
+    <section class="pane" id="rightPane" data-side="right">
+      <div class="pane-toolbar">
+        <button class="file-button primary" id="openRight" title="打开右侧 PDF">
+          <svg class="document-file-icon" aria-hidden="true"><use href="#i-file"/></svg><span class="file-label" id="rightName">打开右侧 PDF</span>
+        </button>
+        <button class="pane-focus" data-focus="right" title="展开此文档，保留另一侧阅读位置">展开 ↗</button>
+        <div class="tool-group" aria-label="右侧页码导航">
+          <button class="icon-btn" data-nav="prev" data-side="right" title="上一页">‹</button>
+          <input class="page-input" id="rightPage" value="0" inputmode="numeric" aria-label="右侧页码">
+          <span class="counter" id="rightTotal">/ 0</span>
+          <button class="icon-btn" data-nav="next" data-side="right" title="下一页">›</button>
+        </div>
+        <div class="tool-group" aria-label="右侧缩放">
+          <button class="icon-btn" data-zoom="out" data-side="right" title="缩小">−</button>
+          <span class="zoom-label" id="rightZoom">100%</span>
+          <button class="icon-btn" data-zoom="in" data-side="right" title="放大">＋</button>
+          <button data-zoom="fit" data-side="right" title="适合宽度">适宽</button>
+          <button data-zoom="reset" data-side="right" title="100%">1:1</button>
+        </div>
+      </div>
+      <div class="viewer" id="rightViewer"><div class="pages" id="rightPages"></div></div>
+      <div class="status" id="rightStatus"></div>
+    </section>
+  </main>

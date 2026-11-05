@@ -47,10 +47,13 @@ function renderWorkspaceTabs(focusId = null) {
     node.append(label,close); fragment.append(node);
   }
   container.append(fragment);
+  const active=activeWorkspaceTab(),expected=active?['left','right'].filter(side=>active.sources[side]):[];
+  $('#readerPanel').classList.toggle('tab-preparing',!!active&&(active.loading||(active.mode==='single'&&!expected.length)||expected.some(side=>panes[side].docId!==active.sources[side].docId||!panes[side].pdf||panes[side].documentOpening)));
   $('#homeTab').setAttribute('aria-selected', String(!workspace.active));
   $('#homeTab').tabIndex = workspace.active ? -1 : 0;
   if (workspace.active) $('#readerPanel').setAttribute('aria-labelledby', `tab-${workspace.active}`);
   document.title = workspace.active ? `${tabTitle(activeWorkspaceTab())} · 对读` : '对读 · PDF 工作空间';
+  syncPdfNavigator();
   if (focusId) (focusId === 'home' ? $('#homeTab') : document.getElementById(`tab-${focusId}`))?.focus({preventScroll:true});
   if (workspace.active) document.getElementById(`tab-${workspace.active}`)?.scrollIntoView({block:'nearest',inline:'nearest'});
 }
@@ -108,7 +111,9 @@ function restorePane(pane, snapshot) {
   pane.paneEl.classList.add('loaded'); pane.nameEl.textContent = pane.file.name; pane.nameEl.title = pane.file.name;
   pane.pageInput.value = String(pane.currentPage); pane.totalEl.textContent = `/ ${pane.pdf.numPages}`;
   pane.updateZoomUI(); pane.setStatus(`${pane.pdf.numPages} 页 · ${formatBytes(pane.file.size)}`);
-  pane.refreshViewportMetrics(); pane.updateSurfaceGeometry(pane.layoutScale);
+  pane.refreshViewportMetrics();
+  if(pane.zoomMode==='fit-width')pane.fitWidth({propagate:false,persist:false});
+  else pane.updateSurfaceGeometry(pane.layoutScale);
   if(snapshot.view.anchor)pane.restoreLocalAnchor(snapshot.view.anchor);
   else {pane.viewer.scrollTop = snapshot.view.scrollTop; pane.viewer.scrollLeft = snapshot.view.scrollLeft;}
   pane.onResize(); pane.renderNearViewport(); pane.scheduleSharpRender();
@@ -117,7 +122,8 @@ function parkCurrentTab() {
   const tab = activeWorkspaceTab();
   if (!tab) return;
   if (document.body.classList.contains('zen')) setZen(false);
-  resetSearch(); $('#searchPanel').hidden = true; clearMirrorSelection();
+  closePdfNavigator();
+  resetSearch(); $('#searchPanel').hidden = true; refreshSearchOverlayLayout(); clearMirrorSelection();
   for (const side of ['left','right']) {
     const snapshot = capturePane(panes[side]);
     if (snapshot) { tab.snapshots[side] = snapshot; tab.sources[side].view = snapshot.view; }
@@ -158,13 +164,13 @@ async function activateWorkspaceTab(id, { focus = false } = {}) {
   document.body.dataset.view = 'reader'; $('#homePanel').hidden = true; $('#readerPanel').hidden = false;
   setLayout(tab.layout || (tab.mode === 'compare' ? 'dual' : 'left'),false);
   applyReadingMode(tab.readingMode,false); renderWorkspaceTabs(focus ? id : null);
-  await nextFrame();
+  if(!Object.values(tab.snapshots).some(snapshot=>snapshot?.pdf))await nextFrame();
   for (const side of ['left','right']) {
     const snapshot = tab.snapshots[side]; tab.snapshots[side] = null;
     if (snapshot?.pdf) restorePane(panes[side],snapshot);
     else if (tab.sources[side]) await loadTabSource(tab,side);
   }
-  refreshSessionHint(); saveWorkspaceTabs(); await evictWorkspaceCache();
+  refreshSessionHint(); renderWorkspaceTabs(); saveWorkspaceTabs(); await evictWorkspaceCache();
 }
 function createWorkspaceTab(mode = 'single') {
   const tab = { id:`w${Date.now().toString(36)}${++workspace.serial}`, mode, sources:{}, snapshots:{}, readingMode:workspacePrefs.readingMode, layout:mode === 'compare' ? 'dual' : 'left', lastUsed:Date.now(), loading:false };
@@ -305,7 +311,7 @@ function paintRecentFiles() {
     const row = document.createElement('div'); row.className = 'file-row';
     const open = document.createElement('button'); open.className = 'file-open'; open.title = `打开 ${doc.name}`;
     open.dataset.recentId = doc.id;
-    const badge = document.createElement('span'); badge.className = 'file-type-icon'; badge.textContent = 'PDF';
+    const badge = document.createElement('span'); badge.className = 'file-type-icon'; badge.innerHTML = icon('file'); badge.setAttribute('aria-hidden','true');
     const name = document.createElement('span'); name.className = 'file-name';
     const strong = document.createElement('strong'); strong.textContent = doc.name;
     const small = document.createElement('small'); small.textContent = doc.pages ? `${doc.pages} 页 · 本地文档` : 'PDF 文档 · 本地保存';
@@ -389,17 +395,14 @@ function applyReadingMode(mode, persist = true) {
 }
 function openPreferences() { applyReadingMode(activeWorkspaceTab()?.readingMode || workspacePrefs.readingMode,false); $('#preferencesDialog').showModal(); }
 function createReaderActions() {
-  const actions=$('.top-actions');
+  const actions=$('#readerToolsRight');
   const mode=document.createElement('button'); mode.id='readingModeBtn'; mode.className='reader-mode-button'; mode.setAttribute('aria-label','切换 PDF 深色阅读'); mode.innerHTML=icon('moon')+'<span class="button-label">深色阅读</span>';
   mode.onclick=()=>applyReadingMode($('#readerPanel').dataset.readingMode==='original'?'dark':'original');
   const settings=document.createElement('button'); settings.id='readerPreferencesBtn'; settings.title='阅读颜色与界面偏好'; settings.setAttribute('aria-label','阅读偏好'); settings.innerHTML=icon('settings'); settings.onclick=openPreferences;
   const download=document.createElement('button'); download.title='下载当前 PDF'; download.setAttribute('aria-label','下载当前 PDF'); download.innerHTML=icon('download');
   download.onclick=()=>{const pane=panes[appState.activeSide];if(!pane.file){toast('请先打开一份 PDF。');return}const url=URL.createObjectURL(pane.file),link=document.createElement('a');link.href=url;link.download=pane.file.name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000)};
-  const history=document.createElement('button');history.id='readerHistoryBtn';history.title='历史文件：选择在左侧或右侧打开';history.setAttribute('aria-label','历史文件');history.innerHTML=icon('clock');history.onclick=openHistory;
   const images=document.createElement('button');images.id='pdfImageExportBtn';images.title='将当前 PDF 转为高清图片';images.setAttribute('aria-label','PDF 转图片');images.innerHTML=icon('image')+'<span class="button-label">转图片</span>';images.onclick=openImageExport;
-  actions.prepend(mode,images,settings,download,history);
-  $('#historyBtn').title='返回主页'; $('#historyBtn').setAttribute('aria-label','返回主页'); $('#historyBtn').innerHTML=icon('home');
-  $('#historyBtn').onclick=()=>enqueueWorkspace(()=>showWorkspaceHome());
+  actions.prepend(mode,images,settings,download);
   const status=document.createElement('span'); status.className='reader-status-bar'; status.textContent='本地处理 · 自动保存阅读进度'; $('#readerPanel').append(status);
 }
 createReaderActions();
@@ -416,18 +419,19 @@ restoreHistoryDoc=(rec,side,{silent=false}={})=>enqueueWorkspace(async()=>{
   await loadTabSource(tab,side);saveWorkspaceTabs();renderWorkspaceTabs();
 });
 function setupReaderOverflow(){
-  const actions=$('.top-actions'),menu=document.createElement('div');menu.id='readerMoreMenu';menu.className='reader-overflow';menu.hidden=true;menu.setAttribute('role','group');menu.setAttribute('aria-label','全部阅读工具');$('#readerPanel').append(menu);
+  const actions=$('#readerToolsRight'),menu=document.createElement('div');menu.id='readerMoreMenu';menu.className='reader-overflow';menu.hidden=true;menu.setAttribute('role','group');menu.setAttribute('aria-label','全部阅读工具');$('#readerPanel').append(menu);
   const more=document.createElement('button');more.id='readerMoreBtn';more.title='全部阅读工具';more.setAttribute('aria-label','全部阅读工具');more.setAttribute('aria-expanded','false');more.innerHTML=icon('more');actions.append(more);
-  const items=[['readerHistoryBtn','历史文件'],['readerPreferencesBtn','阅读偏好'],['syncMenuBtn','双栏联动设置'],['fitAll','适合页面宽度'],['zenBtn','专注阅读'],['fullBtn','浏览器全屏']].map(([id,label])=>({button:document.getElementById(id),label}));
+  const items=[['readerPreferencesBtn','阅读偏好'],['syncMenuBtn','双栏联动设置'],['fitAll','适合页面宽度'],['zenBtn','专注阅读'],['fullBtn','浏览器全屏']].map(([id,label])=>({button:document.getElementById(id),label}));
   const download=actions.querySelector('[aria-label="下载当前 PDF"]');items.push({button:download,label:'下载当前 PDF'});
+  items.push({button:$('#readingModeBtn'),label:'深色阅读',narrowOnly:true},{button:$('#pdfImageExportBtn'),label:'PDF 转图片',narrowOnly:true});
   for(const item of items){const label=document.createElement('span');label.className='overflow-label';label.textContent=item.label;item.button.append(label);}
   function close(){menu.hidden=true;more.setAttribute('aria-expanded','false');}
-  function arrange(){const compact=matchMedia('(max-width:700px)').matches;for(const {button} of items)(compact?menu:actions).append(button);more.hidden=!compact;close();}
+  function arrange(){const compact=matchMedia('(max-width:1100px)').matches,narrow=matchMedia('(max-width:500px)').matches;for(const {button,narrowOnly} of items)((narrowOnly?narrow:compact)?menu:actions).append(button);if(!narrow)actions.prepend($('#readingModeBtn'),$('#pdfImageExportBtn'));more.hidden=!compact;close();}
   more.onclick=()=>{menu.hidden=!menu.hidden;more.setAttribute('aria-expanded',String(!menu.hidden));};
   menu.addEventListener('click',event=>{if(event.target.closest('button'))close()});
   document.addEventListener('pointerdown',event=>{if(!event.target.closest('#readerMoreMenu,#readerMoreBtn'))close()});
   document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
-  matchMedia('(max-width:700px)').addEventListener('change',arrange);arrange();
+  for(const query of ['(max-width:1100px)','(max-width:500px)'])matchMedia(query).addEventListener('change',arrange);arrange();
 }
 setupReaderOverflow();
 applyWorkspaceTheme(workspacePrefs.theme,false); applyReadingMode(workspacePrefs.readingMode,false);
@@ -448,7 +452,7 @@ for(const side of ['left','right']){
   panes[side].loadFile=(file)=>enqueueWorkspace(()=>openWorkspaceFiles([file],{targetSide:activeWorkspaceTab()?.mode==='compare'||appState.layout==='dual'?side:null}));
 }
 $('#homeTab').onclick=()=>enqueueWorkspace(()=>showWorkspaceHome());
-$('#newTabBtn').onclick=()=>enqueueWorkspace(()=>showWorkspaceHome('recent'));
+$('#newTabBtn').onclick=()=>filePicker.click();
 document.addEventListener('click',event=>{
   const action=event.target.closest('[data-action]')?.dataset.action;
   if(action==='open')filePicker.click();

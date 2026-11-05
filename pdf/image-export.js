@@ -11,7 +11,7 @@ function initImageExport(){
   $('#imageExportSource').onchange=()=>loadImageExportSource($('#imageExportSource').value);
   for(const id of ['imageExportRange','imageExportDpi','imageExportFormat','imageExportPrefix'])$(`#${id}`).addEventListener(id.includes('Range')||id.includes('Prefix')?'input':'change',updateImageExportDetails);
   $('#exportToFolder').onclick=()=>setImageExportTarget('folder');$('#exportToZip').onclick=()=>setImageExportTarget('zip');
-  $('#chooseExportFolder').onclick=async()=>{try{imageExport.folder=await window.showDirectoryPicker({id:'pdf-image-export',mode:'readwrite',startIn:'downloads'});$('#exportFolderName').textContent=imageExport.folder.name;updateImageExportDetails();}catch(error){if(error.name!=='AbortError')$('#imageExportStatus').textContent='未获得文件夹写入权限，请重新选择保存目录。';}};
+  $('#chooseExportFolder').onclick=chooseImageExportFolder;
   $('#startImageExport').onclick=runImageExport;$('#cancelImageExport').onclick=()=>{imageExport.cancelled=true;imageExport.renderTask?.cancel();};
 }
 async function openImageExport(){
@@ -27,7 +27,34 @@ async function openImageExport(){
 function setImageExportTarget(mode){
   const supports=typeof window.showDirectoryPicker==='function';imageExport.target=mode==='folder'&&supports?'folder':'zip';
   $('#exportToFolder').disabled=!supports;$('#exportToFolder').setAttribute('aria-pressed',String(imageExport.target==='folder'));$('#exportToZip').setAttribute('aria-pressed',String(imageExport.target==='zip'));$('#chooseExportFolder').hidden=imageExport.target!=='folder';
-  $('#imageExportTargetHint').textContent=imageExport.target==='folder'?'选择 Downloads 后，图片会保存到 PDF 同名文件夹中；不会覆盖已有图片。':supports?'兼容下载方式。直接保存图片请选择“指定文件夹”。':'此浏览器不能直接写入本地文件夹，可使用 Chrome 或 Edge 选择 Downloads。';updateImageExportDetails();
+  $('#imageExportTargetHint').textContent=imageExport.target==='folder'?'建议在 Downloads 中新建普通文件夹后选择。若提示“包含系统文件”，请选择新建的子文件夹。图片按 PDF 名称归档，已有图片会保留。':supports?'兼容下载方式。直接保存图片请选择“指定文件夹”。':'此浏览器不能直接写入本地文件夹，可使用 Chrome 或 Edge 选择 Downloads 中的普通子文件夹。';updateImageExportDetails();
+}
+async function chooseImageExportFolder(){
+  const status=$('#imageExportStatus'),picker=$('#chooseExportFolder');
+  const name=imageFilePrefix(imageExport.file?.name||'PDF 图片');
+  status.textContent=`请在 Downloads 中选择普通子文件夹，也可以新建“${name}”后选择。`;
+  try{
+    // Do not reuse a remembered sensitive directory from the old picker ID.
+    const folder=await window.showDirectoryPicker({mode:'readwrite',startIn:'downloads'});
+    imageExport.folder=folder;imageExport.folderIssue='';picker.classList.remove('is-unavailable');
+    $('#exportFolderName').textContent=folder.name;
+    status.textContent=`保存到 ${folder.name}${folder.name===name?'':' / '+name}，点击转换开始保存。`;
+  }catch(error){
+    imageExport.folderIssue=error.name==='AbortError'?'未选择新目录。若浏览器提示包含系统文件，请在 Downloads 中新建普通子文件夹后重新选择。':'浏览器未允许写入此目录，请选择 Downloads 中的普通子文件夹并允许保存。';
+    status.textContent=imageExport.folderIssue+(imageExport.folder?' 仍保留上次可用的目录。':'');
+    if(!imageExport.folder)picker.classList.add('is-unavailable');
+  }
+  updateImageExportDetails();
+}
+async function imageExportDirectory(parent,pdfName){
+  if(parent.queryPermission){
+    let permission=await parent.queryPermission({mode:'readwrite'});
+    if(permission!=='granted')permission=await parent.requestPermission({mode:'readwrite'});
+    if(permission!=='granted')throw new DOMException('请重新选择保存文件夹并允许写入。','NotAllowedError');
+  }
+  const name=imageFilePrefix(pdfName);
+  // Selecting the PDF-named folder directly must not create PDF/PDF nesting.
+  return parent.name===name?parent:parent.getDirectoryHandle(name,{create:true});
 }
 async function loadImageExportSource(id){
   const source=imageExport.sources.get(id);if(!source)return;const token=++imageExport.token;imageExport.pdf=null;$('#startImageExport').disabled=true;$('#imageExportInfo').textContent='正在读取 PDF…';await imageExport.task?.destroy();
@@ -40,7 +67,7 @@ async function loadImageExportSource(id){
 }
 async function updateImageExportDetails(){
   const pdf=imageExport.pdf,button=$('#startImageExport');button.disabled=!pdf||imageExport.running||(imageExport.target==='folder'&&!imageExport.folder);
-  if(pdf&&!imageExport.running&&imageExport.target==='folder'&&!imageExport.folder)$('#imageExportStatus').textContent='请先选择 Downloads 或其他保存目录。';
+  if(pdf&&!imageExport.running&&imageExport.target==='folder'&&!imageExport.folder)$('#imageExportStatus').textContent=imageExport.folderIssue||'请先选择 Downloads 内的普通文件夹，也可以新建文件夹后选择。';
   const prefix=imageFilePrefix($('#imageExportPrefix').value||imageExport.file?.name),extension=$('#imageExportFormat').value==='png'?'png':'jpg';$('#imageExportNamePreview').textContent=`文件名示例：${prefix}_page-0001.${extension}`;
   if(!pdf){$('#imageExportDimensions').textContent='';return;}
   try{const pages=parsePdfPageRange($('#imageExportRange').value,pdf.numPages);button.textContent=`转换 ${pages.length} 页`;const page=await pdf.getPage(pages[0]);if(imageExport.pdf!==pdf)return;const viewport=page.getViewport({scale:Number($('#imageExportDpi').value)/72});$('#imageExportDimensions').textContent=`首张约 ${Math.ceil(viewport.width-1e-6)} × ${Math.ceil(viewport.height-1e-6)} 像素 · ${$('#imageExportDpi').value} DPI`;$('#imageExportRange').setAttribute('aria-invalid','false');}catch(error){button.disabled=true;$('#imageExportDimensions').textContent=error.message;$('#imageExportRange').setAttribute('aria-invalid','true');}
@@ -61,7 +88,7 @@ async function runImageExport(){
   const records=[];let bytes=0,completed=0,directory=null,canvas;
   imageExport.cancelled=false;setImageExportBusy(true);$('#imageExportProgress').hidden=false;$('#imageExportProgressBar').style.width='0%';$('#imageExportPercent').textContent='0%';
   try{
-    if(imageExport.target==='folder'){if(!imageExport.folder)throw new Error('请先选择保存文件夹。');directory=await imageExport.folder.getDirectoryHandle(imageFilePrefix(imageExport.file.name),{create:true});}
+    if(imageExport.target==='folder'){if(!imageExport.folder)throw new Error('请先选择保存文件夹。');directory=await imageExportDirectory(imageExport.folder,imageExport.file.name);}
     const limit=matchMedia('(pointer: coarse)').matches?16_000_000:48_000_000;
     for(const number of pages){
       if(imageExport.cancelled)break;$('#imageExportProgressText').textContent=`正在转换第 ${number} 页 · ${completed+1} / ${pages.length}`;
@@ -78,6 +105,12 @@ async function runImageExport(){
     if(imageExport.cancelled){$('#imageExportStatus').textContent=directory?`已取消，已保存 ${completed} 页，其余页面未导出。`:'已取消，未生成压缩包。';return;}
     if(!directory){$('#imageExportProgressText').textContent='正在打包图片…';const zip=await buildImageZip(records);if(imageExport.cancelled){$('#imageExportStatus').textContent='已取消，未下载压缩包。';return;}const url=URL.createObjectURL(zip),link=document.createElement('a');link.href=url;link.download=`${prefix}_pages.zip`;link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
     $('#imageExportProgressText').textContent='转换完成';$('#imageExportStatus').textContent=directory?`已保存 ${completed} 张图片到 ${directory.name}`:`已生成 ${completed} 张图片的 ZIP 下载`;
-  }catch(error){$('#imageExportStatus').textContent=imageExport.cancelled?(directory?`已取消，已保存 ${completed} 页。`:'已取消，未生成压缩包。'):`${error.message||'转换失败'}${completed&&directory?` 已保存 ${completed} 页。`:''}`;}
+  }catch(error){
+    if(!imageExport.cancelled&&imageExport.target==='folder'&&['NotAllowedError','SecurityError','NotFoundError','InvalidStateError'].includes(error.name)){
+      imageExport.folder=null;imageExport.folderIssue='所选目录不可写入或权限已失效。请在 Downloads 中新建普通子文件夹，再选择该文件夹并允许保存。';
+      $('#exportFolderName').textContent='重新选择保存文件夹';$('#chooseExportFolder').classList.add('is-unavailable');
+    }
+    $('#imageExportStatus').textContent=imageExport.cancelled?(directory?`已取消，已保存 ${completed} 页。`:'已取消，未生成压缩包。'):`${imageExport.folderIssue||error.message||'转换失败'}${completed&&directory?` 已保存 ${completed} 页。`:''}`;
+  }
   finally{if(canvas)canvas.width=canvas.height=1;imageExport.renderTask=null;records.length=0;setImageExportBusy(false);}
 }
