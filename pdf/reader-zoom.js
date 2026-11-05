@@ -20,6 +20,7 @@ Object.assign(PdfPane.prototype, {
       this.zoomPreviewActive = true;
       this.viewer.classList.add('zoom-preview');
       this.cancelSharpRender();
+      this.pauseBackgroundWork();
       updateRenderConcurrency();
     }
     this.wheelZoomTargetScale = this.scale;
@@ -83,6 +84,7 @@ Object.assign(PdfPane.prototype, {
     this.zoomAnchor = null;
     this.viewer.classList.remove('zoom-preview');
     updateRenderConcurrency();
+    resumePdfThumbnails();
     this.updateCurrentPage();
     this.renderNearViewport({quality: 'fast'});
     this.scheduleSharpRender();

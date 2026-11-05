@@ -4,6 +4,7 @@ import base64
 root = Path(__file__).parent
 read = lambda name: (root / name).read_text(encoding='utf-8')
 js = '\n'.join(read(name) for name in ('reader-core.js', 'reader-zoom.js', 'reader-search-layout.js', 'touch.js', 'controls.js', 'image-export-core.js', 'image-export.js', 'workspace.js', 'page-navigator.js'))
+js += "\nif(new URLSearchParams(location.search).get('perf')==='1')import('./tests/perf-probe.js').then(m=>m.installPdfPerfProbe({panes,renderQueue}));\n"
 (root / 'app.js').write_text(js, encoding='utf-8')
 shell = read('shell.html')
 for part in ('toolbar', 'main', 'search', 'overlays'):

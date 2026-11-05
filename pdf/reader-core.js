@@ -27,15 +27,19 @@ const CFG = Object.freeze({
   DEFAULT_SCALE: 1,
   ZOOM_STEP: 1.15,
   DPR_CAP: 1.5,
+  MOTION_RENDER_SCALE_CAP: 1.25,
+  MOTION_CANVAS_PIXELS: 1_000_000,
+  SCROLL_RENDER_INTERVAL_MS: 80,
+  TEXT_DOM_PAGES: 12,
   FAST_RENDER_SCALE_CAP: 1.75,
   SHARP_RENDER_SCALE_CAP: 3.2,
   FAST_CANVAS_PIXELS: 2_600_000,
   SHARP_CANVAS_PIXELS: 6_000_000,
   CANVAS_MEMORY_BUDGET: matchMedia("(pointer: coarse)").matches ? 50_331_648 : 134_217_728, // 128 MiB per pane
   WHEEL_ZOOM_SETTLE_MS: 110,
-  SHARP_IDLE_MS: 260,
+  SHARP_IDLE_MS: 340,
   TEXT_IDLE_MS: 180,
-  SCROLL_IDLE_MS: 96,
+  SCROLL_IDLE_MS: 200,
   GEOMETRY_SETTLE_MS: 120,
   MEMORY_PRUNE_IDLE_MS: 700,
   RENDER_OVERSCAN_VIEWPORTS: .9,
@@ -99,9 +103,13 @@ class PriorityRenderQueue {
     this.limit = Math.max(1, limit | 0);
     this.pump();
   }
-  add(fn, priority = 0) {
+  cancel(key) {
+    // Resolve discarded work so callers awaiting a first canvas can finish.
+    this.jobs = this.jobs.filter(job => { if (job.key !== key) return true; job.resolve(); return false; });
+  }
+  add(fn, priority = 0, key = null) {
     return new Promise((resolve, reject) => {
-      this.jobs.push({ fn, priority, resolve, reject, serial: this.serial++ });
+      this.jobs.push({ fn, priority, key, resolve, reject, serial: this.serial++ });
       this.jobs.sort((a, b) => b.priority - a.priority || a.serial - b.serial);
       this.pump();
     });
@@ -227,6 +235,9 @@ class PdfPane {
     this.resizeRaf = 0;
     this.panRaf = 0;
     this.scrollIdleTimer = 0;
+    this.scrollRenderTimer = 0;
+    this.lastScrollRenderAt = 0;
+    this.motionRange = "";
     this.viewSaveTimer = 0;
     this.sharpTimer = 0;
     this.geometryTimer = 0;
@@ -235,6 +246,8 @@ class PdfPane {
     this.isScrolling = false;
     this.syncEcho = null;
     this.renderingModels = new Set();
+    this.textRenderingModels = new Set();
+    this.textModels = new Set();
     this.geometryDirtyModels = new Set();
 
     this.textCache = new LruTextCache(CFG.TEXT_CACHE_PAGES);
@@ -313,6 +326,7 @@ class PdfPane {
     };
     try { this.viewer.setPointerCapture(e.pointerId) } catch {}
     this.viewer.classList.add("panning");
+    this.pauseBackgroundWork();
     this.cancelSharpRender();
     updateRenderConcurrency();
   }
@@ -347,7 +361,8 @@ class PdfPane {
     this.panState = null;
     this.viewer.classList.remove("panning");
     updateRenderConcurrency();
-    this.armScrollIdle(48);
+    this.armScrollIdle();
+    resumePdfThumbnails();
   }
 
   async loadFile(file, { docId = null, restoreState = null, persistBlob = true, silent = false } = {}) {
@@ -681,7 +696,9 @@ class PdfPane {
   async ensurePage(model) {
     if (model.page) return model.page;
 
-    const page = await this.pdf.getPage(model.n);
+    const generation=this.generation,pdf=this.pdf;
+    const page = await pdf.getPage(model.n);
+    if(generation!==this.generation || pdf!==this.pdf)return page;
     model.page = page;
     const base = page.getViewport({ scale: 1 });
 
@@ -698,17 +715,18 @@ class PdfPane {
   async getTextContent(model) {
     const cached = this.textCache.get(model.n);
     if (cached) return cached;
+    const generation=this.generation;
     const page = await this.ensurePage(model);
     const tc = await page.getTextContent();
-    this.textCache.set(model.n, tc);
+    if(generation===this.generation)this.textCache.set(model.n, tc);
     return tc;
   }
 
   desiredRenderScale(model, quality = "fast") {
     const zoom = this.layoutScale;
     const dpr = Math.min(window.devicePixelRatio || 1, CFG.DPR_CAP);
-    const cap = quality === "sharp" ? CFG.SHARP_RENDER_SCALE_CAP : CFG.FAST_RENDER_SCALE_CAP;
-    const pixelBudget = quality === "sharp" ? CFG.SHARP_CANVAS_PIXELS : CFG.FAST_CANVAS_PIXELS;
+    const cap = quality === "motion" ? CFG.MOTION_RENDER_SCALE_CAP : quality === "sharp" ? CFG.SHARP_RENDER_SCALE_CAP : CFG.FAST_RENDER_SCALE_CAP;
+    const pixelBudget = quality === "motion" ? CFG.MOTION_CANVAS_PIXELS : quality === "sharp" ? CFG.SHARP_CANVAS_PIXELS : CFG.FAST_CANVAS_PIXELS;
 
     let target = Math.min(zoom * dpr, cap);
     const maxByPixels = Math.sqrt(pixelBudget / Math.max(1, (model.actualW || model.baseW) * (model.actualH || model.baseH)));
@@ -737,6 +755,7 @@ class PdfPane {
     const ticket = ++model.ticket;
     model.rendering = true;
     model.pendingScale = targetScale;
+    model.renderQuality = quality;
     this.renderingModels.add(model);
 
     try {
@@ -764,8 +783,15 @@ class PdfPane {
           background: "rgb(255,255,255)"
         });
         model.renderTask = renderTask;
+        // Let a pending input/paint run between PDF.js operator-list slices.
+        // Keep the completed bitmap visible until its replacement is ready.
+        renderTask.onContinue = resume => {
+          if (this.isScrolling || this.panState || this.zoomPreviewActive) setTimeout(resume, 0);
+          else resume();
+        };
 
-        await renderTask.promise;
+        try { await renderTask.promise; }
+        catch (error) { staged.width = staged.height = 1; throw error; }
         if (generation !== this.generation || ticket !== model.ticket || !model.el.isConnected) {
           staged.width = staged.height = 1;
           return;
@@ -786,7 +812,7 @@ class PdfPane {
         model.placeholder = null;
         if (!this.isScrolling) this.scheduleTextLayer(model);
         this.scheduleCanvasPrune();
-      }, priority);
+      }, priority, model);
       model.renderPromise=work;
       await work;
     } catch (err) {
@@ -807,14 +833,17 @@ class PdfPane {
   cancelModelRender(model) {
     if (!model?.rendering) return;
     model.ticket++;
+    renderQueue.cancel(model);
     try { model.renderTask?.cancel() } catch {}
     model.renderTask = null;
     model.rendering = false;
+    model.renderPromise = null;
     model.pendingScale = 0;
     this.renderingModels.delete(model);
   }
 
   scheduleTextLayer(model) {
+    if (this.paneEl.hidden || document.body.dataset.view === 'home') return;
     if (!model || model.textReady || model.textRendering || model.textScheduled || !model.el.isConnected) return;
     model.textScheduled = true;
     const generation = this.generation;
@@ -833,18 +862,33 @@ class PdfPane {
 
   async ensureTextLayer(model, force = false) {
     if (!this.pdf || !model?.el?.isConnected) return;
-    if (model.textReady) return;
-    if (model.textRendering && !force) return;
+    if (model.textReady) { model.textLastUsed = performance.now(); return; }
+    if (!force && (this.isScrolling || this.panState || this.zoomPreviewActive)) return;
+    if (model.textRendering) {
+      if (!force || model.textForced) { await model.textPromise?.catch(()=>{}); return; }
+      this.cancelTextWork(model);
+    }
 
+    const work = this.buildTextLayer(model, force);
+    model.textPromise = work;
+    await work;
+  }
+
+  async buildTextLayer(model, force) {
     const generation = this.generation;
     const ticket = ++model.textTicket;
     model.textScheduled = false;
     model.textRendering = true;
+    model.textForced = force;
+    this.textRenderingModels.add(model);
+    const valid = () => generation === this.generation && ticket === model.textTicket && model.el.isConnected &&
+      (force || (!this.paneEl.hidden && !this.isScrolling && !this.panState && !this.zoomPreviewActive && this.modelIntersectsViewport(model,96)));
 
     try {
       const page = await this.ensurePage(model);
+      if (!valid()) return;
       const textContent = await this.getTextContent(model);
-      if (generation !== this.generation || ticket !== model.textTicket || !model.el.isConnected) return;
+      if (!valid()) return;
 
       const viewport = page.getViewport({ scale: 1 });
       const staged = document.createElement("div");
@@ -856,76 +900,106 @@ class PdfPane {
         container: staged,
         viewport
       });
+      model.pendingTextLayer = layer;
       await layer.render();
 
-      if (generation !== this.generation || ticket !== model.textTicket || !model.el.isConnected) return;
+      if (!valid()) { layer.cancel(); return; }
 
       model.textLayerEl.replaceWith(staged);
       try { model.textLayer?.cancel?.() } catch {}
       model.textLayerEl = staged;
       model.textLayer = layer;
       model.textReady = true;
+      model.textLastUsed = performance.now();
+      this.textModels.add(model);
       paintSearchHits(this, model);
+      this.scheduleCanvasPrune();
     } catch (err) {
       if (!/cancel/i.test(String(err?.message || ""))) console.warn("Text layer failed", this.side, model.n, err);
     } finally {
-      if (ticket === model.textTicket) model.textRendering = false;
+      if (ticket === model.textTicket) {
+        model.textRendering = false;
+        model.textPromise = null;
+        model.pendingTextLayer = null;
+        this.textRenderingModels.delete(model);
+      }
+    }
+  }
+
+  cancelTextWork(model) {
+    ++model.textTicket;
+    try { model.pendingTextLayer?.cancel(); } catch {}
+    model.pendingTextLayer = null;
+    model.textPromise = null;
+    model.textRendering = false;
+    model.textScheduled = false;
+    this.textRenderingModels.delete(model);
+  }
+
+  pauseBackgroundWork() {
+    for (const model of this.textRenderingModels) if (!model.textForced) this.cancelTextWork(model);
+    if (!this.documentOpening) for (const model of this.renderingModels) {
+      // Stop upgrades, but never discard the only usable bitmap of an opening PDF.
+      if (model.renderQuality !== 'motion' && model.pendingScale > this.desiredRenderScale(model,'motion') * 1.1) this.cancelModelRender(model);
+    }
+    pausePdfThumbnails();
+  }
+
+  pruneTextLayers() {
+    if (this.textModels.size <= CFG.TEXT_DOM_PAGES) return;
+    const selection = document.getSelection();
+    const candidates = [...this.textModels].filter(model => !this.modelIntersectsViewport(model,this.viewportH) &&
+      !model.textRendering && !model.textLayerEl.contains(selection?.anchorNode) && !model.textLayerEl.contains(selection?.focusNode))
+      .sort((a,b)=>(a.textLastUsed||0)-(b.textLastUsed||0));
+    // Bounded DOM detach work per idle turn. Search rebuilds a layer on demand.
+    for (const model of candidates.slice(0,2)) {
+      if (this.textModels.size <= CFG.TEXT_DOM_PAGES) break;
+      clearSearchDecoration(searchPageKey(this,model.n));
+      model.textLayer?.cancel(); model.textLayer = null;
+      model.textLayerEl.replaceChildren(); model.textReady = false;
+      this.textModels.delete(model);
     }
   }
 
   scheduleCanvasPrune() {
-    if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET || this.memoryPruneHandle) return;
-    const run = () => {
+    if ((this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET && this.textModels.size <= CFG.TEXT_DOM_PAGES) || this.memoryPruneHandle || this.isScrolling || this.panState || this.zoomPreviewActive) return;
+    const run = deadline => {
       this.memoryPruneHandle = 0;
-      if (this.isScrolling || this.panState || this.zoomPreviewActive) { this.scheduleCanvasPrune(); return; }
-      this.pruneCanvasMemory();
+      if (this.isScrolling || this.panState || this.zoomPreviewActive) return;
+      const beforeBytes=this.canvasBytes,beforeText=this.textModels.size;
+      this.pruneTextLayers();
+      if (!deadline || deadline.didTimeout || deadline.timeRemaining() > 3) this.pruneCanvasMemory();
+      // All remaining pages may be visible or selected. Wait for the next
+      // viewport change instead of spinning idle callbacks with no reclaimable work.
+      if (this.canvasBytes < beforeBytes || this.textModels.size < beforeText) this.scheduleCanvasPrune();
     };
-    if ("requestIdleCallback" in window) {
-      this.memoryPruneHandle = requestIdleCallback(run, { timeout: CFG.MEMORY_PRUNE_IDLE_MS });
-    } else {
-      this.memoryPruneHandle = setTimeout(run, CFG.MEMORY_PRUNE_IDLE_MS);
-    }
+    if ("requestIdleCallback" in window) this.memoryPruneHandle = requestIdleCallback(run, { timeout: CFG.MEMORY_PRUNE_IDLE_MS });
+    else this.memoryPruneHandle = setTimeout(run, CFG.MEMORY_PRUNE_IDLE_MS);
   }
 
-  // 缩略图降级：只在空闲期做重采样，避免滚动帧被同步 drawImage/resize 阻塞。
+  // One downsample per idle turn, one draw, no resize/redraw of the large live bitmap.
   pruneCanvasMemory() {
-    if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET) return;
-
-    const visible = new Set(this.modelsInViewport(0).map(m => m.n));
-    const victims = this.models
-      .filter(m => m.canvasBytes > 10000 && !visible.has(m.n) && !m.rendering)
-      .sort((a, b) => a.lastUsed - b.lastUsed);
-
-    for (const m of victims) {
-      if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET * .82) break;
-
-      if (m.canvas.width > 200) {
-        const thumbW = Math.max(1, Math.floor(m.canvas.width / 6));
-        const thumbH = Math.max(1, Math.floor(m.canvas.height / 6));
-        const thumb = document.createElement("canvas");
-        thumb.width = thumbW; thumb.height = thumbH;
-        thumb.getContext("2d", { alpha: false }).drawImage(m.canvas, 0, 0, thumbW, thumbH);
-
-        m.canvas.width = thumbW; m.canvas.height = thumbH;
-        m.canvas.getContext("2d", { alpha: false }).drawImage(thumb, 0, 0);
-
-        const newBytes = thumbW * thumbH * 4;
-        this.canvasBytes -= (m.canvasBytes - newBytes);
-        m.canvasBytes = newBytes;
-        m.renderedScale = 0.1;
-      } else {
-        this.canvasBytes -= m.canvasBytes;
-        m.canvasBytes = 0;
-        m.renderedScale = 0;
-        m.canvas.width = 1; m.canvas.height = 1;
-      }
-      try { m.page?.cleanup?.() } catch {}
+    if (this.canvasBytes <= CFG.CANVAS_MEMORY_BUDGET || this.isScrolling || this.panState || this.zoomPreviewActive) return;
+    let victim;
+    for (const model of this.models) {
+      if (model.canvasBytes <= 160000 || model.rendering || model.textRendering || this.modelIntersectsViewport(model,this.viewportH)) continue;
+      if (!victim || model.lastUsed < victim.lastUsed) victim = model;
     }
+    if (!victim) return;
+    const old = victim.canvas, thumb = document.createElement('canvas');
+    const ratio = Math.min(1,160 / Math.max(old.width,old.height));
+    thumb.className = 'pdf-bitmap';
+    thumb.width = Math.max(1,Math.round(old.width*ratio));
+    thumb.height = Math.max(1,Math.round(old.height*ratio));
+    thumb.getContext('2d',{alpha:false}).drawImage(old,0,0,thumb.width,thumb.height);
+    old.replaceWith(thumb); old.width = old.height = 1;
+    const bytes = thumb.width * thumb.height * 4;
+    this.canvasBytes += bytes - victim.canvasBytes;
+    victim.canvas = thumb; victim.canvasBytes = bytes; victim.renderedScale = 0;
+    try { victim.page?.cleanup?.(); } catch {}
   }
 
-  releaseIfFar(model) {
-    this.pruneCanvasMemory();
-  }
+  releaseIfFar() { this.scheduleCanvasPrune(); }
 
   modelIndexAtBaseY(y) {
     if (!this.models.length) return 0;
@@ -971,8 +1045,13 @@ class PdfPane {
   renderNearViewport({ quality = "fast", overscan = null, includeText = !this.isScrolling } = {}) {
     if (document.body.dataset.view === "home" || this.paneEl.hidden || !this.pdf || !this.models.length || this.zoomPreviewActive || this.documentOpening) return;
 
-    const margin = overscan ?? this.viewportH * CFG.RENDER_OVERSCAN_VIEWPORTS;
+    const margin = overscan ?? this.viewportH * (quality === 'motion' ? .65 : CFG.RENDER_OVERSCAN_VIEWPORTS);
     const models = this.modelsInViewport(margin);
+    if (quality === 'motion') {
+      const range = `${this.generation}:${models[0]?.n}:${models.at(-1)?.n}:${this.layoutScale}`;
+      if (this.motionRange === range) return;
+      this.motionRange = range;
+    } else this.motionRange = '';
 
     // Only inspect jobs that are actually pending/running. Never scan every page on a scroll frame.
     if (this.renderingModels.size) {
@@ -987,6 +1066,10 @@ class PdfPane {
     for (const m of models) {
       const distance = Math.abs((m.baseTop + m.baseH / 2) - centerBase);
       const priority = Math.max(1, 200000 - Math.round(distance * 100));
+      // Cached and queued pages require no Promise allocation at scroll frequency.
+      const target = this.desiredRenderScale(m,quality);
+      if (m.canvas?.width > 1 && m.renderedScale >= target * .96) { m.lastUsed = performance.now(); continue; }
+      if (m.rendering && m.pendingScale >= target * .96) continue;
       this.ensureRendered(m, priority, quality);
     }
 
@@ -994,6 +1077,7 @@ class PdfPane {
   }
 
   scheduleVisibleTextLayers() {
+    if (this.paneEl.hidden || document.body.dataset.view === 'home') return;
     if (this.isScrolling || this.panState || this.zoomPreviewActive) return;
     for (const m of this.modelsInViewport(96)) this.scheduleTextLayer(m);
   }
@@ -1006,7 +1090,7 @@ class PdfPane {
   scheduleSharpRender() {
     this.cancelSharpRender();
     this.sharpTimer = setTimeout(() => {
-      if (!this.pdf || this.zoomPreviewActive || this.panState || this.isScrolling || this.documentOpening) return;
+      if (!this.pdf || this.paneEl.hidden || document.body.dataset.view === 'home' || this.zoomPreviewActive || this.panState || this.isScrolling || this.documentOpening) return;
       const visible = this.modelsInViewport(Math.min(220, this.viewportH * .18));
       const centerBase = (this.viewer.scrollTop + this.viewportH / 2) / Math.max(.00001, this.layoutScale);
       for (const m of visible) {
@@ -1108,6 +1192,8 @@ class PdfPane {
     if (!this.isScrolling) {
       this.isScrolling = true;
       this.cancelSharpRender();
+      this.motionRange = '';
+      this.pauseBackgroundWork();
       updateRenderConcurrency();
     }
     this.armScrollIdle(idleMs);
@@ -1121,6 +1207,8 @@ class PdfPane {
   finishScrollActivity() {
     clearTimeout(this.scrollIdleTimer);
     this.scrollIdleTimer = 0;
+    clearTimeout(this.scrollRenderTimer); this.scrollRenderTimer = 0;
+    this.motionRange = '';
     const wasScrolling = this.isScrolling;
     this.isScrolling = false;
     if (wasScrolling) updateRenderConcurrency();
@@ -1133,10 +1221,27 @@ class PdfPane {
     this.scheduleSharpRender();
     this.schedulePersistView();
     this.scheduleCanvasPrune();
+    resumePdfThumbnails();
+  }
+
+  scheduleScrollRender() {
+    if (this.scrollRenderTimer || this.zoomPreviewActive || this.documentOpening) return;
+    const generation = this.generation;
+    const delay = Math.max(0,CFG.SCROLL_RENDER_INTERVAL_MS - (performance.now() - this.lastScrollRenderAt));
+    // A task after the scroll frame; drawing is never started inside its RAF.
+    this.scrollRenderTimer = setTimeout(() => {
+      this.scrollRenderTimer = 0;
+      if (generation !== this.generation || !this.pdf || !this.isScrolling) return;
+      this.lastScrollRenderAt = performance.now();
+      this.renderNearViewport({quality:'motion',includeText:false});
+    }, delay);
   }
 
 onScroll() {
-  if (!this.pdf || this.scrollRaf) return;
+  if (!this.pdf || this.paneEl.hidden || document.body.dataset.view === 'home') return;
+  // Mark interaction immediately, before asynchronous text/render work can resume.
+  this.beginScrollActivity();
+  if (this.scrollRaf) return;
   this.scrollRaf = requestAnimationFrame(() => {
     this.scrollRaf = 0;
     if (!this.pdf) return;
@@ -1145,15 +1250,8 @@ onScroll() {
     // showReadingControls 内部会自动延迟隐藏。
     showReadingControls(this);
 
-    this.beginScrollActivity();
     this.updateCurrentPage();
-
-    if (!this.zoomPreviewActive) {
-      this.renderNearViewport({
-        quality: "fast",
-        includeText: false
-      });
-    }
+    this.scheduleScrollRender();
 
     const isEcho = this.consumeSyncEcho();
 
@@ -1225,6 +1323,8 @@ onScroll() {
     clearTimeout(this.wheelZoomTimer);
     clearTimeout(this.sharpTimer);
     clearTimeout(this.scrollIdleTimer);
+    clearTimeout(this.scrollRenderTimer); this.scrollRenderTimer = 0;
+    this.motionRange = '';
     clearTimeout(this.geometryTimer);
     cancelAnimationFrame(this.scrollRaf);
     cancelAnimationFrame(this.resizeRaf);
@@ -1247,8 +1347,8 @@ onScroll() {
     try { await this.persistView() } catch {}
 
     for (const m of this.models) {
-      m.ticket++;
-      m.textTicket++;
+      this.cancelModelRender(m);
+      this.cancelTextWork(m);
       try { m.renderTask?.cancel() } catch {}
       try { m.textLayer?.cancel?.() } catch {}
       if (m.canvas) {
@@ -1259,6 +1359,7 @@ onScroll() {
     }
 
     this.models = [];
+    this.textRenderingModels.clear(); this.textModels.clear();
     this.plane = null;
     this.baseSurfaceW = 0;
     this.baseSurfaceH = 0;
@@ -1786,9 +1887,12 @@ async function runSearch(token) {
     const { p, pdf, generation } = target;
     for (let n = 1; n <= pdf.numPages; n++) {
       if (!valid(target)) return;
+      // Keep the results already shown; background extraction yields to reading.
+      while (p.isScrolling || p.panState || p.zoomPreviewActive) { await sleep(50); if (!valid(target)) return; }
       try {
         const page = await getSearchPage(pdf, n, p);
         if (!valid(target)) return;
+        while (p.isScrolling || p.panState || p.zoomPreviewActive) { await sleep(50); if (!valid(target)) return; }
         const normalized = await getNormalizedSearchPage(page, sensitive, () => valid(target));
         if (!normalized || !valid(target)) return;
         const text = normalized.text;
@@ -1917,8 +2021,15 @@ renderSearchResults();
 
 
 
-function showReadingControls(p){p.paneEl.classList.add("controls-visible");clearTimeout(p.controlsTimer);p.controlsTimer=setTimeout(()=>p.paneEl.classList.remove("controls-visible"),1700)}
-for(const p of Object.values(panes)){p.paneEl.addEventListener("pointermove",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerdown",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerleave",()=>{clearTimeout(p.controlsTimer);p.paneEl.classList.remove("controls-visible")});p.viewer.tabIndex=0;p.viewer.setAttribute("aria-label",p.side==="left"?"左侧文档阅读区":"右侧文档阅读区");}
+function showReadingControls(p){
+  const now=performance.now();
+  if(p.controlsTimer && now-(p.controlsShownAt||0)<250)return;
+  p.controlsShownAt=now;
+  if(!p.controlsTimer)p.paneEl.classList.add('controls-visible');
+  clearTimeout(p.controlsTimer);
+  p.controlsTimer=setTimeout(()=>{p.controlsTimer=0;p.paneEl.classList.remove('controls-visible');},1700);
+}
+for(const p of Object.values(panes)){p.paneEl.addEventListener("pointermove",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerdown",()=>showReadingControls(p),{passive:true});p.paneEl.addEventListener("pointerleave",()=>{clearTimeout(p.controlsTimer);p.controlsTimer=0;p.paneEl.classList.remove("controls-visible")});p.viewer.tabIndex=0;p.viewer.setAttribute("aria-label",p.side==="left"?"左侧文档阅读区":"右侧文档阅读区");}
 function setZen(value){document.body.classList.toggle("zen",value);$("#zenBtn").setAttribute("aria-pressed",String(value));$("#syncMenu").hidden=true;$("#syncMenuBtn").setAttribute("aria-expanded","false");Object.values(panes).forEach(p=>p.onResize());if(value)$("#exitZen").focus();else $("#zenBtn").focus()}
 $("#zenBtn").onclick=()=>setZen(!document.body.classList.contains("zen"));$("#exitZen").onclick=()=>setZen(false);
 $("#fitAll").onclick=()=>{for(const p of Object.values(panes)){if(p.pdf&&!p.paneEl.hidden){p.fitWidth({propagate:false});p.viewer.scrollLeft=0;showReadingControls(p)}}};

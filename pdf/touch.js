@@ -15,6 +15,7 @@ function installPdfTouch(pane) {
     if (frame) {cancelAnimationFrame(frame); frame=0;}
     paint();
     if (pinch && pane.zoomPreviewActive) pane.commitWheelZoom();
+    pane.viewer.removeEventListener('touchmove',pinchMove);
     pinch=null;pending=null;
   }
   pane.viewer.addEventListener('touchstart',event=>{
@@ -31,18 +32,22 @@ function installPdfTouch(pane) {
     if (pane.zoomPreviewActive) pane.commitWheelZoom();
     const point=center(event.touches);
     pinch={distance:Math.max(1,distance(event.touches)),scale:pane.scale};
+    pane.viewer.addEventListener('touchmove',pinchMove,{passive:false});
     pane.beginZoomPreview(point.x,point.y);
     // Stop residual native momentum at the point where two fingers take control.
     pane.viewer.scrollTo({left:pane.viewer.scrollLeft,top:pane.viewer.scrollTop,behavior:'instant'});
     clearTimeout(pane.wheelZoomTimer);
   },{passive:false});
+  // Ordinary touch scrolling has no cancelable move listener on its path.
   pane.viewer.addEventListener('touchmove',event=>{
     if (tap && event.touches.length===1 && Math.hypot(event.touches[0].clientX-tap.x,event.touches[0].clientY-tap.y)>8) tap=null;
+  },{passive:true});
+  function pinchMove(event) {
     if (!pinch || event.touches.length!==2 || !pane.zoomPreviewActive) return;
     if (event.cancelable) event.preventDefault();
     pending={point:center(event.touches),scale:clamp(pinch.scale*distance(event.touches)/pinch.distance,CFG.MIN_SCALE,CFG.MAX_SCALE)};
     if (!frame) frame=requestAnimationFrame(paint);
-  },{passive:false});
+  }
   pane.viewer.addEventListener('touchend',event=>{
     if (pinch) {if (event.touches.length<2) finish();return;}
     if (event.touches.length || !tap || performance.now()-tap.time>280) {tap=null;return;}

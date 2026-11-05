@@ -64,11 +64,11 @@ function stopPaneActivity(pane) {
   pane.cancelTouch?.();
   if (pane.zoomPreviewActive) pane.commitWheelZoom();
   ++pane.generation;
-  for (const field of ['viewSaveTimer','wheelZoomTimer','sharpTimer','scrollIdleTimer','geometryTimer','controlsTimer']) { clearTimeout(pane[field]); pane[field] = 0; }
+  for (const field of ['viewSaveTimer','wheelZoomTimer','sharpTimer','scrollIdleTimer','geometryTimer','controlsTimer','scrollRenderTimer']) { clearTimeout(pane[field]); pane[field] = 0; }
   for (const field of ['scrollRaf','resizeRaf','panRaf']) { cancelAnimationFrame(pane[field]); pane[field] = 0; }
   if (pane.memoryPruneHandle) { if ('cancelIdleCallback' in window) cancelIdleCallback(pane.memoryPruneHandle); else clearTimeout(pane.memoryPruneHandle); pane.memoryPruneHandle = 0; }
-  pane.isScrolling = false; pane.panState = null; pane.syncEcho = null;
-  for (const model of pane.models) { pane.cancelModelRender(model); ++model.textTicket; model.textLayer?.cancel?.(); model.textRendering = false; model.textScheduled = false; }
+  pane.isScrolling = false; pane.panState = null; pane.syncEcho = null; pane.motionRange = "";
+  for (const model of pane.models) { pane.cancelModelRender(model); pane.cancelTextWork(model); }
   pane.viewer.classList.remove('panning','zoom-preview');
 }
 function capturePane(pane) {
@@ -94,7 +94,7 @@ function capturePane(pane) {
   }
   snapshot.canvasBytes = snapshot.models.reduce((sum, model) => sum + model.canvasBytes, 0);
   pane.file = pane.docId = pane.pdf = pane.loadingTask = pane.plane = null;
-  pane.models = []; pane.renderingModels = new Set(); pane.geometryDirtyModels = new Set();
+  pane.models = []; pane.renderingModels = new Set(); pane.textRenderingModels = new Set(); pane.textModels = new Set(); pane.geometryDirtyModels = new Set();
   pane.textCache = new LruTextCache(CFG.TEXT_CACHE_PAGES); pane.canvasBytes = 0;
   pane.currentPage = 0; pane.pageInput.value = '0'; pane.totalEl.textContent = '/ 0';
   pane.nameEl.textContent = `打开${pane.side === 'left' ? '左' : '右'}侧 PDF`;
@@ -105,7 +105,7 @@ function restorePane(pane, snapshot) {
   ++pane.generation;
   for (const key of documentKeys) pane[key] = snapshot[key];
   pane.wheelZoomTargetScale = pane.scale;
-  pane.renderingModels = new Set(); pane.geometryDirtyModels = new Set();
+  pane.renderingModels = new Set(); pane.textRenderingModels = new Set(); pane.textModels = new Set(pane.models.filter(m=>m.textReady)); pane.geometryDirtyModels = new Set();
   pane.pagesEl.replaceChildren(snapshot.fragment);
   pane.pagesEl.classList.remove('empty-surface'); pane.pagesEl.setAttribute('style',snapshot.style);
   pane.paneEl.classList.add('loaded'); pane.nameEl.textContent = pane.file.name; pane.nameEl.title = pane.file.name;
